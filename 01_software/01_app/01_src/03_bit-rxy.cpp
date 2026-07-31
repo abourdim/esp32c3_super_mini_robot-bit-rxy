@@ -24,13 +24,30 @@
 #define UART_TX_CHAR_UUID   "6e400002-b5a3-f393-e0a9-e50e24dcca9e"  // notify
 #define UART_RX_CHAR_UUID   "6e400003-b5a3-f393-e0a9-e50e24dcca9e"  // write
 
-// Layout CFG (base64 JSON), built to match this robot's controls:
-//   joy_drive       joystick  -> steering (replaces joystick_01_x/y)
-//   btn_horn        button    -> horn/alarm (replaces button_01)
-//   dpad_drive      dpad      -> alternate steering, drives the same x/y as joy_drive
-//   gauge_speed     gauge     -> motor speed magnitude 0-100
-//   gauge_distance  gauge     -> ultrasonic distance 0-200cm
-//   battery_level   battery   -> battery percentage 0-100
+// Layout CFG: LAYOUT_CFG_BASE64 below is this JSON, base64-encoded. Decode
+// with `base64.b64decode(...)` to check it, or regenerate after editing
+// this block with:
+//   python3 -c "import json,base64; print(base64.b64encode(json.dumps(<paste dict here>,separators=(',',':')).encode()).decode())"
+//
+// {
+//   "schemaVersion": 1,
+//   "title": "WDIY Robot b3",
+//   "widgets": [
+//     {"id":"joy_drive","t":"joystick","x":20,"y":20,"w":140,"h":140,"label":"Drive","model":"classic"},
+//     {"id":"btn_horn","t":"button","x":200,"y":50,"w":100,"h":100,"label":"Horn","model":"neo"},
+//     {"id":"dpad_drive","t":"dpad","x":340,"y":20,"w":140,"h":140,"label":"Drive","model":"classic"},
+//     {"id":"gauge_speed","t":"gauge","x":20,"y":180,"w":140,"h":160,"label":"Speed","min":0,"max":100,"units":"%","decimals":0,"model":"classic"},
+//     {"id":"gauge_distance","t":"gauge","x":180,"y":180,"w":140,"h":160,"label":"Distance","min":0,"max":200,"units":"cm","decimals":0,"model":"classic"},
+//     {"id":"battery_level","t":"battery","x":340,"y":200,"w":80,"h":100,"label":"Battery","model":"vertical"}
+//   ]
+// }
+//
+// Widget -> firmware mapping:
+//   joy_drive / dpad_drive  -> both write the same s_joy_x/s_joy_y (steering)
+//   btn_horn                -> horn/alarm (s_button_01)
+//   gauge_speed             -> motor speed magnitude 0-100 (output only)
+//   gauge_distance          -> ultrasonic distance 0-200cm (output only)
+//   battery_level           -> battery percentage 0-100 (output only)
 static const char* LAYOUT_CFG_BASE64 =
   "eyJzY2hlbWFWZXJzaW9uIjoxLCJ0aXRsZSI6IldESVkgUm9ib3QgYjMiLCJ3aWRnZXRzIjpb"
   "eyJpZCI6ImpveV9kcml2ZSIsInQiOiJqb3lzdGljayIsIngiOjIwLCJ5IjoyMCwidyI6MTQw"
