@@ -24,9 +24,9 @@
 #define UART_TX_CHAR_UUID   "6e400002-b5a3-f393-e0a9-e50e24dcca9e"  // notify
 #define UART_RX_CHAR_UUID   "6e400003-b5a3-f393-e0a9-e50e24dcca9e"  // write
 
-// Layout CFG: LAYOUT_CFG_BASE64 below is this JSON, base64-encoded. Decode
-// with `base64.b64decode(...)` to check it, or regenerate after editing
-// this block with:
+// Layout CFG: LAYOUT_CFG_BASE64 below is this JSON, base64-encoded. Regenerate
+// with layout_cfg.sh (decode/encode) after editing 01_app/layout_cfg.sh's
+// input JSON, or by hand:
 //   python3 -c "import json,base64; print(base64.b64encode(json.dumps(<paste dict here>,separators=(',',':')).encode()).decode())"
 //
 // {
@@ -38,7 +38,8 @@
 //     {"id":"dpad_drive","t":"dpad","x":340,"y":20,"w":140,"h":140,"label":"Drive","model":"classic"},
 //     {"id":"gauge_speed","t":"gauge","x":20,"y":180,"w":140,"h":160,"label":"Speed","min":0,"max":100,"units":"%","decimals":0,"model":"classic"},
 //     {"id":"gauge_distance","t":"gauge","x":180,"y":180,"w":140,"h":160,"label":"Distance","min":0,"max":200,"units":"cm","decimals":0,"model":"classic"},
-//     {"id":"battery_level","t":"battery","x":340,"y":200,"w":80,"h":100,"label":"Battery","model":"vertical"}
+//     {"id":"battery_level","t":"battery","x":340,"y":200,"w":80,"h":100,"label":"Battery","model":"vertical"},
+//     {"id":"sound_alert","t":"sound","x":440,"y":180,"w":90,"h":90,"label":"Alert"}
 //   ]
 // }
 //
@@ -48,6 +49,10 @@
 //   gauge_speed             -> motor speed magnitude 0-100 (output only)
 //   gauge_distance          -> ultrasonic distance 0-200cm (output only)
 //   battery_level           -> battery percentage 0-100 (output only)
+//   sound_alert             -> plays a tone on the phone (output only) —
+//                              restores the old RemoteXY sound_01 element,
+//                              which had no bit-rxy equivalent until the
+//                              Sound widget was added
 static const char* LAYOUT_CFG_BASE64 =
   "eyJzY2hlbWFWZXJzaW9uIjoxLCJ0aXRsZSI6IldESVkgUm9ib3QgYjMiLCJ3aWRnZXRzIjpb"
   "eyJpZCI6ImpveV9kcml2ZSIsInQiOiJqb3lzdGljayIsIngiOjIwLCJ5IjoyMCwidyI6MTQw"
@@ -62,7 +67,9 @@ static const char* LAYOUT_CFG_BASE64 =
   "aCI6MTYwLCJsYWJlbCI6IkRpc3RhbmNlIiwibWluIjowLCJtYXgiOjIwMCwidW5pdHMiOiJj"
   "bSIsImRlY2ltYWxzIjowLCJtb2RlbCI6ImNsYXNzaWMifSx7ImlkIjoiYmF0dGVyeV9sZXZl"
   "bCIsInQiOiJiYXR0ZXJ5IiwieCI6MzQwLCJ5IjoyMDAsInciOjgwLCJoIjoxMDAsImxhYmVs"
-  "IjoiQmF0dGVyeSIsIm1vZGVsIjoidmVydGljYWwifV19";
+  "IjoiQmF0dGVyeSIsIm1vZGVsIjoidmVydGljYWwifSx7ImlkIjoic291bmRfYWxlcnQiLCJ0"
+  "Ijoic291bmQiLCJ4Ijo0NDAsInkiOjE4MCwidyI6OTAsImgiOjkwLCJsYWJlbCI6IkFsZXJ0"
+  "In1dfQ==";
 
 // ===========================================================================
 // State
@@ -384,8 +391,39 @@ void remotexy_set_circularBar_01( int8_t p_circularBar_01) {
   (void)p_circularBar_01;  // covered by gauge_speed already
 }
 
+// Maps RemoteXY's sound catalog (07_sounds.h) onto bit-rxy's Sound widget,
+// which only has 5 tone effects (see bit-rxy's playSoundEffect()) rather
+// than a full audio-file library. p_sound_01 == 0 is tasks_rmotexy_sound()'s
+// periodic "no sound" reset — must not itself trigger a sound.
 void remotexy_set_sound_01(int16_t p_sound_01) {
-  (void)p_sound_01;  // bit-rxy has no sound-playback widget
+  if (p_sound_01 == 0) return;
+
+  const char* effect;
+  switch (p_sound_01) {
+    case REMOTEXY_SOUND_SUCCESS:
+    case REMOTEXY_SOUND_SUCCESS_ALT:
+    case REMOTEXY_SOUND_SUCCESS_BEEP:
+    case REMOTEXY_SOUND_POWER_ON:
+    case REMOTEXY_SOUND_CONFIRM:
+    case REMOTEXY_SOUND_CHIME:
+      effect = "success"; break;
+    case REMOTEXY_SOUND_WARNING:
+    case REMOTEXY_SOUND_TIMER:
+    case REMOTEXY_SOUND_COUNTDOWN:
+      effect = "warn"; break;
+    case REMOTEXY_SOUND_ERROR:
+    case REMOTEXY_SOUND_CRITICAL:
+    case REMOTEXY_SOUND_ALARM:
+    case REMOTEXY_SOUND_FAILURE:
+    case REMOTEXY_SOUND_ERROR_BEEP:
+      effect = "danger"; break;
+    case REMOTEXY_SOUND_DOUBLE_BEEP:
+    case REMOTEXY_SOUND_SELECT:
+      effect = "toggle"; break;
+    default:
+      effect = "beep"; break;  // BEEP, BEEP_SHORT, BEEP_LONG, CLICK, TAP, etc.
+  }
+  sendValue("sound_alert", effect);
 }
 
 void remotexy_set_connect_flag( uint8_t p_connect_flag) {
