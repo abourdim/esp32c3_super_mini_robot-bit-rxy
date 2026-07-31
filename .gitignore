@@ -1,0 +1,47 @@
+# ─── Build caches & artifacts ─────────────────────────────────
+**/.pio/
+**/node_modules/
+**/build/
+**/build_output/
+**/CMakeFiles/
+**/CMakeCache.txt
+**/cmake_install.cmake
+**/.cache/
+
+# ─── Editor / IDE ─────────────────────────────────────────────
+**/.vscode/
+**/.idea/
+**/.vs/
+*.swp
+*.swo
+
+# ─── Tooling state ────────────────────────────────────────────
+**/.claude/
+
+# ─── Logs ─────────────────────────────────────────────────────
+**/03_logs/
+**/logs/
+*.log
+
+# ─── OS junk ──────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+*.stackdump
+
+# ─── Secrets ──────────────────────────────────────────────────
+**/secrets.h
+.env
+.env.local
+
+# ─── KiCad temp / cache / autosave ────────────────────────────
+**/*-backups/
+**/~*.lck
+**/*.kicad_pcb-bak
+**/*.kicad_sch-bak
+**/fp-info-cache
+**/_autosave-*
+
+# ─── Personal documents that snuck into the tree ──────────────
+**/*cv_*.pdf
+**/*resume_*.pdf
+**/_00_cv_*

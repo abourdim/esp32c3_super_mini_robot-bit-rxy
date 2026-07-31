@@ -1,0 +1,49 @@
+:root {
+  --bg: #0f1115;
+  --fg: #e6e6e6;
+  --muted: #9aa3af;
+  --card: #1a1d24;
+  --border: #2a2f3a;
+  --accent: #4f8cff;
+  --warn: #f59e0b;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; background: var(--bg); color: var(--fg);
+  font: 14px/1.5 system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+.wrap { max-width: 880px; margin: 0 auto; padding: 32px 20px; }
+h1 { margin: 0 0 4px; font-size: 24px; }
+.sub { color: var(--muted); margin-top: 0; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+code { background: var(--card); padding: 1px 6px; border-radius: 4px; font-size: 13px; }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px; margin: 24px 0; }
+.card { display: block; padding: 16px; background: var(--card);
+  border: 1px solid var(--border); border-radius: 8px; color: var(--fg); }
+.card:hover:not(.disabled) { border-color: var(--accent); text-decoration: none; }
+.card.disabled { opacity: 0.6; }
+.card h2 { margin: 0 0 6px; font-size: 16px; }
+.card p { margin: 0; color: var(--muted); font-size: 13px; }
+
+.btn { padding: 8px 16px; border: 1px solid var(--border); background: var(--card);
+  color: var(--fg); border-radius: 6px; cursor: pointer; font: inherit; }
+.btn:hover:not(:disabled) { border-color: var(--accent); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: white; }
+
+.action { margin: 32px 0; }
+.row { display: flex; gap: 8px; align-items: center; margin: 12px 0; flex-wrap: wrap; }
+.row label { display: flex; gap: 6px; align-items: center; color: var(--muted); }
+
+.log { background: #000; color: #d4d4d4; padding: 12px; border-radius: 6px;
+  height: 360px; overflow: auto; white-space: pre-wrap; word-break: break-all;
+  font: 12px/1.4 ui-monospace, Menlo, Consolas, monospace; }
+.log .tx { color: var(--accent); }
+
+.warn { color: var(--warn); }
+.foot { color: var(--muted); font-size: 13px; margin-top: 32px; }
+.help { margin: 16px 0; color: var(--muted); }
+.help summary { cursor: pointer; }
+input, select { background: var(--card); color: var(--fg);
+  border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; font: inherit; }

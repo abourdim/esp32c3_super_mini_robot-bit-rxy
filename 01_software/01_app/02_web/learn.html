@@ -1,0 +1,972 @@
+<!doctype html>
+<html lang="en" dir="ltr" data-theme="lab-dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tech Deep-Dive — ESP32-C3 Robot</title>
+<link rel="stylesheet" href="assets/wdiy-template.css">
+<style>
+.app { max-width: 1000px; }
+
+code {
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  color: var(--accent); padding: 1px 6px; border-radius: 4px;
+  font-size: .82em; font-family: ui-monospace, Menlo, Consolas, monospace;
+}
+.light-theme code { color: var(--text); }
+
+pre {
+  background: rgba(0,0,0,.45);
+  border: 1px solid var(--border); border-radius: 8px;
+  padding: 12px 14px; overflow-x: auto;
+  margin: 10px 0; position: relative;
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+}
+pre code {
+  background: transparent; color: var(--text); padding: 0;
+  font-size: .82em; display: block; line-height: 1.55;
+}
+.light-theme pre { background: rgba(0,0,0,.04); }
+.copy-btn {
+  position: absolute; top: 6px; right: 6px;
+  font: 11px ui-monospace, monospace;
+  background: var(--panel); border: 1px solid var(--border);
+  color: var(--text-muted); padding: 3px 8px; border-radius: 4px;
+  cursor: pointer; letter-spacing: .05em;
+}
+.copy-btn:hover  { color: var(--accent) !important; border-color: var(--accent) !important; }
+.copy-btn.ok     { color: #22c55e !important; border-color: #22c55e !important; }
+
+.intro { font-size: .92em; color: var(--text); line-height: 1.6; margin: 0 0 14px; padding: 0 4px; }
+p.lead { font-size: .9em; color: var(--text); line-height: 1.6; margin: 0 0 10px; }
+
+/* ════════════════════════════════════════════════════════════
+   PER-OPTION CARD
+   ════════════════════════════════════════════════════════════ */
+.opt {
+  background: rgba(0,0,0,.22);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin: 10px 0;
+}
+.light-theme .opt { background: rgba(0,0,0,.04); }
+
+.opt-hdr {
+  display: flex; align-items: center; gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed color-mix(in srgb, var(--border) 70%, transparent);
+}
+.opt-num {
+  font-family: ui-monospace, monospace;
+  font-size: 1.1em; font-weight: 800;
+  color: var(--bg);
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  padding: 4px 10px; border-radius: 8px;
+  min-width: 36px; text-align: center;
+}
+.opt-id {
+  font-family: ui-monospace, monospace;
+  font-size: .82em; color: var(--text-muted);
+  letter-spacing: .04em;
+}
+.opt-title {
+  font-family: var(--font-h);
+  font-size: 1em; color: var(--accent);
+  text-transform: uppercase; letter-spacing: .04em;
+  flex: 1;
+  min-width: 0;
+}
+.opt-cat {
+  font-size: .68em; padding: 3px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent2) 18%, transparent);
+  color: var(--accent2);
+  font-weight: 600; letter-spacing: .04em; text-transform: uppercase;
+}
+
+.opt-grid {
+  display: grid; grid-template-columns: 130px 1fr;
+  gap: 6px 14px;
+  font-size: .85em;
+  margin-bottom: 4px;
+}
+@media (max-width: 600px) {
+  .opt-grid { grid-template-columns: 1fr; gap: 2px 0; }
+  .opt-grid .label { color: var(--accent2); font-size: .76em; padding-top: 8px; }
+}
+.opt-grid .label {
+  color: var(--accent2);
+  font-family: var(--font-h);
+  font-size: .72em;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  padding-top: 3px;
+}
+.opt-grid .val {
+  color: var(--text);
+  line-height: 1.55;
+}
+.opt-grid .val code {
+  font-size: .92em;
+}
+.opt-grid .val ul { padding-left: 18px; margin: 4px 0; }
+.opt-grid .val li { margin-bottom: 2px; line-height: 1.5; }
+
+/* ════════════════════════════════════════════════════════════
+   TABLES
+   ════════════════════════════════════════════════════════════ */
+table.dt {
+  width: 100%; border-collapse: collapse; margin: 10px 0;
+  font-size: .82em;
+}
+table.dt th, table.dt td {
+  text-align: left; padding: 7px 10px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+table.dt th {
+  font-family: var(--font-h); font-size: .74em;
+  color: var(--accent2); font-weight: 700;
+  text-transform: uppercase; letter-spacing: .06em;
+}
+table.dt tr:hover td { background: color-mix(in srgb, var(--accent) 5%, transparent); }
+table.dt code { font-size: .9em; }
+
+/* ════════════════════════════════════════════════════════════
+   ALERTS
+   ════════════════════════════════════════════════════════════ */
+.alert {
+  border-left: 3px solid var(--accent);
+  padding: 10px 14px;
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  border-radius: 0 8px 8px 0; margin: 10px 0;
+  font-size: .85em; line-height: 1.55;
+}
+.alert.warn   { border-left-color: #f59e0b; background: rgba(245,158,11,.10); }
+.alert.danger { border-left-color: #ef4444; background: rgba(239,68,68,.10); }
+.alert.win    { border-left-color: #22c55e; background: rgba(34,197,94,.10); }
+.alert strong { display: block; margin-bottom: 4px; font-size: .8em; letter-spacing: .04em; color: var(--accent); }
+.alert.warn strong  { color: #f59e0b; }
+.alert.danger strong{ color: #ef4444; }
+.alert.win strong   { color: #22c55e; }
+
+/* ════════════════════════════════════════════════════════════
+   GROUP DIVIDERS WITHIN A SECTION
+   ════════════════════════════════════════════════════════════ */
+h3.subhead {
+  font-family: var(--font-h);
+  font-size: .82em;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  margin: 18px 0 8px;
+  padding-bottom: 4px;
+  border-bottom: 1px dashed color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+/* ════════════════════════════════════════════════════════════
+   REGISTER-DUMP STYLE BLOCK
+   ════════════════════════════════════════════════════════════ */
+.regdump {
+  background: rgba(0,0,0,.55);
+  color: #a4f0a4;
+  font: 11.5px/1.55 ui-monospace, Menlo, Consolas, monospace;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 14px;
+  white-space: pre;
+  overflow-x: auto;
+  margin: 8px 0;
+}
+.light-theme .regdump { background: #15171b; color: #a4f0a4; }
+.regdump .h { color: #ef4444; font-weight: 700; }
+.regdump .a { color: #f59e0b; }
+.regdump .c { color: #5d8a5d; }
+
+/* ════════════════════════════════════════════════════════════
+   FOOT
+   ════════════════════════════════════════════════════════════ */
+.foot-note { font-size: .82em; color: var(--text-muted); text-align: center; padding: 14px 4px 4px; line-height: 1.55; }
+
+ul.simple { padding-left: 22px; margin: 8px 0; }
+ul.simple li { font-size: .86em; color: var(--text); line-height: 1.6; margin-bottom: 4px; }
+
+details.collapsible > summary { font-size: .94rem; }
+</style>
+</head>
+
+<body
+  data-app-title="Tech Deep-Dive"
+  data-app-subtitle="🔬 read · 🔍 understand · 🛠️ master"
+  data-help-page="learn"
+  data-default-theme="lab-dark"
+  data-status-text="Curiosity"
+  data-status-online="true">
+
+<div class="app">
+  <div class="rows-container">
+
+    <p class="intro">
+      You've already read <a href="start-here.html">start-here.html</a> — the narrative tour.
+      This page is the <strong>reference manual</strong>: every <code>launch.sh</code> option, every <code>platformio.ini</code> directive,
+      every "wait, what's actually happening here?" — explained with the underlying commands, failure modes, and cross-links to the audit log.
+    </p>
+
+    <!-- ══════════════════════════════════════════════════
+         § 1 — LAUNCHER ANATOMY
+         ══════════════════════════════════════════════════ -->
+    <details class="collapsible" id="launcher" open>
+      <summary>🚀 1 — Launcher anatomy — every option of <code>launch.sh</code></summary>
+      <div class="card">
+        <p class="lead">The <code>launch.sh</code> menu has 20 numbered options grouped into sections. Numbers always work — letters (<code>s</code>, <code>b</code>, <code>w</code>, <code>g</code>) just expand the visual section.</p>
+
+        <h3 class="subhead">Group: 🧰 Toolchain (s)</h3>
+
+        <div class="opt">
+          <div class="opt-hdr">
+            <span class="opt-num">0</span>
+            <span class="opt-title">Setup my robot — one-click install</span>
+            <span class="opt-cat">⭐ FAST PATH</span>
+          </div>
+          <div class="opt-grid">
+            <div class="label">What</div>
+            <div class="val">Runs all 4 levels of bootstrap in sequence: Python check → PlatformIO install → ESP32 platform fetch → optional VS Code extension. Equivalent to running options <code>1</code>, <code>2</code>, <code>3</code>, then opening VS Code.</div>
+            <div class="label">Function</div>
+            <div class="val"><code>act_bootstrap()</code> — calls <code>act_check</code>, <code>act_install_pio</code>, <code>act_install_deps</code> in order.</div>
+            <div class="label">Duration</div>
+            <div class="val">~5–10 minutes on a fresh machine (the ESP32 platform is ~150 MB).</div>
+            <div class="label">Failure modes</div>
+            <div class="val"><ul>
+              <li>No Python found → on Windows, runs <code>winget install Python.Python.3.13</code> auto-magically. On macOS/Linux, you need to install Python 3.10+ manually first.</li>
+              <li>MSYS2 environment with broken POSIX Python → launcher detects this and points you to <code>pacman -S mingw-w64-ucrt-x86_64-python</code>.</li>
+              <li>Network failure during platform fetch → just rerun. PlatformIO resumes downloads.</li>
+            </ul></div>
+            <div class="label">See also</div>
+            <div class="val"><a href="start-here.html#setup">start-here § 6 (FIRST DEPLOY)</a></div>
+          </div>
+        </div>
+
+        <div class="opt">
+          <div class="opt-hdr">
+            <span class="opt-num">1</span>
+            <span class="opt-title">Check toolchain — what's installed?</span>
+            <span class="opt-cat">DIAG</span>
+          </div>
+          <div class="opt-grid">
+            <div class="label">What</div>
+            <div class="val">Diagnostic-only. Prints what was found and what's missing: Python · PlatformIO Core · ESP32 platform · esptool. Doesn't change anything.</div>
+            <div class="label">Function</div>
+            <div class="val"><code>act_check()</code> — wraps <code>have python</code>, <code>have pio</code>, version probes.</div>
+            <div class="label">When to use</div>
+            <div class="val">First thing after cloning. Tells you which next options you need to run.</div>
+          </div>
+        </div>
+
+        <div class="opt">
+          <div class="opt-hdr">
+            <span class="opt-num">2</span>
+            <span class="opt-title">Install PlatformIO Core</span>
+          </div>
+          <div class="opt-grid">
+            <div class="label">What</div>
+            <div class="val">Installs PlatformIO Core (the Python package, not the IDE). Makes <code>pio</code> available as a CLI command.</div>
+            <div class="label">Underlying</div>
+            <div class="val"><code>pip install -U platformio</code></div>
+            <div class="label">Size</div>
+            <div class="val">~30 MB download.</div>
+            <div class="label">Common gotcha</div>
+            <div class="val"><code>pio</code> may install to a directory not on your <code>PATH</code>. The launcher works around this by always invoking via <code>python -m platformio</code>. To get bare <code>pio</code> working, add the suggested <code>export PATH=...</code> line to your <code>~/.bashrc</code>.</div>
+          </div>
+        </div>
+
+        <div class="opt">
+          <div class="opt-hdr">
+            <span class="opt-num">3</span>
+            <span class="opt-title">Install ESP32 platform + libraries</span>
+          </div>
+          <div class="opt-grid">
+            <div class="label">What</div>
+            <div class="val">Downloads the ESP32 platform package (Arduino-ESP32 core + RISC-V toolchain + IDF) and project library deps from <code>platformio.ini</code>. Pinned: platform 6.7.0 (ESP-IDF 5.1).</div>
+            <div class="label">Underlying</div>
+            <div class="val"><code>pio pkg install</code></div>
+            <div class="label">Size</div>
+            <div class="val">~150 MB. The biggest single download in the project.</div>
+            <div class="label">First-time only</div>
+            <div class="val">Subsequent runs are no-ops if the cache is intact (<code>~/.platformio/packages/</code>).</div>
+          </div>
+        </div>
+
+        <h3 class="subhead">Group: 🔥 Deploy (b)</h3>
+
+        <div class="opt">
+          <div class="opt-hdr">
+            <span class="opt-num">4</span>
+            <span class="opt-title">Compile</span>
+            <span class="opt-cat">DAILY</span>
+          </div>
+          <div class="opt-grid">
+            <div class="label">What</div>
+            <div class="val">Compiles the firmware. No upload. Output goes to <code>.pio/build/esp32-c3-devkitm-1/</code>.</div>
+            <div class="label">Underlying</div>
+            <div class="val"><code>pio run</code></div>
+            <div class="label">Output</div>
+            <div class="val">Three binaries: <code>bootloader.bin</code> (offset <code>0x0</code>) · <code>partitions.bin</code> (<code>0x8000</code>) · <code>firmware.bin</code> (<code>0x10000</code>) + an <code>.elf</code> with debug symbols.</div>
+            <div class="label">Duration</div>
+            <div class="val">~60 s on a clean cache, ~5–10 s incremental.</div>
+            <div class="label">Failure modes</div>
+            <div class="val"><ul>
+              <li>"library X not found" → run option 16 (update libs).</li>
+              <li>Linker error "section overflow" → firmware too big for partition. Adjust <code>board_build.partitions</code>.</li>
+              <li>"redefinition of NUM_LEDS" → known macro collision. See <a href="audit.html">audit C5</a>.</li>
+            </ul></div>
+            <div class="label">See also</div>
+            <div class="val"><a href="start-here.html#pipeline">start-here § 7 (BUILD PIPELINE)</a></div>
+          </div>
+        </div>
+
+        <div class="opt">
+          <div class="opt-hdr">
+            <span class="opt-num">5</span>
+            <span class="opt-title">Clean</span>
+          </div>
+          <div class="opt-grid">
+            <div class="label">What</div>
+            <div class="val">Deletes the <code>.pio/build/</code> directory. Forces a from-scratch recompile next time.</div>
+            <div class="label">Underlying</div>
+            <div class="val"><code>pio run -t clean</code></div>
+            <div class="label">When to use</div>
+            <div class="val"><ul>
+              <li>After changing <code>build_flags</code> or <code>lib_deps</code> — incremental builds may not pick up the change.</li>
+              <li>When something feels haunted ("worked yesterday, broken today, no edits made").</li>
+              <li>Never on a critical path — adds 60 s to next build.</li>
+            </ul></div>
+          </div>
+        </div>
+
+        <div class="opt">
+          <div class="opt-hdr">
+            <span class="opt-num">6</span>
+            <span class="opt-title">Upload (flash)</span>
+            <span class="opt-cat">DAILY</span>
+          </div>
+          <div class="opt-grid">
+            <div class="label">What</div>
+            <div class="val">Uploads the already-compiled firmware to the chip. Must compile first (option 4 or option 10).</div>
+            <div class="label">Underlying</div>
+            <div class="val"><code>pio run -t upload --upload-port COM8</code> (Windows) — port detected automatically or via option 9.</div>
+            <div class="label">Step-by-step</div>
+            <div class="val"><ol style="padding-left:18px;margin:4px 0">
+              <li>esptool toggles DTR/RTS to put the chip in download mode.</li>
+              <li>Sends a sync ping at 115200 baud.</li>
+              <li>Negotiates higher baud (typically 921600).</li>
+              <li>Writes bootloader, partitions, firmware sequentially.</li>
+              <li>Hard-resets the chip → it boots the new code.</li>
+            </ol></div>
+            <div class="label">Failure modes</div>
+            <div class="val"><ul>
+              <li>"Failed to connect" → BOOT/RESET trick (<a href="start-here.html#bootreset">Mission 09</a>).</li>
+              <li>"Could not open COM8" → native USB CDC re-enumeration race on Windows (<a href="audit.html#bug-005">audit BUG-005</a>).</li>
+              <li>Permission denied on Linux → <code>sudo usermod -aG dialout $USER</code>.</li>
+            </ul></div>
+          </div>
+        </div>
+
+        <div class="opt">
+          <div class="opt-hdr">
+            <span class="opt-num">7</span>
+            <span class="opt-title">Erase flash</span>
+            <span class="opt-cat">DESTRUCTIVE</span>
+          </div>
+          <div class="opt-grid">
+            <div class="label">What</div>
+            <div class="val">Wipes ALL flash memory on the chip. Bootloader, partitions, firmware, NVS, OTA, all gone.</div>
+            <div class="label">Underlying</div>
+            <div class="val"><code>esptool --chip esp32c3 --port COM8 erase_flash</code></div>
+            <div class="label">When to use</div>
+            <div class="val"><ul>
+              <li>After flashing weird firmware that bricks the boot.</li>
+              <li>When NVS is corrupted (saved settings cause crashes).</li>
+              <li>Before transferring the chip to someone else.</li>
+            </ul></div>
+            <div class="label">Recovery</div>
+            <div class="val">Re-run option 6 to reflash. Erased flash + flash → fully working chip again.</div>
+          </div>
+        </div>
+
+        <div class="opt">
+          <div class="opt-hdr">
+            <span class="opt-num">8</span>
+            <span class="opt-title">Serial monitor</span>
+            <span class="opt-cat">DAILY</span>
+          </div>
+          <div class="opt-grid">
+            <div class="label">What</div>
+            <div class="val">Live serial output from the chip. Shows boot logs, <code>Serial.println()</code> messages, crash dumps.</div>
+            <div class="label">Underlying</div>
+            <div class="val"><code>pio device monitor -b 115200 --port COM8</code></div>
+            <div class="label">Quit</div>
+            <div class="val"><code>Ctrl+C</code> on Linux/macOS. <strong>MSYS2 swallows it</strong> — use <code>Ctrl+]</code> or close the terminal (<a href="audit.html#bug-002">audit BUG-002</a>).</div>
+            <div class="label">Web alternative</div>
+            <div class="val"><a href="monitor.html">monitor.html</a> — same baud rate, browser-based, supports send.</div>
+          </div>
+        </div>
+
+        <div class="opt">
+          <div class="opt-hdr">
+            <span class="opt-num">9</span>
+            <span class="opt-title">Select port — picker</span>
+          </div>
+          <div class="opt-grid">
+            <div class="label">What</div>
+            <div class="val">Lists detected serial devices (USB-to-UART chips and native USB-CDC like the C3) and asks which one to use for subsequent commands. Stores the choice in <code>$PORT</code>.</div>
+            <div class="label">Underlying</div>
+            <div class="val"><code>pio device list</code> + interactive prompt.</div>
+            <div class="label">When auto-detect fails</div>
+            <div class="val">Multiple chips plugged in · MSYS2 picking wrong one · the chip's COM port number changed after Windows enumeration. This menu fixes it.</div>
+            <div class="label">Override from CLI</div>
+            <div class="val"><code>PORT=COM7 ./launch.sh upload</code></div>
+          </div>
+        </div>
+
+        <div class="opt">
+          <div class="opt-hdr">
+            <span class="opt-num">10</span>
+            <span class="opt-title">Full flash — compile + upload + monitor</span>
+            <span class="opt-cat">⭐ ONE-SHOT</span>
+          </div>
+          <div class="opt-grid">
+            <div class="label">What</div>
+            <div class="val">The complete dev cycle in one command. Compiles, uploads, then drops you into the serial monitor to watch the boot.</div>
+            <div class="label">Underlying</div>
+            <div class="val"><code>act_compile && act_upload && act_monitor</code> — chained with <code>&amp;&amp;</code> so failure stops the chain.</div>
+            <div class="label">When to use</div>
+            <div class="val">Daily iteration. The mission you'll run 100 times.</div>
+            <div class="label">Hotkey</div>
+            <div class="val"><code>./launch.sh flash</code> — same thing, no menu.</div>
+          </div>
+        </div>
+
+        <h3 class="subhead">Group: 🌐 Cyberspace (w)</h3>
+
+        <div class="opt">
+          <div class="opt-hdr">
+            <span class="opt-num">11</span>
+            <span class="opt-title">Open in VS Code</span>
+          </div>
+          <div class="opt-grid">
+            <div class="label">What</div>
+            <div class="val">Opens the project folder in VS Code. If the PlatformIO IDE extension isn't installed, prompts to install it (~70 MB download).</div>
+            <div class="label">Underlying</div>
+            <div class="val"><code>code .</code> + optional <code>code --install-extension platformio.platformio-ide</code></div>
+            <div class="label">Prereq</div>
+            <div class="val"><code>code</code> command on PATH. Install via VS Code's command palette → "Install 'code' command in PATH".</div>
+          </div>
+        </div>
+
+        <div class="opt">
+          <div class="opt-hdr">
+            <span class="opt-num">12</span>
+            <span class="opt-title">PlatformIO Home — browser dashboard</span>
+          </div>
+          <div class="opt-grid">
+            <div class="label">What</div>
+            <div class="val">Launches PlatformIO's local web UI. Project browser, library manager, board explorer, IDE-like view in your browser.</div>
+            <div class="label">Underlying</div>
+            <div class="val"><code>pio home</code> → opens <code>http://localhost:8008/</code></div>
+            <div class="label">When to use</div>
+            <div class="val">When you want to browse PlatformIO's library registry visually, or compare boards.</div>
+          </div>
+        </div>
+
+        <div class="opt">
+          <div class="opt-hdr">
+            <span class="opt-num">13</span>
+            <span class="opt-title">Serve <code>02_web/</code> on localhost:8000</span>
+            <span class="opt-cat">WEB</span>
+          </div>
+          <div class="opt-grid">
+            <div class="label">What</div>
+            <div class="val">Starts a local HTTP server in <code>02_web/</code> and opens the browser. Lets you use <a href="flash.html">flash.html</a> + <a href="monitor.html">monitor.html</a> (Web Serial requires HTTPS or localhost).</div>
+            <div class="label">Underlying</div>
+            <div class="val"><code>cd 02_web &amp;&amp; python -m http.server 8000</code></div>
+            <div class="label">Use case</div>
+            <div class="val">Workshop with multiple students — your laptop serves the tools, students hit <code>http://&lt;your-ip&gt;:8000/</code> from their phones / tablets / chromebooks.</div>
+          </div>
+        </div>
+
+        <div class="opt">
+          <div class="opt-hdr">
+            <span class="opt-num">14</span>
+            <span class="opt-title">Package web flasher</span>
+          </div>
+          <div class="opt-grid">
+            <div class="label">What</div>
+            <div class="val">Compiles the firmware then copies the 3 binaries to <code>02_web/firmware/</code> so <a href="flash.html">flash.html</a> can install them via Web Serial.</div>
+            <div class="label">Underlying</div>
+            <div class="val"><code>pio run</code> + <code>cp .pio/build/esp32-c3-devkitm-1/{bootloader,partitions,firmware}.bin 02_web/firmware/</code></div>
+            <div class="label">Required for</div>
+            <div class="val">The web flasher to work. Without packaged binaries, <a href="flash.html">flash.html</a> shows nothing.</div>
+            <div class="label">When to run</div>
+            <div class="val">Every time you change firmware AND want web users to get the latest. Otherwise web users keep getting the previous build.</div>
+          </div>
+        </div>
+
+        <h3 class="subhead">Group: 📜 Misc</h3>
+
+        <div class="opt">
+          <div class="opt-hdr">
+            <span class="opt-num">15</span>
+            <span class="opt-title">Show recent logs</span>
+          </div>
+          <div class="opt-grid">
+            <div class="label">What</div>
+            <div class="val">Lists files in <code>03_logs/</code> (past command outputs). Each <code>./launch.sh</code> action with <code>with_timer</code> wrapping logs to a timestamped file.</div>
+            <div class="label">Use case</div>
+            <div class="val">Comparing successful builds against failing ones · grepping for error patterns across runs · auditing what was run when.</div>
+          </div>
+        </div>
+
+        <div class="opt">
+          <div class="opt-hdr">
+            <span class="opt-num">16</span>
+            <span class="opt-title">Update libraries + platform</span>
+          </div>
+          <div class="opt-grid">
+            <div class="label">What</div>
+            <div class="val">Pulls newer versions of every <code>lib_deps</code> entry and the platform itself, respecting your version pins. Optionally upgrades PlatformIO Core (with confirmation).</div>
+            <div class="label">Underlying</div>
+            <div class="val"><code>pio pkg update</code> + optional <code>pio upgrade</code></div>
+            <div class="label">⚠️ Caution</div>
+            <div class="val">Pinned versions like <code>fastled/FastLED @ ^3.7.0</code> only allow patch upgrades. Updating ESP-IDF was the cause of <a href="audit.html#bug-001">BUG-001</a> in the first place — pinning helps, but always test after updating.</div>
+          </div>
+        </div>
+
+        <h3 class="subhead">Group: 📡 Git ops (g)</h3>
+
+        <div class="opt">
+          <div class="opt-hdr">
+            <span class="opt-num">17</span>
+            <span class="opt-title">git status</span>
+          </div>
+          <div class="opt-grid">
+            <div class="label">What</div>
+            <div class="val">Shows uncommitted changes, untracked files, current branch, distance from origin.</div>
+            <div class="label">Underlying</div>
+            <div class="val"><code>git status</code></div>
+          </div>
+        </div>
+
+        <div class="opt">
+          <div class="opt-hdr">
+            <span class="opt-num">18</span>
+            <span class="opt-title">git log — last 20 commits</span>
+          </div>
+          <div class="opt-grid">
+            <div class="label">What</div>
+            <div class="val">Pretty one-liner log of recent commits.</div>
+            <div class="label">Underlying</div>
+            <div class="val"><code>git log --oneline --decorate -20</code></div>
+          </div>
+        </div>
+
+        <div class="opt">
+          <div class="opt-hdr">
+            <span class="opt-num">19</span>
+            <span class="opt-title">git diff</span>
+          </div>
+          <div class="opt-grid">
+            <div class="label">What</div>
+            <div class="val">Shows working-tree changes vs HEAD. Pipes through <code>less</code> if available.</div>
+            <div class="label">Underlying</div>
+            <div class="val"><code>git diff HEAD</code></div>
+          </div>
+        </div>
+
+        <div class="alert">
+          <strong>// CLI shortcuts</strong>
+          Every menu option also has a CLI form: <code>./launch.sh compile</code> · <code>./launch.sh upload</code> · <code>./launch.sh monitor</code> · <code>./launch.sh flash</code> · <code>./launch.sh serve</code> · <code>./launch.sh package-web</code>. Skip the menu when you know what you want.
+        </div>
+
+      </div>
+    </details>
+
+    <!-- ══════════════════════════════════════════════════
+         § 2 — platformio.ini DECODED
+         ══════════════════════════════════════════════════ -->
+    <details class="collapsible" id="ini">
+      <summary>⚙️ 2 — <code>platformio.ini</code> decoded — every directive</summary>
+      <div class="card">
+        <p class="lead">Annotated walk-through of every line in this project's <code>platformio.ini</code>, with explanation and gotchas.</p>
+
+        <h3 class="subhead">[platformio] section</h3>
+
+        <table class="dt">
+          <tr><th>Directive</th><th>Value</th><th>What it does</th></tr>
+          <tr>
+            <td><code>src_dir</code></td>
+            <td><code>01_src</code></td>
+            <td>Where source files live. Default is <code>src/</code>; we override to <code>01_src/</code> so Arduino IDE folder-name rule still works.</td>
+          </tr>
+        </table>
+
+        <h3 class="subhead">[env:esp32-c3-devkitm-1] section</h3>
+
+        <table class="dt">
+          <tr><th>Directive</th><th>Value</th><th>What it does</th></tr>
+          <tr>
+            <td><code>platform</code></td>
+            <td><code>espressif32 @ 6.7.0</code></td>
+            <td><strong>Pinned</strong> — version 6.7.0 ships ESP-IDF 5.1 with the rewritten RMT driver. Earlier versions had the ISR re-entry race that crashed FastLED on C3 (<a href="audit.html#bug-001">BUG-001</a>). The <code>@ X.Y.Z</code> syntax means EXACT version. Without the pin, you'd get whatever's latest at install time → silent regressions.</td>
+          </tr>
+          <tr>
+            <td><code>board</code></td>
+            <td><code>esp32-c3-devkitm-1</code></td>
+            <td>Selects the board profile from PlatformIO's database. Determines: pin map, flash size (4 MB), partition layout, upload speed, default baud. The <code>seeed_xiao_esp32c3</code> alternative (commented out) has a different pin map.</td>
+          </tr>
+          <tr>
+            <td><code>framework</code></td>
+            <td><code>arduino</code></td>
+            <td>Activates the Arduino-ESP32 API: <code>setup()</code>/<code>loop()</code>, <code>pinMode()</code>, <code>Serial.println()</code>, etc. Built on top of ESP-IDF — you can mix and match. The <code>espidf</code> alternative (commented) gives raw IDF with no Arduino layer.</td>
+          </tr>
+          <tr>
+            <td><code>monitor_speed</code></td>
+            <td><code>115200</code></td>
+            <td>Baud rate the serial monitor uses. Must match what your firmware calls in <code>Serial.begin()</code>. Wrong baud → garbage characters.</td>
+          </tr>
+          <tr>
+            <td colspan="3" style="padding-top:14px;font-weight:700;color:var(--accent2)">build_flags</td>
+          </tr>
+          <tr>
+            <td><code>FASTLED_RMT_MAX_CHANNELS</code></td>
+            <td><code>1</code></td>
+            <td>FastLED defaults to 8 RMT channels (ESP32 classic has 8). The C3 has only <strong>2</strong>. Capping to 1 prevents FastLED from trying to claim non-existent channels. <strong>Safety</strong>: belt-and-suspenders even with the IDF 5.1 fix.</td>
+          </tr>
+          <tr>
+            <td><code>FASTLED_RMT_BUILTIN_DRIVER</code></td>
+            <td><code>1</code></td>
+            <td>Tells FastLED to use IDF's tested RMT driver instead of FastLED's bundled custom one. The custom driver was the cracked egg in <a href="audit.html#bug-001">BUG-001</a>; this flag opts out of it.</td>
+          </tr>
+          <tr>
+            <td colspan="3" style="padding-top:14px;font-weight:700;color:var(--accent2)">lib_deps</td>
+          </tr>
+          <tr>
+            <td><code>RemoteXY</code></td>
+            <td>(unconstrained)</td>
+            <td>Phone-app library for Bluetooth control. NOT pinned because pinning didn't fix <a href="audit.html#bug-004">BUG-004</a> (PRO check is enforced server-side, not in the lib).</td>
+          </tr>
+          <tr>
+            <td><code>fastled/FastLED</code></td>
+            <td><code>@ ^3.7.0</code></td>
+            <td>NeoPixel driver. <code>^3.7.0</code> means "3.x but ≥ 3.7" — patch updates allowed, major upgrades blocked.</td>
+          </tr>
+          <tr>
+            <td><code>madhephaestus/ESP32Servo</code></td>
+            <td>(unconstrained)</td>
+            <td>Servo PWM driver. Author prefix prevents PIO from grabbing a different lib of the same name.</td>
+          </tr>
+          <tr>
+            <td><code>adafruit/Adafruit GFX Library</code></td>
+            <td>(unconstrained)</td>
+            <td>Generic 2D drawing primitives — the OLED driver depends on it.</td>
+          </tr>
+          <tr>
+            <td><code>adafruit/Adafruit SSD1306</code></td>
+            <td>(unconstrained)</td>
+            <td>Concrete OLED driver for the SSD1306 chip on our display.</td>
+          </tr>
+        </table>
+
+        <h3 class="subhead">Common directives NOT in this project (but useful to know)</h3>
+
+        <table class="dt">
+          <tr><th>Directive</th><th>What it would do</th></tr>
+          <tr><td><code>upload_speed</code></td><td>Default for the C3 is auto-negotiated at 921600. Override only if you have flaky USB cables.</td></tr>
+          <tr><td><code>upload_protocol</code></td><td><code>esp-builtin</code> uses USB-JTAG instead of the CDC reset dance. Could fix <a href="audit.html#bug-005">BUG-005</a>.</td></tr>
+          <tr><td><code>monitor_filters</code></td><td><code>esp32_exception_decoder</code> auto-runs addr2line on crashes. Highly recommended for debugging.</td></tr>
+          <tr><td><code>board_build.partitions</code></td><td>Custom partition table CSV. Default is a balanced 1.2 MB app. <code>huge_app.csv</code> gives 3 MB if you don't need OTA.</td></tr>
+          <tr><td><code>board_build.usb_cdc</code></td><td>Toggles USB CDC console (Serial-over-USB). Already enabled by default for C3 boards with native USB.</td></tr>
+          <tr><td><code>extra_scripts</code></td><td>Run Python scripts at compile time — e.g. inject git hash into firmware version string.</td></tr>
+        </table>
+
+        <div class="alert">
+          <strong>// PIN, OR NOT TO PIN?</strong>
+          Pin <em>platforms</em> hard (<code>@ 6.7.0</code>): platform changes mean toolchain + IDF changes — high blast radius.<br>
+          Pin <em>libraries</em> with caret (<code>@ ^X.Y.Z</code>): patch fixes welcome, breaking changes blocked.<br>
+          Leave <em>libraries</em> unpinned only when the lib is your own / very stable / when pinning made things worse (RemoteXY case).
+        </div>
+      </div>
+    </details>
+
+    <!-- ══════════════════════════════════════════════════
+         § 3 — ESP32-C3 CONCEPTS
+         ══════════════════════════════════════════════════ -->
+    <details class="collapsible" id="esp32">
+      <summary>💡 3 — ESP32-C3 hardware concepts</summary>
+      <div class="card">
+
+        <h3 class="subhead">RMT — Remote Control Transceiver</h3>
+
+        <p class="lead">Hardware peripheral for generating precise pulse trains without CPU involvement. Originally for IR remotes, but FastLED uses it to drive WS2812 NeoPixels at 800 kHz with sub-150-ns timing — impossible to bit-bang reliably.</p>
+
+        <table class="dt">
+          <tr><th>Chip</th><th>RMT channels</th><th>Notes</th></tr>
+          <tr><td>ESP32 classic</td><td>8</td><td>Lots of headroom, FastLED has no issues.</td></tr>
+          <tr><td>ESP32-S2 / S3</td><td>4</td><td>Comfortable.</td></tr>
+          <tr><td><strong>ESP32-C3 (this board)</strong></td><td><strong>2</strong></td><td><strong>Tight</strong>. Any IR receiver or second LED strip directly competes.</td></tr>
+          <tr><td>ESP32-C6</td><td>2</td><td>Same as C3.</td></tr>
+        </table>
+
+        <p class="lead" style="margin-top:14px">The full forensic — including the IDF 4.x ISR re-entry bug that triggered <a href="audit.html#bug-001">BUG-001</a> — is in the audit page.</p>
+
+        <h3 class="subhead">Partition table</h3>
+
+        <p class="lead">Flash memory is divided into named regions. The bootloader reads <code>partitions.bin</code> at offset <code>0x8000</code> to know where everything else lives.</p>
+
+<pre><code><span style="color:var(--text-muted)"># Default Arduino-ESP32 layout (4 MB flash):</span>
+nvs       data 0x9000   0x5000     <span style="color:var(--text-muted"># 20 KB — saved settings</span>
+otadata   data 0xe000   0x2000     <span style="color:var(--text-muted"># 8 KB — OTA pointer</span>
+app0      app  0x10000  0x140000   <span style="color:var(--text-muted"># 1.25 MB — your firmware</span>
+app1      app  0x150000 0x140000   <span style="color:var(--text-muted"># 1.25 MB — OTA backup</span>
+spiffs    data 0x290000 0x170000   <span style="color:var(--text-muted"># 1.4 MB — file system</span></code></pre>
+
+        <p class="lead">If you don't need OTA, switch to <code>huge_app.csv</code> (3 MB single app slot). For audio assets, switch to <code>large_spiffs.csv</code>.</p>
+
+        <h3 class="subhead">USB JTAG/Serial vs UART</h3>
+
+        <p class="lead">The ESP32-C3 Super Mini has <strong>native USB</strong> — the chip itself implements USB-CDC over its built-in USB JTAG/Serial peripheral. There is NO external UART chip (no CP210x, no CH340).</p>
+
+        <table class="dt">
+          <tr><th>Aspect</th><th>External UART (e.g. CP210x)</th><th>Native USB CDC (this board)</th></tr>
+          <tr><td>Speed</td><td>Up to 921 600 baud</td><td>~12 Mbps theoretical</td></tr>
+          <tr><td>Drivers (Windows)</td><td>Manual install required</td><td>Built into Win 10/11</td></tr>
+          <tr><td>Reset behavior</td><td>External chip toggles RTS/DTR</td><td>Chip resets itself · COM port disappears + re-enumerates</td></tr>
+          <tr><td>Failure mode</td><td>Driver mismatch</td><td>Re-enumeration race (<a href="audit.html#bug-005">BUG-005</a>)</td></tr>
+        </table>
+
+        <h3 class="subhead">GPIO strapping pins — gotchas</h3>
+
+        <p class="lead">Some GPIOs have special meaning at boot. Using them for sensors / LEDs without thinking can prevent the chip from booting.</p>
+
+        <table class="dt">
+          <tr><th>GPIO</th><th>Boot role</th><th>Audit ref</th></tr>
+          <tr><td><code>2</code></td><td>Strapping — VDD_SPI voltage select. Pulled at boot.</td><td>—</td></tr>
+          <tr><td><code>8</code></td><td>Strapping + onboard LED on the Super Mini (active LOW, blue). Conflicts with I²C SDA without a pull-up.</td><td><a href="audit.html">H1</a></td></tr>
+          <tr><td><code>9</code></td><td>Strapping + BOOT button. Pulled LOW at power-on enters ROM bootloader.</td><td><a href="audit.html">H2</a></td></tr>
+        </table>
+
+        <h3 class="subhead">ESP32-C3 SuperMini — board-specific quirks</h3>
+
+        <p class="lead">
+          The exact dev-board this project uses. Reference page:
+          <a href="https://randomnerdtutorials.com/getting-started-esp32-c3-super-mini/" target="_blank" rel="noopener">randomnerdtutorials.com / Getting Started with ESP32-C3 Super Mini</a>.
+          Things that bite you on this specific board:
+        </p>
+
+        <table class="dt">
+          <tr><th>Quirk</th><th>What &amp; why</th><th>Mitigation</th></tr>
+          <tr>
+            <td><strong>Onboard LED is active LOW</strong></td>
+            <td>The blue LED on GPIO 8 is wired so that <code>digitalWrite(8, LOW)</code> turns it on, <code>HIGH</code> turns it off. Standard <code>blink</code> sketch looks inverted.</td>
+            <td>Invert your logic, or move status indicator to another GPIO.</td>
+          </tr>
+          <tr>
+            <td><strong>Antenna defect (some batches)</strong></td>
+            <td>Wi-Fi range is poor on certain production runs. Cause: the cap labelled <code>C3</code> sits ~1.5 mm from the antenna trace instead of the design spec ~3.3 mm — detunes the matching network.</td>
+            <td>Inspect under magnification before assembly. If it's a defective batch, the only real fix is switching boards.</td>
+          </tr>
+          <tr>
+            <td><strong>Breadboard kills Wi-Fi</strong></td>
+            <td>Metal contacts under the antenna detune it. Range drops to a few metres.</td>
+            <td>Raise the board 15 + mm above the breadboard with stacking headers, or mount it on the edge so the antenna overhangs.</td>
+          </tr>
+          <tr>
+            <td><strong>Power LED drains the battery</strong></td>
+            <td>The red "power on" LED steals ~500 µA in deep sleep — about 10× the chip's own minimum.</td>
+            <td>Desolder the LED (or its current-limit resistor) for battery-powered builds. Brings sleep current to the datasheet's ~43 µA.</td>
+          </tr>
+          <tr>
+            <td><strong>USB CDC On Boot must be enabled</strong></td>
+            <td>The board has no external UART chip — only the chip's native USB-Serial/JTAG. Without the right Arduino IDE setting, <code>Serial.print()</code> goes nowhere.</td>
+            <td>Arduino IDE → <em>Tools → USB CDC On Boot → Enabled</em>. PlatformIO sets this automatically for the <code>esp32-c3-devkitm-1</code> board.</td>
+          </tr>
+          <tr>
+            <td><strong>Deep-sleep upload trap</strong></td>
+            <td>If your firmware enters deep sleep within seconds of boot, esptool can't sync — the chip is asleep before the auto-reset finishes.</td>
+            <td>BOOT/RESET trick (hold BOOT, tap RST, release BOOT) before retrying upload. Or build a delay-on-boot guard into firmware before the sleep call.</td>
+          </tr>
+          <tr>
+            <td><strong>UART defaults: GPIO 20 (RX) / 21 (TX)</strong></td>
+            <td>If you use <code>Serial1</code> or expose a hardware UART, these are the default pins on the Arduino-ESP32 core.</td>
+            <td>Or remap with <code>Serial1.begin(baud, mode, RX, TX)</code> to any free GPIO.</td>
+          </tr>
+        </table>
+
+        <div class="alert">
+          <strong>// Specs at a glance</strong>
+          RISC-V single-core @ 160 MHz · 4 MB flash · 400 KB SRAM · 384 KB ROM · 11 broken-out GPIOs · 2× 12-bit ADCs (6 channels) · 6× PWM channels · WiFi 2.4 GHz · BLE 5 · USB-C native · 3.3 V regulator (~500 mA) · accepts 3.3 V – 6 V on VIN.
+        </div>
+      </div>
+    </details>
+
+    <!-- ══════════════════════════════════════════════════
+         § 4 — CRASH FORENSICS
+         ══════════════════════════════════════════════════ -->
+    <details class="collapsible" id="crash">
+      <summary>🐛 4 — Crash forensics — addr2line in depth</summary>
+      <div class="card">
+
+        <p class="lead">When the ESP32-C3 panics, you get a "Guru Meditation" register dump in the serial monitor. Here's how to turn the hex into source-line info.</p>
+
+        <h3 class="subhead">The dump structure</h3>
+
+<pre><code>Guru Meditation Error: Core 0 panic'ed (Instruction access fault)
+Core 0 register dump:
+MEPC    : 0x3fc9027c   <span style="color:var(--text-muted)"># where it died</span>
+RA      : 0x4038c53c   <span style="color:var(--text-muted)"># return address (where it would have gone)</span>
+SP      : 0x3fc8f8d0   <span style="color:var(--text-muted)"># stack pointer at crash</span>
+MCAUSE  : 0x00000001   <span style="color:var(--text-muted)"># why it died</span>
+MTVAL   : 0x3fc9027c   <span style="color:var(--text-muted)"># offending address (load/store cause)</span></code></pre>
+
+        <h3 class="subhead">MCAUSE codes</h3>
+
+        <table class="dt">
+          <tr><th>MCAUSE</th><th>Name</th><th>Means</th></tr>
+          <tr><td><code>0x01</code></td><td>Instruction access fault</td><td>Tried to fetch code from non-executable memory. Classic stack-overflow signature (RA pointed into RAM).</td></tr>
+          <tr><td><code>0x02</code></td><td>Illegal instruction</td><td>CPU saw bytes that don't decode as RISC-V. Usually corruption — bad function pointer.</td></tr>
+          <tr><td><code>0x05</code></td><td>Load access fault</td><td>Tried to read from invalid memory. Look at MTVAL.</td></tr>
+          <tr><td><code>0x07</code></td><td>Store access fault</td><td>Tried to write to invalid memory. Buffer overrun on a global, or null-pointer write.</td></tr>
+          <tr><td><code>0x0B</code></td><td>Environment call</td><td>Software <code>ecall</code> — usually intentional in ISR.</td></tr>
+        </table>
+
+        <h3 class="subhead">Address ranges — where it points</h3>
+
+        <table class="dt">
+          <tr><th>Range</th><th>Meaning</th><th>Action</th></tr>
+          <tr><td><code>0x4038xxxx</code> – <code>0x403F</code></td><td>IROM — flash code</td><td>Decode with addr2line.</td></tr>
+          <tr><td><code>0x4080xxxx</code></td><td>IRAM — code in RAM (interrupt handlers)</td><td>Decode with addr2line.</td></tr>
+          <tr><td><code>0x3FC0xxxx</code> – <code>0x3FCF</code></td><td>DRAM — data + stack</td><td>If MEPC points here = stack overflow / corrupted return address.</td></tr>
+          <tr><td><code>0x3C0xxxxx</code></td><td>DROM — read-only data in flash</td><td>If MEPC points here = jumped into a string constant. Bad function pointer.</td></tr>
+        </table>
+
+        <h3 class="subhead">Running addr2line</h3>
+
+<pre><code><span style="color:var(--text-muted)"># Linux / macOS / Git Bash:</span>
+~/.platformio/packages/toolchain-riscv32-esp/bin/riscv32-esp-elf-addr2line \
+    -fipe .pio/build/esp32-c3-devkitm-1/firmware.elf \
+    0x4038c53c 0x403801ee 0x4038907e
+
+<span style="color:var(--text-muted)"># Output:</span>
+ESP32RMTController::interruptHandler at .../FastLED/.../idf4_rmt_impl.cpp:827
+vPortEnterCritical at .../freertos/port/riscv/port.c:246
+xPortEnterCriticalTimeout at .../freertos/port/riscv/port.c:198</code></pre>
+
+        <table class="dt">
+          <tr><th>Flag</th><th>What</th></tr>
+          <tr><td><code>-f</code></td><td>show function name</td></tr>
+          <tr><td><code>-i</code></td><td>show inlined-function chain</td></tr>
+          <tr><td><code>-p</code></td><td>pretty-print (one line per address)</td></tr>
+          <tr><td><code>-e &lt;path&gt;</code></td><td>ELF file path</td></tr>
+          <tr><td><code>-C</code></td><td>demangle C++ symbols (try if functions look mangled)</td></tr>
+        </table>
+
+        <h3 class="subhead">Common crash signatures</h3>
+
+        <div class="alert danger">
+          <strong>// STACK OVERFLOW</strong>
+          MEPC in DRAM (<code>0x3FCxxxxx</code>) + repeating stack frames at fixed offsets + decrementing counter. Exact pattern of <a href="audit.html#bug-001">BUG-001</a>. Fix: reduce recursion depth, increase stack size, or fix the runaway loop.
+        </div>
+
+        <div class="alert warn">
+          <strong>// NULL-POINTER WRITE</strong>
+          MCAUSE 0x07 + MTVAL 0x00000000 (or near). Usually a not-yet-initialized object's method called too early. Add a null check or move init earlier.
+        </div>
+
+        <div class="alert warn">
+          <strong>// HEAP CORRUPTION</strong>
+          MCAUSE 0x07 + MTVAL pointing into a known heap region (<code>0x3FC8xxxx</code>) but the object should still exist. Use-after-free or buffer overrun. Try <code>CONFIG_HEAP_POISONING_COMPREHENSIVE</code> in <code>sdkconfig</code>.
+        </div>
+
+        <div class="alert">
+          <strong>// AUTO-DECODE</strong>
+          Add <code>monitor_filters = esp32_exception_decoder</code> to <code>platformio.ini</code> and the serial monitor will auto-run addr2line on every crash. Saves the manual step.
+        </div>
+      </div>
+    </details>
+
+    <!-- ══════════════════════════════════════════════════
+         § 5 — WEB SERIAL API
+         ══════════════════════════════════════════════════ -->
+    <details class="collapsible" id="webserial">
+      <summary>📡 5 — Web Serial API — what powers the browser tools</summary>
+      <div class="card">
+
+        <p class="lead">The Web Serial API (W3C) lets a webpage talk directly to USB-serial devices — no plugins, no native install. <a href="flash.html">flash.html</a> and <a href="monitor.html">monitor.html</a> use it.</p>
+
+        <h3 class="subhead">Browser support</h3>
+
+        <table class="dt">
+          <tr><th>Browser</th><th>Support</th></tr>
+          <tr><td>Chrome 89+</td><td>✅ Yes</td></tr>
+          <tr><td>Edge 89+</td><td>✅ Yes</td></tr>
+          <tr><td>Opera 76+</td><td>✅ Yes</td></tr>
+          <tr><td>Firefox</td><td>❌ No (philosophical objection — Mozilla considers Web Serial too dangerous)</td></tr>
+          <tr><td>Safari</td><td>❌ No</td></tr>
+        </table>
+
+        <h3 class="subhead">Security model</h3>
+
+        <ul class="simple">
+          <li><strong>HTTPS or localhost only.</strong> File:// URLs and plain HTTP rejected.</li>
+          <li><strong>User gesture required.</strong> The port-picker dialog only opens after a real user click.</li>
+          <li><strong>Per-origin permission.</strong> Once granted, the origin remembers the device for next time.</li>
+          <li><strong>One owner at a time.</strong> Only one app can hold a serial port. Close PlatformIO monitor before connecting from the browser.</li>
+        </ul>
+
+        <h3 class="subhead">Minimal example</h3>
+
+<pre><code>// 1 — request a port (must be in a click handler)
+const port = await navigator.serial.requestPort();
+await port.open({ baudRate: 115200 });
+
+// 2 — read a stream of bytes
+const decoder = new TextDecoderStream();
+port.readable.pipeTo(decoder.writable);
+const reader = decoder.readable.getReader();
+while (true) {
+  const { value, done } = await reader.read();
+  if (done) break;
+  console.log(value);   // chunk of UTF-8 text
+}
+
+// 3 — write
+const writer = port.writable.getWriter();
+await writer.write(new TextEncoder().encode("hello\n"));
+writer.releaseLock();
+
+// 4 — close
+await port.close();</code></pre>
+
+        <div class="alert">
+          <strong>// SEE ALSO</strong>
+          Full Web Serial spec: <a href="https://wicg.github.io/serial/" target="_blank" rel="noopener">wicg.github.io/serial</a> ·
+          esp-web-tools (used by <a href="flash.html">flash.html</a>): <a href="https://github.com/esphome/esp-web-tools" target="_blank" rel="noopener">github.com/esphome/esp-web-tools</a>
+        </div>
+      </div>
+    </details>
+
+    <p class="foot-note">
+      Got a topic to add? Open an issue:
+      <a href="https://github.com/abourdim/esp32c3_super_mini_robot/issues" target="_blank" rel="noopener">github.com/abourdim/esp32c3_super_mini_robot/issues</a>
+      · Other guides: <a href="user-guide.html">user</a> · <a href="build-guide.html">build</a> · <a href="instructor.html">instructor</a> · <a href="start-here.html">start-here</a>
+    </p>
+
+  </div><!-- .rows-container -->
+</div><!-- .app -->
+
+<script src="assets/wdiy-script.js"></script>
+<script src="assets/wdiy-shell.js"></script>
+</body>
+</html>

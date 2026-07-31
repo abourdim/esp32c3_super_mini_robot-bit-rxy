@@ -1,0 +1,548 @@
+<!doctype html>
+<html lang="en" dir="ltr" data-theme="bot-pop">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>User Guide — ESP32-C3 Robot</title>
+<link rel="stylesheet" href="assets/wdiy-template.css">
+<style>
+.app { max-width: 880px; }
+
+code {
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  color: var(--accent); padding: 1px 6px; border-radius: 4px;
+  font-size: .82em; font-family: ui-monospace, Menlo, Consolas, monospace;
+}
+.light-theme code { color: var(--text); }
+
+.intro {
+  font-size: 1em; color: var(--text); line-height: 1.6;
+  margin: 0 0 14px; padding: 0 4px;
+}
+
+/* ── Big tile grid for sections inside cards ── */
+.ug-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 12px;
+  margin: 12px 0;
+}
+.ug-tile {
+  background: rgba(0,0,0,.20);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px 14px;
+  transition: all .15s;
+}
+.ug-tile:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--accent) 22%, transparent);
+}
+.ug-tile .icon {
+  font-size: 28px; display: block; margin-bottom: 8px;
+  filter: drop-shadow(0 2px 4px color-mix(in srgb, var(--accent) 30%, transparent));
+}
+.ug-tile h3 {
+  font-family: var(--font-h);
+  font-size: .95em; color: var(--accent);
+  letter-spacing: .03em; margin: 0 0 6px;
+  text-transform: uppercase;
+}
+.ug-tile p { font-size: .85em; color: var(--text-muted); line-height: 1.55; margin: 0; }
+
+.light-theme .ug-tile { background: rgba(0,0,0,.04); }
+
+/* ── Color-coded LED key ── */
+.led-key { display: grid; grid-template-columns: 80px 1fr; gap: 10px; margin: 12px 0; align-items: center; }
+.led-swatch {
+  width: 60px; height: 36px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: .78em; color: #fff;
+  text-shadow: 0 1px 2px rgba(0,0,0,.3);
+  box-shadow: 0 0 18px currentColor;
+}
+.led-swatch.green   { background: #22c55e; color: #fff; }
+.led-swatch.amber   { background: #f59e0b; color: #1a1a1a; text-shadow: none; }
+.led-swatch.red     { background: #ef4444; color: #fff; }
+.led-swatch.blue    { background: #3b82f6; color: #fff; }
+.led-swatch.purple  { background: #a855f7; color: #fff; }
+.led-swatch.rainbow { background: linear-gradient(90deg,#ef4444,#f59e0b,#22c55e,#3b82f6,#a855f7); color: #fff; }
+.led-swatch.off     { background: #1a1a1a; color: #888; box-shadow: inset 0 0 8px #000; }
+.led-desc { font-size: .9em; color: var(--text); }
+.led-desc strong { color: var(--accent); }
+
+/* ── Sound row ── */
+.sound { display: grid; grid-template-columns: 110px 1fr; gap: 10px; margin: 10px 0; align-items: center; padding: 10px; border-radius: 10px; background: rgba(0,0,0,.16); }
+.light-theme .sound { background: rgba(0,0,0,.04); }
+.sound-icon { font-size: 26px; text-align: center; }
+.sound-name {
+  font-family: var(--font-h); font-size: .82em;
+  letter-spacing: .04em; color: var(--accent); text-transform: uppercase;
+  margin-bottom: 2px;
+}
+.sound-desc { font-size: .85em; color: var(--text); line-height: 1.4; }
+
+/* ── Step list ── */
+.steps { counter-reset: step; padding: 0; margin: 12px 0; list-style: none; }
+.steps li {
+  counter-increment: step;
+  position: relative;
+  padding: 10px 12px 10px 50px;
+  margin-bottom: 8px;
+  background: rgba(0,0,0,.18);
+  border-radius: 10px;
+  font-size: .9em;
+  line-height: 1.55;
+}
+.steps li::before {
+  content: counter(step);
+  position: absolute; left: 12px; top: 12px;
+  width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(135deg, var(--accent), var(--band2));
+  color: var(--bg);
+  border-radius: 50%; font-weight: 800; font-size: .8em;
+}
+.light-theme .steps li { background: rgba(0,0,0,.04); }
+
+/* ── Alert boxes ── */
+.alert {
+  border-left: 3px solid var(--accent);
+  padding: 12px 16px;
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  border-radius: 0 8px 8px 0;
+  margin: 12px 0;
+  font-size: .88em; line-height: 1.55;
+}
+.alert.warn   { border-left-color: #f59e0b; background: rgba(245,158,11,.10); }
+.alert.danger { border-left-color: #ef4444; background: rgba(239,68,68,.10); }
+.alert.win    { border-left-color: #22c55e; background: rgba(34,197,94,.10); }
+.alert strong { display: block; margin-bottom: 4px; font-size: .82em; letter-spacing: .04em; color: var(--accent); }
+.alert.warn   strong { color: #f59e0b; }
+.alert.danger strong { color: #ef4444; }
+.alert.win    strong { color: #22c55e; }
+
+/* ── Pairing app screenshot mockup ── */
+.phone-mock {
+  width: 200px; height: 360px;
+  border: 6px solid var(--text); border-radius: 30px;
+  background: var(--panel);
+  margin: 12px auto;
+  padding: 22px 12px;
+  display: flex; flex-direction: column; gap: 10px;
+  position: relative; box-shadow: 0 12px 30px rgba(0,0,0,.25);
+}
+.phone-mock::before {
+  content: '';
+  position: absolute; top: 6px; left: 50%; transform: translateX(-50%);
+  width: 50px; height: 6px; border-radius: 4px; background: var(--text);
+}
+.phone-mock .screen-title { font-size: .8em; text-align: center; color: var(--accent); font-weight: 700; }
+.phone-mock .joystick {
+  width: 90px; height: 90px; border-radius: 50%;
+  background: radial-gradient(circle at 50% 40%, var(--accent), var(--band2));
+  margin: 6px auto;
+  position: relative;
+}
+.phone-mock .joystick::after {
+  content: ''; position: absolute; top: 35%; left: 35%;
+  width: 30%; height: 30%; border-radius: 50%; background: var(--bg);
+}
+.phone-mock .pad-row { display: flex; gap: 6px; justify-content: center; }
+.phone-mock .pad-row > div {
+  flex: 1; height: 30px; border-radius: 6px;
+  background: rgba(0,0,0,.2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: .7em; color: var(--text-muted);
+}
+
+.foot-note {
+  font-size: .82em; color: var(--text-muted);
+  text-align: center; padding: 14px 4px 4px; line-height: 1.55;
+}
+
+ul.simple { padding-left: 22px; margin: 8px 0; }
+ul.simple li { font-size: .88em; color: var(--text); line-height: 1.6; margin-bottom: 5px; }
+
+p.lead { font-size: .92em; color: var(--text); line-height: 1.6; margin: 0 0 10px; }
+
+details.collapsible > summary { font-size: .95rem; }
+</style>
+</head>
+
+<body
+  data-app-title="User Guide"
+  data-app-subtitle="🎮 power · 📱 pair · 🚀 drive"
+  data-help-page="user-guide"
+  data-default-theme="bot-pop"
+  data-status-text="Robot ready"
+  data-status-online="true">
+
+<div class="app">
+  <div class="rows-container">
+
+    <p class="intro">
+      Hi! 👋 You've got a Robot-01 — an ESP32-C3 brain on wheels with lights, sounds, and a phone-app remote control.
+      This guide walks you through everything from the first power-on to driving like a pro.
+      No coding needed. Tap any section below to expand it.
+    </p>
+
+    <!-- ═══ MISSION 1 — HI, I'M ROBOT-01 ═══ -->
+    <details class="collapsible" id="hi" open>
+      <summary>🤖 1 — Hi, I'm Robot-01 — what can I do?</summary>
+      <div class="card">
+        <p class="lead">Your robot is a small wheeled buddy with these built-in superpowers:</p>
+        <div class="ug-grid">
+          <div class="ug-tile">
+            <span class="icon">🦾</span>
+            <h3>Move</h3>
+            <p>Two motors → drive forward, back, turn left, turn right. Top speed: ~30 cm/s.</p>
+          </div>
+          <div class="ug-tile">
+            <span class="icon">💡</span>
+            <h3>Glow</h3>
+            <p>4 NeoPixel LEDs → show battery, mood, errors, and patterns you trigger from the app.</p>
+          </div>
+          <div class="ug-tile">
+            <span class="icon">🔊</span>
+            <h3>Beep</h3>
+            <p>Buzzer → boot tune, low-battery warning, obstacle alert, button feedback.</p>
+          </div>
+          <div class="ug-tile">
+            <span class="icon">📡</span>
+            <h3>See</h3>
+            <p>Ultrasonic sensor → measures distance to walls and objects. Avoids crashes.</p>
+          </div>
+          <div class="ug-tile">
+            <span class="icon">📺</span>
+            <h3>Speak</h3>
+            <p>Tiny OLED display → shows status, battery %, and live sensor readings.</p>
+          </div>
+          <div class="ug-tile">
+            <span class="icon">📱</span>
+            <h3>Listen</h3>
+            <p>Bluetooth → talks to your phone over a free RemoteXY app. No WiFi needed.</p>
+          </div>
+        </div>
+      </div>
+    </details>
+
+    <!-- ═══ MISSION 2 — POWER ═══ -->
+    <details class="collapsible" id="power">
+      <summary>🔌 2 — Power me on</summary>
+      <div class="card">
+        <p class="lead">Two ways to power Robot-01: USB cable (charges the battery) or battery alone (cordless drive).</p>
+
+        <h4 style="color:var(--accent);font-family:var(--font-h);text-transform:uppercase;letter-spacing:.03em;font-size:.9em;margin:14px 0 6px">Option A · Plug in USB-C</h4>
+        <ul class="simple">
+          <li>Plug a USB-C cable into the side of the robot.</li>
+          <li>Plug the other end into any USB-A or USB-C charger / laptop / power bank.</li>
+          <li>The status LED turns 🟢 <strong>green</strong> when charging is going well.</li>
+          <li>Wait until the LED turns 🟢 <strong>solid green and stops blinking</strong> — that's full battery (about 90 min from empty).</li>
+        </ul>
+
+        <h4 style="color:var(--accent);font-family:var(--font-h);text-transform:uppercase;letter-spacing:.03em;font-size:.9em;margin:14px 0 6px">Option B · Switch to battery</h4>
+        <ul class="simple">
+          <li>Unplug the USB cable.</li>
+          <li>Flip the small power switch on the bottom of the robot to <strong>ON</strong>.</li>
+          <li>You'll hear a short <em>boop-beep</em> and the LEDs will do a rainbow sweep — that's the boot animation.</li>
+          <li>The OLED shows <code>READY</code>. The robot is now waiting for your phone to connect.</li>
+        </ul>
+
+        <div class="alert">
+          <strong>// FIRST CHARGE</strong>
+          A brand-new robot ships with about 30% battery. Plug it in for at least 30 minutes before the first ride.
+        </div>
+        <div class="alert warn">
+          <strong>// BATTERY LIFE</strong>
+          A full charge gets you ~45 minutes of active driving. Idle time (sitting and listening for the phone) is much longer — about 4 hours.
+        </div>
+      </div>
+    </details>
+
+    <!-- ═══ MISSION 3 — PAIR PHONE ═══ -->
+    <details class="collapsible" id="pair">
+      <summary>📱 3 — Connect your phone</summary>
+      <div class="card">
+        <p class="lead">Robot-01 is controlled from a free app called <strong>RemoteXY</strong>. It uses Bluetooth, so no WiFi or internet is needed.</p>
+
+        <ol class="steps">
+          <li>Open the App Store (iOS) or Play Store (Android). Search for <strong>RemoteXY</strong>. Install the app — it's free.</li>
+          <li>Power on Robot-01 (see section <strong>2</strong>). Make sure the OLED shows <code>READY</code>.</li>
+          <li>Open RemoteXY → tap <strong>+ New connection</strong> → pick <strong>Bluetooth</strong>.</li>
+          <li>The app scans. After a few seconds you'll see <code>RemoteXY</code> or <code>Robot-01</code> in the list. Tap it.</li>
+          <li>Phone will ask to pair. Confirm. The buzzer plays a short <em>connect</em> jingle.</li>
+          <li>The app loads the control screen — joystick, button, and battery gauge appear. The robot's status LED turns 🔵 <strong>blue</strong> = connected.</li>
+        </ol>
+
+        <div class="phone-mock" aria-label="RemoteXY control screen mockup">
+          <div class="screen-title">ROBOT-01</div>
+          <div class="joystick" aria-label="joystick"></div>
+          <div class="pad-row">
+            <div>BTN</div>
+            <div>BAT 87%</div>
+          </div>
+          <div class="pad-row">
+            <div style="height:20px">distance: 38 cm</div>
+          </div>
+        </div>
+
+        <div class="alert win">
+          <strong>// SAVED FOR NEXT TIME</strong>
+          Once paired, your phone remembers Robot-01. Next time, just open RemoteXY and tap <strong>Connect</strong> — no re-scanning.
+        </div>
+        <div class="alert warn">
+          <strong>// "NO PRO LICENSE"</strong>
+          If you see a "PRO license required" dialog, that's a known limit of the free RemoteXY tier (max 5 controls). The grown-ups need to fix it — see <a href="audit.html#bug-004">audit BUG-004</a>.
+        </div>
+      </div>
+    </details>
+
+    <!-- ═══ MISSION 4 — DRIVE ═══ -->
+    <details class="collapsible" id="drive">
+      <summary>🎮 4 — Drive me</summary>
+      <div class="card">
+        <p class="lead">The phone shows a round joystick (left thumb) and an action button (right thumb).</p>
+
+        <div class="ug-grid">
+          <div class="ug-tile">
+            <span class="icon">⬆️</span>
+            <h3>Push up</h3>
+            <p>Robot drives <strong>forward</strong>. Push further = goes faster.</p>
+          </div>
+          <div class="ug-tile">
+            <span class="icon">⬇️</span>
+            <h3>Push down</h3>
+            <p>Robot drives <strong>backward</strong>. Same — further = faster reverse.</p>
+          </div>
+          <div class="ug-tile">
+            <span class="icon">⬅️</span>
+            <h3>Push left</h3>
+            <p>Robot <strong>turns left</strong>. Push left + up = curve left while moving forward.</p>
+          </div>
+          <div class="ug-tile">
+            <span class="icon">➡️</span>
+            <h3>Push right</h3>
+            <p>Robot <strong>turns right</strong>. Push right + up = curve right while moving forward.</p>
+          </div>
+          <div class="ug-tile">
+            <span class="icon">⏺️</span>
+            <h3>Release</h3>
+            <p>Joystick centers automatically. Robot <strong>stops</strong>.</p>
+          </div>
+          <div class="ug-tile">
+            <span class="icon">🔘</span>
+            <h3>Action button</h3>
+            <p>Tap = <em>beep</em>. Hold = LED rainbow party. Try double-tap.</p>
+          </div>
+        </div>
+
+        <div class="alert">
+          <strong>// PRO TIP</strong>
+          For a smooth turn, push the joystick diagonally — like tilting a steering wheel. Pushing it pure-left or pure-right makes the robot pivot in place.
+        </div>
+      </div>
+    </details>
+
+    <!-- ═══ MISSION 5 — LIGHTS ═══ -->
+    <details class="collapsible" id="lights">
+      <summary>💡 5 — What my lights mean</summary>
+      <div class="card">
+        <p class="lead">The 4 NeoPixel LEDs on the front of the robot tell you what's going on.</p>
+
+        <div class="led-key">
+          <div class="led-swatch off">OFF</div>
+          <div class="led-desc"><strong>All off</strong> — robot is powered off, or battery completely dead. Plug in USB.</div>
+        </div>
+        <div class="led-key">
+          <div class="led-swatch rainbow">🌈</div>
+          <div class="led-desc"><strong>Rainbow sweep</strong> — boot animation. Plays for 2 seconds when you turn it on. Means everything started OK.</div>
+        </div>
+        <div class="led-key">
+          <div class="led-swatch green">100%</div>
+          <div class="led-desc"><strong>All 4 green</strong> — battery is over 75%. Lots of juice left.</div>
+        </div>
+        <div class="led-key">
+          <div class="led-swatch amber">50%</div>
+          <div class="led-desc"><strong>2 amber</strong> — battery 25–75%. Plenty of driving left, but think about charging soon.</div>
+        </div>
+        <div class="led-key">
+          <div class="led-swatch red">10%</div>
+          <div class="led-desc"><strong>1 red, blinking</strong> — battery under 15%. Plug in within 5 minutes or the robot will shut down.</div>
+        </div>
+        <div class="led-key">
+          <div class="led-swatch blue">📡</div>
+          <div class="led-desc"><strong>Slow blue pulse</strong> — phone connected via Bluetooth.</div>
+        </div>
+        <div class="led-key">
+          <div class="led-swatch purple">🎉</div>
+          <div class="led-desc"><strong>Purple party</strong> — you held the action button. Robot is having a moment.</div>
+        </div>
+        <div class="led-key">
+          <div class="led-swatch red">⚠️</div>
+          <div class="led-desc"><strong>All 4 red, fast blink</strong> — error. Usually wiring or sensor problem. Power-cycle the robot.</div>
+        </div>
+      </div>
+    </details>
+
+    <!-- ═══ MISSION 6 — SOUNDS ═══ -->
+    <details class="collapsible" id="sounds">
+      <summary>🔊 6 — What my sounds mean</summary>
+      <div class="card">
+        <p class="lead">Each beep means something specific. Listen up.</p>
+
+        <div class="sound">
+          <div class="sound-icon">🎵</div>
+          <div>
+            <div class="sound-name">Boot tune</div>
+            <div class="sound-desc">Three rising notes <em>doo-dee-DOO</em>. Plays once when you power on. Means firmware booted OK.</div>
+          </div>
+        </div>
+        <div class="sound">
+          <div class="sound-icon">📞</div>
+          <div>
+            <div class="sound-name">Connect ping</div>
+            <div class="sound-desc">Single high <em>boop</em>. Plays when your phone successfully pairs over Bluetooth.</div>
+          </div>
+        </div>
+        <div class="sound">
+          <div class="sound-icon">🔘</div>
+          <div>
+            <div class="sound-name">Button beep</div>
+            <div class="sound-desc">Short <em>beep</em>. Plays each time you tap the action button on the phone.</div>
+          </div>
+        </div>
+        <div class="sound">
+          <div class="sound-icon">🔋</div>
+          <div>
+            <div class="sound-name">Low-battery whine</div>
+            <div class="sound-desc">Slow descending <em>weep</em>, repeats every 30 seconds. Battery is below 15% — charge soon.</div>
+          </div>
+        </div>
+        <div class="sound">
+          <div class="sound-icon">🚧</div>
+          <div>
+            <div class="sound-name">Obstacle alert</div>
+            <div class="sound-desc">Three quick <em>beep-beep-beep</em>. Ultrasonic sensor saw something within 10 cm — robot will refuse to drive forward into it.</div>
+          </div>
+        </div>
+        <div class="sound">
+          <div class="sound-icon">💔</div>
+          <div>
+            <div class="sound-name">Disconnect tone</div>
+            <div class="sound-desc">Two falling notes <em>dee-doo</em>. Phone walked out of Bluetooth range or quit the app. Robot stops moving.</div>
+          </div>
+        </div>
+      </div>
+    </details>
+
+    <!-- ═══ MISSION 7 — SENSES ═══ -->
+    <details class="collapsible" id="senses">
+      <summary>📡 7 — My senses — what the OLED shows</summary>
+      <div class="card">
+        <p class="lead">The tiny black-and-white screen on top of the robot is the OLED display. It shows live status info.</p>
+
+        <div class="ug-grid">
+          <div class="ug-tile">
+            <span class="icon">🔋</span>
+            <h3>Battery %</h3>
+            <p>Top-right corner. Shows percentage from 0 to 100. Updates every 5 seconds.</p>
+          </div>
+          <div class="ug-tile">
+            <span class="icon">📡</span>
+            <h3>Distance</h3>
+            <p>Center. Shows distance in cm to the closest obstacle in front.</p>
+          </div>
+          <div class="ug-tile">
+            <span class="icon">📱</span>
+            <h3>BT status</h3>
+            <p>Bottom-left. Shows <code>BT: --</code> when alone, <code>BT: ON</code> when paired.</p>
+          </div>
+          <div class="ug-tile">
+            <span class="icon">🏃</span>
+            <h3>Speed</h3>
+            <p>Bottom-right. Shows current speed as a percentage of max (0% = stopped, 100% = full throttle).</p>
+          </div>
+        </div>
+
+        <p class="lead" style="margin-top:14px">The ultrasonic sensor is the round black eye on the front. It pings the world 10 times per second using sound waves humans can't hear.</p>
+      </div>
+    </details>
+
+    <!-- ═══ MISSION 8 — TROUBLESHOOTING ═══ -->
+    <details class="collapsible" id="troubleshoot">
+      <summary>🚨 8 — If something's wrong</summary>
+      <div class="card">
+
+        <h4 style="color:#ef4444;font-family:var(--font-h);text-transform:uppercase;letter-spacing:.03em;font-size:.9em;margin:0 0 6px">// Won't turn on</h4>
+        <ul class="simple">
+          <li>Battery might be flat. Plug in USB-C for a few minutes, then try again.</li>
+          <li>Power switch might be off. Check the bottom of the robot.</li>
+          <li>If LEDs don't light at all even with USB plugged in, ask a grown-up — could be a hardware problem.</li>
+        </ul>
+
+        <h4 style="color:#ef4444;font-family:var(--font-h);text-transform:uppercase;letter-spacing:.03em;font-size:.9em;margin:14px 0 6px">// Won't pair with phone</h4>
+        <ul class="simple">
+          <li>Make sure Bluetooth is ON in your phone settings (not just in the app).</li>
+          <li>Make sure the robot is powered on and showing <code>READY</code> on the OLED.</li>
+          <li>Force-close the RemoteXY app and reopen it.</li>
+          <li>If it still won't connect, switch the robot off, count to 5, switch it back on. Re-scan.</li>
+        </ul>
+
+        <h4 style="color:#ef4444;font-family:var(--font-h);text-transform:uppercase;letter-spacing:.03em;font-size:.9em;margin:14px 0 6px">// Drives in circles when joystick is centered</h4>
+        <ul class="simple">
+          <li>The joystick needs calibration. Hold the action button for 5 seconds while the joystick is centered. The robot will store the new center.</li>
+          <li>If it still drifts, one motor might be sticking — check the wheels for hair or carpet fibers.</li>
+        </ul>
+
+        <h4 style="color:#ef4444;font-family:var(--font-h);text-transform:uppercase;letter-spacing:.03em;font-size:.9em;margin:14px 0 6px">// Stops randomly during a drive</h4>
+        <ul class="simple">
+          <li>Phone walked out of Bluetooth range. Move closer (max ~10 m).</li>
+          <li>Battery might be very low — check the LEDs.</li>
+          <li>Obstacle sensor saw a wall — the robot refuses to drive into things. Back up or turn.</li>
+        </ul>
+
+        <h4 style="color:#ef4444;font-family:var(--font-h);text-transform:uppercase;letter-spacing:.03em;font-size:.9em;margin:14px 0 6px">// All 4 LEDs blinking red fast</h4>
+        <div class="alert danger">
+          <strong>// HARDWARE ERROR</strong>
+          Power off the robot. Wait 10 seconds. Power on again. If the red blink comes back immediately, ask a grown-up to check
+          the <a href="audit.html">audit page</a> — could be one of the known issues.
+        </div>
+      </div>
+    </details>
+
+    <!-- ═══ MISSION 9 — SAFETY ═══ -->
+    <details class="collapsible" id="safety">
+      <summary>🛡️ 9 — Stay safe — five rules</summary>
+      <div class="card">
+        <ol class="steps">
+          <li><strong>Don't drive off tables.</strong> Robot-01 has no edge sensors — it will drive off and break. Stick to floors.</li>
+          <li><strong>Don't charge while wet.</strong> If the robot got splashed, dry it for an hour before plugging in USB.</li>
+          <li><strong>Don't pull on the wires.</strong> Lift the robot from the bottom, not by sensors or cables.</li>
+          <li><strong>Don't drive on stairs.</strong> Same reason as tables. Plus stairs eat wheels for breakfast.</li>
+          <li><strong>Don't leave it charging unattended overnight.</strong> Once the LED says full, unplug it.</li>
+        </ol>
+
+        <div class="alert win">
+          <strong>// HAVE FUN</strong>
+          Other than that — Robot-01 is built for play. Drive fast, try patterns, make obstacle courses, race friends.
+          When something breaks, that's just a learning chance. <a href="audit.html">Audit page</a> tracks every quirk.
+        </div>
+      </div>
+    </details>
+
+    <!-- ── footer nav ── -->
+    <p class="foot-note">
+      Building one yourself? See <a href="build-guide.html">build-guide.html</a>.<br>
+      Teaching a class? See <a href="instructor.html">instructor.html</a>.<br>
+      Coding the firmware? See <a href="start-here.html">start-here.html</a>.
+    </p>
+
+  </div><!-- .rows-container -->
+</div><!-- .app -->
+
+<script src="assets/wdiy-script.js"></script>
+<script src="assets/wdiy-shell.js"></script>
+</body>
+</html>

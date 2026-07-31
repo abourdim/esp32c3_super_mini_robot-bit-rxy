@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="en" dir="ltr" data-theme="robot">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Monitor — ESP32-C3 Robot App</title>
+<link rel="stylesheet" href="assets/wdiy-template.css">
+<style>
+.app { max-width: 920px; }
+
+code {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: var(--accent); padding: 1px 6px; border-radius: 3px;
+  font-size: .82em;
+  font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+.light-theme code { color: var(--text); }
+
+.intro { font-size: .9em; color: var(--text); line-height: 1.6; margin: 0 0 14px; }
+
+/* ── control rows ── */
+.ctrl-row {
+  display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+  padding: 12px 14px;
+  background: rgba(0,0,0,.18);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  margin: 12px 0;
+}
+.light-theme .ctrl-row { background: rgba(0,0,0,.04); }
+
+.ctrl-row label {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: .82em; color: var(--text-muted);
+}
+.ctrl-row select, .ctrl-row input[type="text"] {
+  padding: 6px 10px;
+  background: rgba(0,0,0,.3); color: var(--text);
+  border: 1px solid var(--border); border-radius: 8px;
+  font: .82em "SF Mono", ui-monospace, monospace;
+  outline: none;
+}
+.light-theme .ctrl-row select,
+.light-theme .ctrl-row input[type="text"] {
+  background: rgba(0,0,0,.04);
+}
+.ctrl-row select:focus, .ctrl-row input:focus { border-color: var(--accent); }
+.ctrl-row input[type="text"] { flex: 1; min-width: 160px; }
+
+/* ── primary action button ── */
+button.connect-btn {
+  font-family: var(--font-h);
+  font-size: .85em; font-weight: 700;
+  letter-spacing: .04em; text-transform: uppercase;
+  padding: 8px 18px; border-radius: 999px;
+  background: linear-gradient(135deg, var(--accent), var(--band2));
+  color: var(--bg); border: none;
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--accent) 30%, transparent);
+  cursor: pointer;
+}
+button.connect-btn:hover { box-shadow: 0 6px 18px color-mix(in srgb, var(--accent) 45%, transparent); }
+button.connect-btn:disabled { opacity: .4; cursor: default; box-shadow: none; }
+
+/* ── serial log viewport ── */
+.serial-log {
+  background: #000;
+  color: #a4f0a4;
+  font: 12.5px/1.5 "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  height: 380px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin: 0;
+  position: relative;
+  box-shadow: inset 0 0 30px rgba(34,255,136,.05);
+}
+.serial-log::before {
+  content: "● ● ●";
+  position: absolute; top: 6px; left: 14px;
+  color: rgba(255,255,255,.18); font-size: 9px; letter-spacing: 4px;
+}
+.serial-log .tx { color: #fbbf24; }   /* outgoing */
+.serial-log .err { color: #ef4444; }
+.serial-log .info { color: #60a5fa; }
+
+.status-line {
+  font-size: .8em;
+  padding: 6px 4px;
+  color: var(--text-muted);
+  min-height: 1.4em;
+}
+.status-line.err { color: #ef4444; }
+.status-line.ok  { color: #22c55e; }
+
+.foot-note { font-size: .78em; color: var(--text-muted); text-align: center; padding: 14px 4px 4px; }
+
+details.collapsible > summary { font-size: .92rem; }
+</style>
+</head>
+
+<body
+  data-app-title="Serial Monitor"
+  data-app-subtitle="📡 connect · 👀 watch · ⌨️ talk back"
+  data-help-page="monitor"
+  data-status-text="Disconnected"
+  data-status-online="false">
+
+<div class="app">
+  <div class="rows-container">
+
+    <p class="intro">
+      Live serial logs from your ESP32-C3, in the browser.
+      Web Serial reads the USB output, you watch the robot boot &amp; loop, and you can type back to it.
+    </p>
+
+    <!-- ═══ Connection bar ═══ -->
+    <div class="ctrl-row">
+      <label>Baud
+        <select id="baud">
+          <option>9600</option>
+          <option>57600</option>
+          <option selected>115200</option>
+          <option>230400</option>
+          <option>460800</option>
+        </select>
+      </label>
+      <button id="connect" class="connect-btn">🔌 Connect</button>
+      <button id="disconnect" class="connect-btn" disabled style="background:linear-gradient(135deg,#ef4444,#b91c1c)">⏏ Disconnect</button>
+      <button id="clear" class="btn-sm">Clear</button>
+      <span style="flex:1"></span>
+      <span class="status-line" id="status">Idle.</span>
+    </div>
+
+    <!-- ═══ Output ═══ -->
+    <pre id="serial-log" class="serial-log" aria-label="Serial output"></pre>
+
+    <!-- ═══ Send bar ═══ -->
+    <div class="ctrl-row">
+      <input id="send-input" type="text" placeholder="text to send to the robot...">
+      <label>End
+        <select id="line-ending">
+          <option value="">none</option>
+          <option value="\n">LF</option>
+          <option value="\r\n" selected>CRLF</option>
+        </select>
+      </label>
+      <button id="send" class="connect-btn" disabled>📤 Send</button>
+    </div>
+
+    <!-- ═══ Tips ═══ -->
+    <details class="collapsible">
+      <summary>💡 Tips &amp; troubleshooting</summary>
+      <div class="card">
+        <ul style="padding-left:20px;font-size:.84em;line-height:1.7;color:var(--text);margin:8px 0">
+          <li><strong>Browser:</strong> Web Serial only works in <strong>Chrome / Edge</strong>.</li>
+          <li><strong>"Already open" error:</strong> close PlatformIO/Arduino monitor first — only one app can hold the port.</li>
+          <li><strong>Wrong baud:</strong> match <code>monitor_speed</code> in <code>platformio.ini</code> (project default: <code>115200</code>).</li>
+          <li><strong>Garbled output:</strong> wrong baud → garbage characters. Try other rates.</li>
+          <li><strong>No output, no error:</strong> the chip might not be running. Hit physical RESET on the board.</li>
+          <li><strong>Want to flash?</strong> Disconnect first, then go to <a href="flash.html">flash.html</a>.</li>
+        </ul>
+      </div>
+    </details>
+
+    <p class="foot-note">
+      Tip · output is also mirrored into the <strong>Activity Log (📜)</strong> sidebar, with timestamps and filters.
+    </p>
+
+  </div>
+</div>
+
+<script src="assets/wdiy-script.js"></script>
+<script src="assets/wdiy-shell.js"></script>
+
+<!-- ═══ Web Serial state machine ═══ -->
+<script>
+(function () {
+  const $ = id => document.getElementById(id);
+  const logEl    = $('serial-log');
+  const statusEl = $('status');
+  let port = null, reader = null, writer = null, keep = false;
+
+  function setStatusLine(text, cls = '') {
+    statusEl.textContent = text;
+    statusEl.className = 'status-line ' + cls;
+  }
+
+  function setPill(connected) {
+    if (typeof setStatus === 'function') setStatus(connected);
+    const txt = $('statusText');
+    if (txt) txt.textContent = connected ? 'Connected' : 'Disconnected';
+    const pill = $('statusPill');
+    if (pill) pill.classList.toggle('connected', connected);
+  }
+
+  function append(text, cls) {
+    const span = document.createElement('span');
+    if (cls) span.className = cls;
+    span.textContent = text;
+    logEl.appendChild(span);
+    logEl.scrollTop = logEl.scrollHeight;
+
+    // Mirror lines into the template's Activity Log sidebar
+    if (typeof log === 'function' && cls !== 'tx') {
+      // split by newline; only forward complete lines to avoid log spam
+      const lines = String(text).split('\n');
+      lines.forEach((line, i) => {
+        if (i < lines.length - 1 && line.trim()) {
+          log('📡 ' + line.trim(), 'rx');
+        }
+      });
+    }
+  }
+
+  /* Browser support check */
+  if (!('serial' in navigator)) {
+    setStatusLine('Web Serial not supported. Use Chrome or Edge.', 'err');
+    $('connect').disabled = true;
+    return;
+  }
+
+  $('connect').onclick = async () => {
+    try {
+      port = await navigator.serial.requestPort();
+      const baudRate = parseInt($('baud').value, 10);
+      await port.open({ baudRate });
+      $('connect').disabled    = true;
+      $('disconnect').disabled = false;
+      $('send').disabled       = false;
+      setStatusLine('Connected at ' + baudRate + ' baud.', 'ok');
+      setPill(true);
+      if (typeof log === 'function') log('📡 Connected at ' + baudRate, 'success');
+      keep = true;
+
+      const decoder = new TextDecoderStream();
+      port.readable.pipeTo(decoder.writable).catch(() => {});
+      reader = decoder.readable.getReader();
+      writer = port.writable.getWriter();
+
+      while (keep) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        if (value) append(value);
+      }
+    } catch (e) {
+      setStatusLine('Error: ' + e.message, 'err');
+      if (typeof log === 'function') log('❌ ' + e.message, 'error');
+    }
+  };
+
+  $('disconnect').onclick = async () => {
+    keep = false;
+    try { await reader?.cancel(); } catch {}
+    try { writer?.releaseLock(); } catch {}
+    try { await port?.close();   } catch {}
+    $('connect').disabled    = false;
+    $('disconnect').disabled = true;
+    $('send').disabled       = true;
+    setStatusLine('Disconnected.');
+    setPill(false);
+    if (typeof log === 'function') log('📡 Disconnected', 'info');
+  };
+
+  $('clear').onclick = () => {
+    logEl.textContent = '';
+    if (typeof log === 'function') log('🧹 Serial buffer cleared', 'info');
+  };
+
+  $('send').onclick = async () => {
+    const raw = $('send-input').value;
+    const ending = $('line-ending').value || '';
+    const text = raw + ending;
+    const data = new TextEncoder().encode(text);
+    try {
+      await writer.write(data);
+      append('> ' + raw + '\n', 'tx');
+      if (typeof log === 'function') log('📤 ' + raw, 'tx');
+      $('send-input').value = '';
+    } catch (e) {
+      setStatusLine('Write error: ' + e.message, 'err');
+      if (typeof log === 'function') log('❌ write: ' + e.message, 'error');
+    }
+  };
+
+  $('send-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') $('send').click();
+  });
+})();
+</script>
+</body>
+</html>

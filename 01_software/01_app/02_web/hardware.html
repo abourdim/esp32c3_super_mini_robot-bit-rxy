@@ -1,0 +1,602 @@
+<!doctype html>
+<html lang="en" dir="ltr" data-theme="lab-dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hardware — ESP32-C3 Robot</title>
+<link rel="stylesheet" href="assets/wdiy-template.css">
+<style>
+.app { max-width: 1100px; }
+
+code {
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  color: var(--accent); padding: 1px 6px; border-radius: 4px;
+  font-size: .82em; font-family: ui-monospace, Menlo, Consolas, monospace;
+}
+.light-theme code { color: var(--text); }
+
+.intro { font-size: .92em; color: var(--text); line-height: 1.6; margin: 0 0 14px; padding: 0 4px; }
+p.lead  { font-size: .9em; color: var(--text); line-height: 1.6; margin: 0 0 10px; }
+
+/* ── version banner ── */
+.version-banner {
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  padding: 14px 16px;
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  border: 1px solid var(--accent);
+  border-radius: 12px;
+  margin: 0 0 16px;
+}
+.version-banner .v-tag {
+  font-family: var(--font-h);
+  font-size: 1.4em; font-weight: 800;
+  color: var(--bg);
+  background: var(--accent);
+  padding: 4px 14px; border-radius: 8px;
+}
+.version-banner .v-info { flex: 1; min-width: 200px; }
+.version-banner .v-info strong { display: block; font-size: .95em; color: var(--accent); margin-bottom: 2px; }
+.version-banner .v-info span { font-size: .82em; color: var(--text-muted); }
+.version-banner .v-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.version-banner .v-actions a {
+  font-family: var(--font-h);
+  font-size: .76em;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  padding: 6px 12px;
+  border-radius: 6px;
+  background: rgba(0,0,0,.3);
+  color: var(--text);
+  text-decoration: none;
+  border: 1px solid var(--border);
+  transition: all .15s;
+}
+.version-banner .v-actions a:hover {
+  background: var(--accent);
+  color: var(--bg);
+  border-color: var(--accent);
+  text-decoration: none;
+}
+
+/* ── Hero render ── */
+.pcb-hero {
+  position: relative;
+  margin: 0 0 16px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: linear-gradient(135deg,
+    color-mix(in srgb, var(--accent) 8%, transparent),
+    color-mix(in srgb, var(--accent2) 8%, transparent));
+}
+.pcb-hero img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 540px;
+  object-fit: contain;
+  background: #c0c5d0;
+}
+.light-theme .pcb-hero img { background: #e8ecf3; }
+.pcb-hero figcaption {
+  position: absolute;
+  left: 12px; bottom: 12px;
+  padding: 6px 12px;
+  background: rgba(0,0,0,.65);
+  color: #fff;
+  font: 600 .75em ui-monospace, monospace;
+  border-radius: 6px;
+  letter-spacing: .04em;
+  backdrop-filter: blur(4px);
+}
+
+/* ── Schematic embed ── */
+.schematic-frame {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 8px;
+  overflow: auto;
+  max-height: 720px;
+  position: relative;
+}
+.light-theme .schematic-frame { box-shadow: 0 4px 14px rgba(0,0,0,.06); }
+.schematic-frame object {
+  display: block;
+  width: 100%;
+  min-width: 1200px;     /* schematic is wide — let it overflow horizontally on small screens */
+  height: auto;
+  background: #fff;
+}
+.schematic-controls {
+  display: flex; gap: 8px; flex-wrap: wrap;
+  margin: 10px 0 6px;
+  align-items: center;
+}
+.schematic-controls .hint {
+  font-size: .76em; color: var(--text-muted); margin-left: auto;
+}
+
+/* ── PCB viewer ── */
+.pcb-viewer {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 18px;
+  margin: 14px 0;
+  position: relative;
+  min-height: 400px;
+  overflow: hidden;
+}
+.light-theme .pcb-viewer { box-shadow: 0 4px 14px rgba(0,0,0,.06); }
+
+.pcb-stage {
+  position: relative;
+  width: 100%;
+  background: #fff;
+  border-radius: 6px;
+  overflow: hidden;
+}
+.pcb-stage object,
+.pcb-stage img {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%;
+  height: auto;
+  display: block;
+}
+/* Stack layers as overlays — first child is base, rest stack on top */
+.pcb-stage object[data-layer="board"]    { position: relative; }
+.pcb-stage object[data-layer="copper"]   { mix-blend-mode: multiply; }
+.pcb-stage object[data-layer="silk"]     { mix-blend-mode: multiply; }
+.pcb-stage object[data-layer="court"]    { mix-blend-mode: multiply; opacity: .35; }
+.pcb-stage object[data-layer="bcopper"]  { mix-blend-mode: multiply; opacity: .55; }
+
+/* layer toggle */
+.layer-bar {
+  display: flex; gap: 8px; flex-wrap: wrap;
+  margin: 14px 0 4px;
+}
+.layer-toggle {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  font-size: .8em;
+  cursor: pointer;
+  user-select: none;
+  transition: all .15s;
+  color: var(--text);
+}
+.layer-toggle:hover { border-color: var(--accent); }
+.layer-toggle.active {
+  background: var(--accent);
+  color: var(--bg);
+  border-color: var(--accent);
+}
+.layer-toggle .dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  display: inline-block;
+}
+.layer-toggle[data-layer="board"] .dot   { background: #2c3e50; }
+.layer-toggle[data-layer="copper"] .dot  { background: #c97050; }
+.layer-toggle[data-layer="silk"] .dot    { background: #1a1a1a; }
+.layer-toggle[data-layer="court"] .dot   { background: #f59e0b; }
+.layer-toggle[data-layer="bcopper"] .dot { background: #2563eb; }
+
+.layer-note {
+  font-size: .76em; color: var(--text-muted);
+  margin: 6px 4px 0; line-height: 1.5;
+}
+
+/* ── pin map ── */
+.pinmap {
+  width: 100%; border-collapse: collapse; margin: 12px 0;
+  font-size: .85em;
+}
+.pinmap th, .pinmap td {
+  text-align: left; padding: 8px 10px;
+  border-bottom: 1px solid var(--border); vertical-align: top;
+}
+.pinmap th {
+  font-family: var(--font-h); font-size: .74em;
+  color: var(--accent2); font-weight: 700;
+  text-transform: uppercase; letter-spacing: .06em;
+}
+.pinmap .gpio { font-family: ui-monospace, monospace; color: var(--accent); font-weight: 700; white-space: nowrap; }
+.pinmap .role { font-weight: 600; }
+.pinmap .group-motor   { background: color-mix(in srgb, #ef4444 8%, transparent); }
+.pinmap .group-i2c     { background: color-mix(in srgb, #3b82f6 8%, transparent); }
+.pinmap .group-input   { background: color-mix(in srgb, #22c55e 8%, transparent); }
+.pinmap .group-aux     { background: color-mix(in srgb, #a855f7 8%, transparent); }
+.pinmap .group-power   { background: color-mix(in srgb, #f59e0b 8%, transparent); }
+.pinmap tr:hover td { filter: brightness(0.95); }
+
+.legend {
+  display: flex; flex-wrap: wrap; gap: 10px; margin: 6px 0 14px;
+  font-size: .76em;
+}
+.legend .chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 8px; border-radius: 999px;
+  background: rgba(0,0,0,.18);
+  color: var(--text-muted);
+}
+.light-theme .legend .chip { background: rgba(0,0,0,.05); }
+.legend .chip::before {
+  content: ''; width: 10px; height: 10px; border-radius: 50%;
+  display: inline-block;
+}
+.legend .chip.motor::before { background: #ef4444; }
+.legend .chip.i2c::before   { background: #3b82f6; }
+.legend .chip.input::before { background: #22c55e; }
+.legend .chip.aux::before   { background: #a855f7; }
+.legend .chip.power::before { background: #f59e0b; }
+
+/* ── connectors grid ── */
+.conn-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px; margin: 12px 0;
+}
+.conn {
+  background: rgba(0,0,0,.22);
+  border: 1px solid var(--border);
+  border-radius: 10px; padding: 12px 14px;
+}
+.light-theme .conn { background: rgba(0,0,0,.04); }
+.conn h4 {
+  font-family: var(--font-h); font-size: .85em;
+  color: var(--accent); text-transform: uppercase;
+  letter-spacing: .04em; margin: 0 0 6px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.conn h4 .pintype { font-size: .7em; color: var(--text-muted); font-weight: 400; letter-spacing: 0; text-transform: none; }
+.conn p { font-size: .82em; color: var(--text); line-height: 1.55; margin: 0; }
+.conn p code { font-size: .9em; }
+.conn .pins {
+  font: 11px ui-monospace, monospace;
+  color: var(--text-muted);
+  display: block; margin-top: 4px;
+}
+
+/* ── alerts ── */
+.alert {
+  border-left: 3px solid var(--accent);
+  padding: 12px 16px;
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  border-radius: 0 8px 8px 0; margin: 12px 0;
+  font-size: .85em; line-height: 1.55;
+}
+.alert.warn   { border-left-color: #f59e0b; background: rgba(245,158,11,.10); }
+.alert.danger { border-left-color: #ef4444; background: rgba(239,68,68,.10); }
+.alert.win    { border-left-color: #22c55e; background: rgba(34,197,94,.10); }
+.alert strong { display: block; margin-bottom: 4px; font-size: .8em; letter-spacing: .04em; color: var(--accent); }
+.alert.warn   strong { color: #f59e0b; }
+.alert.danger strong { color: #ef4444; }
+.alert.win    strong { color: #22c55e; }
+
+.foot-note { font-size: .82em; color: var(--text-muted); text-align: center; padding: 14px 4px 4px; line-height: 1.55; }
+
+ul.simple { padding-left: 22px; margin: 8px 0; }
+ul.simple li { font-size: .86em; color: var(--text); line-height: 1.6; margin-bottom: 4px; }
+
+details.collapsible > summary { font-size: .92rem; }
+</style>
+</head>
+
+<body
+  data-app-title="Hardware"
+  data-app-subtitle="🔌 schematic · 🟫 PCB · 📐 fab"
+  data-help-page="hardware"
+  data-default-theme="lab-dark"
+  data-status-text="v3"
+  data-status-online="true">
+
+<div class="app">
+  <div class="rows-container">
+
+    <p class="intro">
+      Robot-01's hardware is a 4-layer-aware 2-layer PCB built around the <strong>ESP32-C3 SuperMini</strong> + <strong>TB6612FNG</strong> dual H-bridge.
+      Source files (KiCad 7), production gerbers, BOMs, and SVG layer renders all live in
+      <code><a href="https://github.com/abourdim/esp32c3_super_mini_robot/tree/master/02_hardware/v3">02_hardware/v3/</a></code>.
+    </p>
+
+    <!-- ═══ VERSION BANNER ═══ -->
+    <div class="version-banner">
+      <div class="v-tag">v3</div>
+      <div class="v-info">
+        <strong>37_rich_light_move v3</strong>
+        <span>Schematic: 2025-07-28 · PCB: 2025-06-21 · KiCad 7.0.6 · workshop-diy.org</span>
+      </div>
+      <div class="v-actions">
+        <a href="hardware/v3/37_rich_light_move_v3-schematic.svg" target="_blank" rel="noopener">📐 Schematic SVG</a>
+        <a href="https://github.com/abourdim/esp32c3_super_mini_robot/blob/master/02_hardware/v3/37_rich_light_move_v3.kicad_sch" target="_blank" rel="noopener">.kicad_sch</a>
+        <a href="https://github.com/abourdim/esp32c3_super_mini_robot/blob/master/02_hardware/v3/37_rich_light_move_v3.kicad_pcb" target="_blank" rel="noopener">🟫 .kicad_pcb</a>
+        <a href="hardware/v3/bom/ibom.html" target="_blank">📋 Interactive BOM</a>
+        <a href="https://github.com/abourdim/esp32c3_super_mini_robot/blob/master/02_hardware/v3/production/37_richa_light_move_v3.zip" target="_blank" rel="noopener">📦 Gerbers</a>
+        <a href="https://randomnerdtutorials.com/getting-started-esp32-c3-super-mini/" target="_blank" rel="noopener" title="Random Nerd Tutorials — Getting Started with ESP32-C3 Super Mini">🎓 Board ref</a>
+      </div>
+    </div>
+
+    <!-- ═══ HERO 3D RENDER ═══ -->
+    <figure class="pcb-hero">
+      <img src="hardware/v3/37_rich_light_move_v3.png"
+           alt="3D render of the v3 PCB — top view showing buzzer, NeoPixels D1-D4, motor terminals, ESP32-C3 module, and HC-SR04 header"
+           loading="lazy">
+      <figcaption>v3 · 3D render · top view</figcaption>
+    </figure>
+
+    <!-- ═══ § 1 — SCHEMATIC ═══ -->
+    <details class="collapsible" id="schematic" open>
+      <summary>📐 1 — Schematic — full design</summary>
+      <div class="card">
+        <p class="lead">
+          Full schematic exported from KiCad as searchable SVG.
+          Use <kbd>Ctrl+F</kbd> in your browser to find a component reference (e.g. <code>R7</code>, <code>U1</code>, <code>JP2</code>) — the silkscreen text stays as real text.
+        </p>
+
+        <div class="schematic-controls">
+          <a href="hardware/v3/37_rich_light_move_v3-schematic.svg" target="_blank" rel="noopener"
+             style="font-family:var(--font-h);font-size:.78em;text-transform:uppercase;letter-spacing:.04em;padding:6px 12px;border-radius:6px;background:rgba(0,0,0,.3);color:var(--text);text-decoration:none;border:1px solid var(--border)">
+            🔍 Open full size in new tab
+          </a>
+          <span class="hint">Schematic exported 2025-07-28 · KiCad 7.0.6 · 1.6 MB · text-searchable</span>
+        </div>
+
+        <div class="schematic-frame">
+          <object data="hardware/v3/37_rich_light_move_v3-schematic.svg"
+                  type="image/svg+xml"
+                  aria-label="37_rich_light_move v3 schematic"></object>
+        </div>
+      </div>
+    </details>
+
+    <!-- ═══ § 2 — PCB VIEWER ═══ -->
+    <details class="collapsible" id="pcb">
+      <summary>🟫 2 — PCB layer browser</summary>
+      <div class="card">
+
+        <p class="lead">Toggle layers to see what's on each side. Compare with the 3D render above to map silkscreen labels to physical components.</p>
+
+        <div class="layer-bar" role="group" aria-label="Layer toggles">
+          <button class="layer-toggle active" data-layer="board"    aria-pressed="true">
+            <span class="dot"></span> Board outline
+          </button>
+          <button class="layer-toggle active" data-layer="copper"   aria-pressed="true">
+            <span class="dot"></span> Front copper
+          </button>
+          <button class="layer-toggle active" data-layer="silk"     aria-pressed="true">
+            <span class="dot"></span> Front silkscreen
+          </button>
+          <button class="layer-toggle"        data-layer="court"    aria-pressed="false">
+            <span class="dot"></span> Front courtyard
+          </button>
+          <button class="layer-toggle"        data-layer="bcopper"  aria-pressed="false">
+            <span class="dot"></span> Back copper
+          </button>
+          <button class="layer-toggle"        data-layer="bsilk"    aria-pressed="false">
+            <span class="dot"></span> Back silkscreen
+          </button>
+        </div>
+        <p class="layer-note">SVGs are rendered to <code>02_hardware/v3/</code> by KiCad's <em>File → Plot → SVG</em>. Bundled to Pages by the deploy workflow.</p>
+
+        <div class="pcb-viewer">
+          <div class="pcb-stage" id="pcb-stage">
+            <object data="hardware/v3/37_rich_light_move_v3-Edge_Cuts.svg"    type="image/svg+xml" data-layer="board"   aria-label="board outline"></object>
+            <object data="hardware/v3/37_rich_light_move_v3-F_Cu.svg"         type="image/svg+xml" data-layer="copper"  aria-label="front copper"></object>
+            <object data="hardware/v3/37_rich_light_move_v3-F_Silkscreen.svg" type="image/svg+xml" data-layer="silk"    aria-label="front silkscreen"></object>
+            <object data="hardware/v3/37_rich_light_move_v3-F_Courtyard.svg"  type="image/svg+xml" data-layer="court"   aria-label="front courtyard" style="display:none"></object>
+            <object data="hardware/v3/37_rich_light_move_v3-B_Cu.svg"         type="image/svg+xml" data-layer="bcopper" aria-label="back copper" style="display:none"></object>
+            <object data="hardware/v3/37_rich_light_move_v3-B_Silkscreen.svg" type="image/svg+xml" data-layer="bsilk"   aria-label="back silkscreen" style="display:none"></object>
+          </div>
+        </div>
+
+        <div class="alert">
+          <strong>// VIEWING TIP</strong>
+          The interactive <a href="hardware/v3/bom/ibom.html" target="_blank">BOM viewer</a> (KiCad's InteractiveHtmlBom export) is more useful for hunting down where a specific component lives — hover the BOM table → see the part highlighted on the board.
+        </div>
+      </div>
+    </details>
+
+    <!-- ═══ § 2 — PIN MAP ═══ -->
+    <details class="collapsible" id="pinmap">
+      <summary>🔌 3 — ESP32-C3 GPIO pin map (from v3 schematic)</summary>
+      <div class="card">
+
+        <p class="lead">All GPIOs as actually wired in the v3 schematic — single source of truth.</p>
+
+        <div class="legend">
+          <span class="chip motor">Motor driver</span>
+          <span class="chip i2c">I²C bus</span>
+          <span class="chip input">Input</span>
+          <span class="chip power">Audio / signal</span>
+          <span class="chip aux">Expansion</span>
+        </div>
+
+        <table class="pinmap">
+          <thead>
+            <tr><th>GPIO</th><th>Role</th><th>Connected to</th><th>Direction</th><th>Notes</th></tr>
+          </thead>
+          <tbody>
+            <tr class="group-input"><td class="gpio">GPIO 0</td><td class="role">Push-button input</td><td>SW1 (Omron B3F)</td><td>IN</td><td>10 kΩ pull-up to 3V3 (R2). Goes via JP1 jumper to GPIO 20 if wanted.</td></tr>
+            <tr class="group-motor"><td class="gpio">GPIO 1</td><td class="role">Motor A direction 1</td><td>TB6612FNG AIN1 + J2 conn + LEDs D5/D6</td><td>OUT</td><td>Also drives green status LED pair via 1 kΩ.</td></tr>
+            <tr class="group-motor"><td class="gpio">GPIO 2</td><td class="role">Motor A direction 2</td><td>TB6612FNG AIN2</td><td>OUT</td><td>Forms the AIN1/AIN2 truth-table for motor A direction.</td></tr>
+            <tr class="group-motor"><td class="gpio">GPIO 3</td><td class="role">Motor A speed (PWM)</td><td>TB6612FNG PWMA + also exposed on J3</td><td>OUT</td><td>GPIO 3 always drives PWMA. The J3 3-pin header taps the same signal so an external device (e.g. servo) can share it. Solder jumper <code>JP2</code> selects J3's power pin: <strong>VCC direct</strong> (battery) <em>or</em> <strong>5 V regulated</strong> (per the 2025-06-21 schematic note).</td></tr>
+            <tr class="group-power"><td class="gpio">GPIO 4</td><td class="role">Buzzer</td><td>R7 → transistor → bz1/bz2</td><td>OUT</td><td>Transistor stage (R7 base, R8 series, R9 pull-down). Allows louder volume + protects GPIO.</td></tr>
+            <tr class="group-aux"><td class="gpio">GPIO 5</td><td class="role">Onboard NeoPixel chain</td><td>D1 → D2 → D3 → D4 (TX1812, 5050)</td><td>OUT</td><td>4× WS2812-compatible addressable RGB LEDs daisy-chained. <code>DIN</code> of D1 = GPIO 5; <code>DOUT</code> of each feeds <code>DIN</code> of next. Drives the "rich light" animations via RMT @ 800 kHz.</td></tr>
+            <tr class="group-motor"><td class="gpio">GPIO 6</td><td class="role">Motor B direction 1</td><td>TB6612FNG BIN1 + J4 conn</td><td>OUT</td><td>Also routed to J4 servo header (3-pin V+/GND/sig).</td></tr>
+            <tr class="group-motor"><td class="gpio">GPIO 7</td><td class="role">Motor B direction 2</td><td>TB6612FNG BIN2</td><td>OUT</td><td>Forms the BIN1/BIN2 truth-table for motor B direction.</td></tr>
+            <tr class="group-i2c"><td class="gpio">GPIO 8</td><td class="role">I²C SDA</td><td>OLED 128×32</td><td>I/O</td><td>10 kΩ pull-up to 3V3 (R10).</td></tr>
+            <tr class="group-i2c"><td class="gpio">GPIO 9</td><td class="role">I²C SCL</td><td>OLED 128×32</td><td>OUT</td><td>10 kΩ pull-up to 3V3 (R11). Also BOOT button — pull-up keeps it high at boot.</td></tr>
+            <tr class="group-motor"><td class="gpio">GPIO 10</td><td class="role">Motor B speed (PWM)</td><td>TB6612FNG PWMB + J5 conn + LEDs D7/D8</td><td>OUT</td><td>Also drives blue status LED pair + J5 servo header.</td></tr>
+            <tr class="group-aux"><td class="gpio">GPIO 20</td><td class="role">Expansion</td><td>J7 (2-pin) + JP1</td><td>I/O</td><td>JP1 jumper bridges this to GPIO 0 if SW1 isn't used.</td></tr>
+            <tr class="group-aux"><td class="gpio">GPIO 21</td><td class="role">Expansion</td><td>J6 (4-pin)</td><td>I/O</td><td>4-pin connector — likely external I²C device or ultrasonic sensor.</td></tr>
+          </tbody>
+        </table>
+
+        <div class="alert warn">
+          <strong>// SUPERSEDES BUILD-GUIDE PIN MAP</strong>
+          The earlier <a href="build-guide.html">build-guide</a>'s pin map was speculative (assumed servos + NeoPixel + HC-SR04). This page reflects the actual v3 schematic. The build-guide will be updated to match.
+        </div>
+      </div>
+    </details>
+
+    <!-- ═══ § 3 — CONNECTORS ═══ -->
+    <details class="collapsible" id="connectors">
+      <summary>🔗 4 — Connectors — what plugs where</summary>
+      <div class="card">
+
+        <p class="lead">11 connectors on the board. The 3-pin ones follow the standard servo pinout (V+/GND/signal); 2-pin pads are motor outputs; 4-pin is for external I²C / sensor.</p>
+
+        <div class="conn-grid">
+          <div class="conn">
+            <h4>J1 <span class="pintype">2-pin</span></h4>
+            <p>Auxiliary push-button — wires to <code>GPIO 0</code> via SW1.</p>
+            <span class="pins">pin 1: GPIO 0 · pin 2: GND</span>
+          </div>
+          <div class="conn">
+            <h4>J2 <span class="pintype">3-pin servo</span></h4>
+            <p>Servo / LED-pair — signal on <code>GPIO 1</code>. Powers the green LED indicator pair.</p>
+            <span class="pins">VCC · GND · GPIO 1</span>
+          </div>
+          <div class="conn">
+            <h4>J3 <span class="pintype">3-pin servo</span></h4>
+            <p>Servo-style header that taps the <strong>PWMA</strong> signal (GPIO 3). JP2 selects whether the V+ pin is VCC (direct battery) or 5 V (regulated) — see schematic note.</p>
+            <span class="pins">V+ (VCC or 5V via JP2) · GND · GPIO 3 / PWMA</span>
+          </div>
+          <div class="conn">
+            <h4>J4 <span class="pintype">3-pin servo</span></h4>
+            <p>Servo header — signal on <code>GPIO 6</code> (also TB6612 BIN1).</p>
+            <span class="pins">VCC · 5V · GPIO 6</span>
+          </div>
+          <div class="conn">
+            <h4>J5 <span class="pintype">3-pin servo</span></h4>
+            <p>Servo header — signal on <code>GPIO 10</code> (also TB6612 PWMB + blue LED pair).</p>
+            <span class="pins">VCC · 5V · GPIO 10</span>
+          </div>
+          <div class="conn">
+            <h4>J6 <span class="pintype">4-pin · HC-SR04</span></h4>
+            <p>Ultrasonic distance sensor header. PCB silkscreen labels the four pads <code>vcc · trig · echo · gnd</code> — drop-in for a standard HC-SR04 module.</p>
+            <span class="pins">VCC · TRIG · ECHO · GND  (signal pins routed to GPIO 20 / 21)</span>
+          </div>
+          <div class="conn">
+            <h4>J7 <span class="pintype">2-pin</span></h4>
+            <p>Generic expansion — <code>GPIO 20</code> + GND. Bridged to GPIO 0 via JP1 if needed.</p>
+            <span class="pins">GPIO 20 · GND</span>
+          </div>
+          <div class="conn">
+            <h4>J8 <span class="pintype">2-pin pads</span></h4>
+            <p>Motor A output — TB6612FNG AO1/AO2. Solder DC motor leads here.</p>
+            <span class="pins">AO1 · AO2</span>
+          </div>
+          <div class="conn">
+            <h4>J9 <span class="pintype">2-pin pads</span></h4>
+            <p>Motor B output — TB6612FNG BO1/BO2. Solder second DC motor here.</p>
+            <span class="pins">BO1 · BO2</span>
+          </div>
+          <div class="conn">
+            <h4>J10 / J11 <span class="pintype">2-pin</span></h4>
+            <p>Battery / power input + switched power-out. <code>SK12D07VG4</code> slide switch (U2) routes between them.</p>
+            <span class="pins">VDDA · GND</span>
+          </div>
+          <div class="conn">
+            <h4>BB1 <span class="pintype">4-pin I²C</span></h4>
+            <p>OLED 128×32 — SSD1306-class display module. Inline I²C with R10/R11 pull-ups.</p>
+            <span class="pins">SDA · SCL · VCC · GND</span>
+          </div>
+        </div>
+      </div>
+    </details>
+
+    <!-- ═══ § 4 — KEY ICs ═══ -->
+    <details class="collapsible" id="ics">
+      <summary>🧩 5 — Key ICs on the board</summary>
+      <div class="card">
+
+        <table class="pinmap">
+          <thead><tr><th>Ref</th><th>Part</th><th>Role</th><th>Why</th></tr></thead>
+          <tbody>
+            <tr><td class="gpio">U3</td><td><strong>ESP32-C3 SuperMini</strong></td><td>MCU</td><td>RISC-V 32-bit · WiFi + BLE · USB-C native CDC · 4 MB flash · 13 GPIOs broken out.</td></tr>
+            <tr><td class="gpio">U1</td><td><strong>TB6612FNG</strong></td><td>Dual H-bridge motor driver</td><td>Drives 2 DC motors up to 1.2 A continuous each. PWMA + AIN1/2 (motor A), PWMB + BIN1/2 (motor B), STBY enable.</td></tr>
+            <tr><td class="gpio">U4</td><td><strong>AMS1117-5.0</strong></td><td>5 V LDO regulator</td><td>Steps battery (VDDA) down to 5 V for servos &amp; logic. C4 + C5 = 100 nF decoupling.</td></tr>
+            <tr><td class="gpio">U2</td><td><strong>SK12D07VG4</strong></td><td>Slide switch (SPDT)</td><td>Power on/off — selects between battery and disconnected.</td></tr>
+            <tr><td class="gpio">SW1</td><td><strong>B3F (Omron)</strong></td><td>Tactile push-button</td><td>User input on GPIO 0. Pulled high by R2 (10 kΩ).</td></tr>
+            <tr><td class="gpio">BB1</td><td><strong>OLED 128×32</strong></td><td>I²C display module</td><td>SSD1306-class. Status / battery % / sensor readout.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </details>
+
+    <!-- ═══ § 5 — NOTES FROM SCHEMATIC ═══ -->
+    <details class="collapsible" id="notes">
+      <summary>📝 6 — Schematic revision notes</summary>
+      <div class="card">
+
+        <p class="lead">The bottom-right of the v3 schematic carries two annotated revision notes from the designer:</p>
+
+        <div class="alert warn">
+          <strong>// 21 / 06 / 2025</strong>
+          <em>"select either powering from VCC directly or 5V from regulator. Problems with PWMA for servos add a protection diode."</em>
+          <br><br>
+          → Implication: if you connect a servo via J3 (which shares GPIO 3 with motor PWMA via JP2), the back-EMF can damage the GPIO. Add a <code>1N4148</code> reverse-biased between signal and ground.
+        </div>
+
+        <div class="alert warn">
+          <strong>// 28 / 07 / 2025</strong>
+          <em>"add 1000 µF capacitors for servos."</em>
+          <br><br>
+          → Implication: SG90-class servos draw a stall current spike (~600 mA each). Without bulk capacitance the 5 V rail dips and the C3 browns out. A single 1000 µF electrolytic across 5V↔GND near the servo headers solves it.
+        </div>
+
+        <div class="alert">
+          <strong>// AUDIT CROSS-REFS</strong>
+          The audit page items <a href="audit.html">C1 (buzzer/battery), H1 (OLED SDA/onboard LED), H2 (OLED SCL/BOOT)</a> were written when the firmware audit predated this schematic. The v3 board uses the documented pull-up + transistor designs that resolve those concerns. Re-verify firmware against this pin map before treating those audit items as live bugs.
+        </div>
+      </div>
+    </details>
+
+    <p class="foot-note">
+      KiCad source on GitHub: <a href="https://github.com/abourdim/esp32c3_super_mini_robot/tree/master/02_hardware/v3" target="_blank" rel="noopener">02_hardware/v3/</a>
+      &nbsp;·&nbsp; Other guides: <a href="user-guide.html">user</a> · <a href="build-guide.html">build</a> · <a href="instructor.html">instructor</a> · <a href="learn.html">learn</a> · <a href="start-here.html">start-here</a>
+    </p>
+
+  </div><!-- .rows-container -->
+</div><!-- .app -->
+
+<script src="assets/wdiy-script.js"></script>
+<script src="assets/wdiy-shell.js"></script>
+
+<script>
+/* Layer-toggle wiring */
+document.querySelectorAll('.layer-toggle').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const layer = btn.dataset.layer;
+    const obj = document.querySelector(`.pcb-stage object[data-layer="${layer}"]`);
+    if (!obj) return;
+    const wasActive = btn.classList.contains('active');
+    btn.classList.toggle('active', !wasActive);
+    btn.setAttribute('aria-pressed', String(!wasActive));
+    obj.style.display = wasActive ? 'none' : '';
+  });
+});
+
+/* When the first <object> loads, size the stage to its aspect ratio so
+   subsequent absolute-positioned siblings overlay correctly. */
+const board = document.querySelector('.pcb-stage object[data-layer="board"]');
+if (board) {
+  board.addEventListener('load', () => {
+    const stage = document.getElementById('pcb-stage');
+    const svg = board.contentDocument?.querySelector('svg');
+    if (svg && stage) {
+      const vb = svg.getAttribute('viewBox')?.split(/\s+/);
+      if (vb && vb.length === 4) {
+        const ratio = Number(vb[3]) / Number(vb[2]);
+        stage.style.aspectRatio = `${vb[2]} / ${vb[3]}`;
+      }
+    }
+  });
+}
+</script>
+</body>
+</html>

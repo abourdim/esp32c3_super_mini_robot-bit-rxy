@@ -1,0 +1,1423 @@
+<!doctype html>
+<html lang="en" dir="ltr" data-theme="robot">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Firmware Audit — ESP32-C3 Robot App</title>
+<link rel="stylesheet" href="assets/wdiy-template.css">
+<style>
+/* ════════════════════════════════════════════════════════════
+   AUDIT-SPECIFIC CSS — bridges audit's local var names to the
+   wdiy-template vars, plus theme-agnostic severity colors.
+   ════════════════════════════════════════════════════════════ */
+
+:root {
+  /* Aliases — audit's old names → template vars */
+  --fg:       var(--text);
+  --muted:    var(--text-muted);
+  --card:     var(--panel);
+  --card2:    rgba(0,0,0,.18);
+  --shadow:   rgba(0,0,0,.25);
+  --code-bg:  color-mix(in srgb, var(--accent) 14%, transparent);
+
+  /* Severity colors — single set, theme-agnostic
+     (red/orange/yellow/green read as severity in any palette) */
+  --crit: #ef4444; --crit-bg: rgba(239,68,68,.12); --crit-glow: rgba(239,68,68,.25);
+  --high: #f97316; --high-bg: rgba(249,115,22,.12); --high-glow: rgba(249,115,22,.25);
+  --med:  #eab308; --med-bg:  rgba(234,179,8,.12);  --med-glow:  rgba(234,179,8,.25);
+  --low:  #22c55e; --low-bg:  rgba(34,197,94,.12);  --low-glow:  rgba(34,197,94,.25);
+  --check-done: #22c55e;
+}
+.light-theme {
+  --shadow:   rgba(0,0,0,.08);
+  --card2:    rgba(0,0,0,.04);
+  --crit-bg:  rgba(239,68,68,.08);
+  --high-bg:  rgba(249,115,22,.08);
+  --med-bg:   rgba(234,179,8,.08);
+  --low-bg:   rgba(34,197,94,.08);
+}
+
+.app { max-width: 920px; }
+
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+code {
+  background: var(--code-bg); color: var(--accent);
+  padding: 1px 6px; border-radius: 4px;
+  font: 12.5px/1.4 ui-monospace, Menlo, Consolas, monospace;
+}
+.light-theme code { color: var(--text); }
+
+/* ── Sub-header (date) ── */
+.audit-sub { color: var(--muted); font-size: 13px; margin: 4px 0 18px; padding: 0 4px; }
+
+/* ── Stat cards ── */
+.stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-bottom: 22px; }
+.stat {
+  padding: 14px 16px; border-radius: 10px;
+  background: var(--card); border: 1px solid var(--border);
+  box-shadow: 0 2px 8px var(--shadow);
+  text-align: center; transition: transform .15s, box-shadow .15s;
+}
+.stat:hover { transform: translateY(-2px); box-shadow: 0 6px 20px var(--shadow); }
+.stat .num { font-size: 28px; font-weight: 800; line-height: 1; }
+.stat .lbl {
+  font-size: 11px; text-transform: uppercase;
+  letter-spacing: .5px; margin-top: 4px; font-weight: 600; color: var(--muted);
+}
+.stat.s-crit { border-color: var(--crit); background: var(--crit-bg); } .stat.s-crit .num { color: var(--crit); }
+.stat.s-high { border-color: var(--high); background: var(--high-bg); } .stat.s-high .num { color: var(--high); }
+.stat.s-med  { border-color: var(--med);  background: var(--med-bg);  } .stat.s-med  .num { color: var(--med); }
+.stat.s-low  { border-color: var(--low);  background: var(--low-bg);  } .stat.s-low  .num { color: var(--low); }
+
+/* ── Progress bar ── */
+.progress-wrap {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 12px; height: 32px; overflow: hidden;
+  position: relative; margin-bottom: 20px;
+  box-shadow: 0 2px 8px var(--shadow);
+}
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  transition: width .4s cubic-bezier(.4,0,.2,1);
+  border-radius: 12px; position: relative; overflow: hidden;
+}
+.progress-bar::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.15), transparent);
+  animation: shimmer 2s infinite;
+}
+@keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+.progress-label {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; pointer-events: none;
+  text-shadow: 0 1px 2px rgba(0,0,0,.3); color: #fff;
+}
+.light-theme .progress-label { color: var(--text); text-shadow: none; }
+
+/* ── Toolbar ── */
+.toolbar { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; }
+.toolbar button {
+  padding: 6px 14px; border: 1px solid var(--border);
+  background: var(--card); color: var(--fg);
+  border-radius: 8px; cursor: pointer;
+  font: 12px/1.4 inherit; font-weight: 500;
+  transition: all .15s;
+}
+.toolbar button:hover {
+  border-color: var(--accent); background: var(--card2);
+  box-shadow: 0 2px 8px var(--shadow); transform: none;
+}
+
+/* ── Phases ── */
+.phase { margin-bottom: 24px; }
+.phase-hdr {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 16px; border-radius: 10px;
+  background: var(--card); border-left: 5px solid;
+  cursor: pointer; user-select: none;
+  box-shadow: 0 2px 8px var(--shadow); transition: all .15s;
+}
+.phase-hdr:hover { box-shadow: 0 4px 16px var(--shadow); }
+.phase-hdr h2 { font-size: 15px; flex: 1; font-weight: 700; margin: 0; }
+.phase-hdr .emoji { font-size: 20px; }
+.phase-hdr .badge {
+  font-size: 11px; padding: 3px 10px;
+  border-radius: 12px; font-weight: 700; white-space: nowrap;
+}
+.phase-hdr .arrow { transition: transform .2s; font-size: 11px; color: var(--muted); }
+.phase-hdr.collapsed .arrow { transform: rotate(-90deg); }
+
+.phase[data-level="critical"] .phase-hdr { border-color: var(--crit); box-shadow: 0 2px 12px var(--crit-glow); }
+.phase[data-level="critical"] .badge      { background: var(--crit); color: #fff; }
+.phase[data-level="high"] .phase-hdr      { border-color: var(--high); box-shadow: 0 2px 12px var(--high-glow); }
+.phase[data-level="high"] .badge          { background: var(--high); color: #fff; }
+.phase[data-level="medium"] .phase-hdr    { border-color: var(--med); box-shadow: 0 2px 12px var(--med-glow); }
+.phase[data-level="medium"] .badge        { background: var(--med); color: #000; }
+.phase[data-level="low"] .phase-hdr       { border-color: var(--low); box-shadow: 0 2px 12px var(--low-glow); }
+.phase[data-level="low"] .badge           { background: var(--low); color: #fff; }
+
+/* ── Items ── */
+.items { padding: 8px 0 0; display: grid; gap: 8px; }
+.item {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 14px 16px; border-radius: 10px;
+  background: var(--card); border: 1px solid var(--border);
+  box-shadow: 0 1px 4px var(--shadow); transition: all .2s;
+}
+.item:hover {
+  border-color: var(--accent); box-shadow: 0 4px 16px var(--shadow);
+  transform: translateY(-1px);
+}
+.item.done { opacity: .5; transform: none !important; }
+.item.done .desc strong { text-decoration: line-through; }
+
+.item .sev {
+  width: 32px; height: 32px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; flex-shrink: 0; font-weight: 800; color: #fff;
+}
+.phase[data-level="critical"] .sev { background: var(--crit); }
+.phase[data-level="high"] .sev     { background: var(--high); }
+.phase[data-level="medium"] .sev   { background: var(--med); color: #000; }
+.phase[data-level="low"] .sev      { background: var(--low); }
+
+.item input[type=checkbox] {
+  margin-top: 6px; accent-color: var(--check-done);
+  width: 18px; height: 18px; flex-shrink: 0;
+  cursor: pointer; border-radius: 4px;
+}
+
+.desc { flex: 1; min-width: 0; }
+.desc strong { font-weight: 700; font-size: 14px; display: block; margin-bottom: 3px; }
+.desc .detail { color: var(--muted); font-size: 13px; line-height: 1.5; }
+.file {
+  display: inline-flex; align-items: center; gap: 4px;
+  font: 11.5px/1.4 ui-monospace, Menlo, Consolas, monospace;
+  background: var(--code-bg); padding: 2px 8px; border-radius: 5px;
+  color: var(--muted); margin-top: 6px; word-break: break-all;
+}
+.file::before { content: '📄'; font-size: 11px; }
+
+/* ── Bug reports ── */
+.bugs-section { margin-top: 40px; padding-top: 24px; border-top: 2px solid var(--border); }
+.bugs-section h2 { font-size: 20px; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+.bug {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 12px; padding: 18px; margin-bottom: 14px;
+  box-shadow: 0 2px 8px var(--shadow); transition: all .2s;
+}
+.bug:hover { box-shadow: 0 4px 16px var(--shadow); border-color: var(--accent); }
+.bug-hdr { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+.bug-id {
+  font: 13px/1 ui-monospace, Menlo, Consolas, monospace;
+  padding: 4px 10px; border-radius: 6px; font-weight: 700; white-space: nowrap;
+}
+.bug-id.fixed         { background: var(--low); color: #fff; }
+.bug-id.open          { background: var(--crit); color: #fff; }
+.bug-id.investigating { background: var(--med); color: #000; }
+.bug-title { font-weight: 700; font-size: 15px; flex: 1; }
+.bug-date  { color: var(--muted); font-size: 12px; }
+.bug-status { font-size: 12px; padding: 3px 10px; border-radius: 10px; font-weight: 600; }
+.bug-status.fixed         { background: var(--low-bg);  color: var(--low);  border: 1px solid var(--low); }
+.bug-status.open          { background: var(--crit-bg); color: var(--crit); border: 1px solid var(--crit); }
+.bug-status.investigating { background: var(--med-bg);  color: var(--med);  border: 1px solid var(--med); }
+
+.bug-body { display: grid; gap: 8px; }
+.bug-row { display: grid; grid-template-columns: 90px 1fr; gap: 8px; font-size: 13px; }
+.bug-row .label {
+  color: var(--muted); font-weight: 600;
+  text-transform: uppercase; font-size: 11px; letter-spacing: .3px;
+  padding-top: 2px;
+}
+.bug-row .val { line-height: 1.5; }
+.bug-row .val code { font-size: 12px; }
+.crash-dump {
+  background: var(--code-bg); border: 1px solid var(--border);
+  border-radius: 6px; padding: 10px 14px;
+  font: 11.5px/1.5 ui-monospace, Menlo, Consolas, monospace;
+  color: var(--muted); max-height: 220px; overflow: auto;
+  white-space: pre; margin-top: 6px;
+}
+.bug-files { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+
+/* ── Responsive ── */
+@media (max-width: 600px) {
+  .stats { grid-template-columns: repeat(2,1fr); }
+  .stat .num { font-size: 22px; }
+  .phase-hdr h2 { font-size: 13px; }
+  .bug-row { grid-template-columns: 1fr; gap: 4px; }
+}
+</style>
+</head>
+
+<body
+  data-app-title="Firmware Audit"
+  data-app-subtitle="🐛 track · 🔍 diagnose · 🛠️ fix"
+  data-help-page="audit"
+  data-status-text="board_v3"
+  data-status-online="true">
+
+<div class="app">
+  <div class="rows-container">
+
+    <p class="audit-sub">ESP32-C3 Super Mini · board_v3 · <span id="date"></span></p>
+
+    <!-- ═══ Stat cards ═══ -->
+    <div class="stats">
+      <div class="stat s-crit"><div class="num" id="sc">0/5</div><div class="lbl">Critical</div></div>
+      <div class="stat s-high"><div class="num" id="sh">0/7</div><div class="lbl">High</div></div>
+      <div class="stat s-med"><div class="num" id="sm">0/5</div><div class="lbl">Medium</div></div>
+      <div class="stat s-low"><div class="num" id="sl">0/5</div><div class="lbl">Low</div></div>
+    </div>
+
+    <!-- ═══ Progress ═══ -->
+    <div class="progress-wrap">
+      <div class="progress-bar" id="bar"></div>
+      <div class="progress-label" id="bar-label"></div>
+    </div>
+
+    <!-- ═══ Toolbar ═══ -->
+    <div class="toolbar">
+      <button onclick="toggleAll(true)">✅ Check all</button>
+      <button onclick="toggleAll(false)">⬜ Reset</button>
+      <button onclick="expandAll(true)">▾ Expand</button>
+      <button onclick="expandAll(false)">▸ Collapse</button>
+    </div>
+
+    <!-- ═══ CRITICAL ═══ -->
+    <div class="phase" data-level="critical">
+      <div class="phase-hdr" onclick="toggle(this)">
+        <span class="arrow">▾</span>
+        <span class="emoji">💥</span>
+        <h2>Phase 1 — Critical</h2>
+        <span class="badge" id="bc">0 / 5</span>
+      </div>
+      <div class="items">
+
+        <div class="item" data-id="c1">
+          <div class="sev">C1</div>
+          <input type="checkbox" onchange="save()">
+          <div class="desc">
+            <strong>GPIO 4 collision: buzzer + battery</strong>
+            <div class="detail">Both <code>CONFIG_PIN_BUZZER</code> and <code>CONFIG_PIN_BATTERY</code> use GPIO 4. PWM output corrupts ADC reads. Move buzzer to GPIO 3.</div>
+            <span class="file">src/00_config.h : lines 17, 21</span>
+          </div>
+        </div>
+
+        <div class="item" data-id="c2">
+          <div class="sev">C2</div>
+          <input type="checkbox" onchange="save()">
+          <div class="desc">
+            <strong>NeoPixel out-of-bounds writes</strong>
+            <div class="detail">Animations index LEDs 0–15 / 0–31 but <code>CONFIG_NEOPIXELS_NB_LEDS</code> is 4. Memory corruption &rarr; random crashes.</div>
+            <span class="file">src/06_neopixels.cpp</span>
+          </div>
+        </div>
+
+        <div class="item" data-id="c3">
+          <div class="sev">C3</div>
+          <input type="checkbox" onchange="save()">
+          <div class="desc">
+            <strong>Duplicate FastLED.addLeds()</strong>
+            <div class="detail">Demo file calls <code>addLeds&lt;WS2812, 10&gt;</code> with hardcoded pin &amp; 16 LEDs, conflicting with main init. Remove or gate behind a flag.</div>
+            <span class="file">src/15_neopixels_demo.cpp : line 57</span>
+          </div>
+        </div>
+
+        <div class="item" data-id="c4">
+          <div class="sev">C4</div>
+          <input type="checkbox" onchange="save()">
+          <div class="desc">
+            <strong>Blocking bit-bang PWM in playTone()</strong>
+            <div class="detail">Busy <code>while(millis())</code> loop freezes BLE, sensors, motors. Replace with <code>ledcWriteTone()</code> + timer callback.</div>
+            <span class="file">src/05_buzzer.cpp</span>
+          </div>
+        </div>
+
+        <div class="item" data-id="c5">
+          <div class="sev">C5</div>
+          <input type="checkbox" onchange="save()">
+          <div class="desc">
+            <strong>FRAMES_PER_SECOND redefined</strong>
+            <div class="detail">Macro defined on lines 15 &amp; 48. Also redefines <code>NUM_LEDS</code>, <code>LED_PIN</code> locally — use config.h values.</div>
+            <span class="file">src/16_neopixels_waving_french_flag.cpp</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ═══ HIGH ═══ -->
+    <div class="phase" data-level="high">
+      <div class="phase-hdr" onclick="toggle(this)">
+        <span class="arrow">▾</span>
+        <span class="emoji">⚠️</span>
+        <h2>Phase 2 — High</h2>
+        <span class="badge" id="bh">0 / 7</span>
+      </div>
+      <div class="items">
+
+        <div class="item" data-id="h1">
+          <div class="sev">H1</div>
+          <input type="checkbox" onchange="save()">
+          <div class="desc">
+            <strong>GPIO 8 = OLED SDA = built-in LED</strong>
+            <div class="detail">On Super Mini, GPIO 8 drives the onboard LED. I&sup2;C and LED will conflict. Reassign OLED SDA.</div>
+            <span class="file">src/00_config.h : line 24</span>
+          </div>
+        </div>
+
+        <div class="item" data-id="h2">
+          <div class="sev">H2</div>
+          <input type="checkbox" onchange="save()">
+          <div class="desc">
+            <strong>GPIO 9 = OLED SCL = BOOT button</strong>
+            <div class="detail">Pulling SCL low during power-on enters bootloader. Reassign OLED SCL or add external pull-up.</div>
+            <span class="file">src/00_config.h : line 25</span>
+          </div>
+        </div>
+
+        <div class="item done" data-id="h3" style="opacity:.5">
+          <div class="sev" style="background:var(--muted)">H3</div>
+          <input type="checkbox" onchange="save()" disabled>
+          <div class="desc">
+            <strong style="text-decoration:line-through">Wrong variable in events</strong> &nbsp;<span style="color:var(--low);font-size:11px;font-weight:700">FALSE POSITIVE</span>
+            <div class="detail"><code>interval</code> IS a valid global declared in <code>02_data.h</code> and defined in <code>02_data.cpp</code> as <code>const int32_t interval = 500</code>. Audit was wrong — not a bug.</div>
+            <span class="file">src/11_events.cpp ✓ verified</span>
+          </div>
+        </div>
+
+        <div class="item" data-id="h4">
+          <div class="sev">H4</div>
+          <input type="checkbox" onchange="save()">
+          <div class="desc">
+            <strong>Hardcoded WiFi credentials</strong>
+            <div class="detail">SSID <code>"wdy_wifi_01"</code> / password <code>"12345678"</code> in <code>#else</code> branch. Move to <code>secrets.h</code> (gitignored).</div>
+            <span class="file">src/03_remotexy.cpp</span>
+          </div>
+        </div>
+
+        <div class="item" data-id="h5">
+          <div class="sev">H5</div>
+          <input type="checkbox" onchange="save()">
+          <div class="desc">
+            <strong>LED pins redefined locally</strong>
+            <div class="detail"><code>LED_PIN_1=2</code>, <code>LED_PIN_2=6</code> shadow config.h values. Use config defines only.</div>
+            <span class="file">src/14_leds.cpp : lines 3–4</span>
+          </div>
+        </div>
+
+        <div class="item" data-id="h6">
+          <div class="sev">H6</div>
+          <input type="checkbox" onchange="save()">
+          <div class="desc">
+            <strong>Typo: DEF_DERIAL_DEBUG</strong>
+            <div class="detail">Should be <code>DEF_SERIAL_DEBUG</code>. The <code>#ifdef</code> never matches — error message is dead code.</div>
+            <span class="file">src/13_oled.cpp : line 20</span>
+          </div>
+        </div>
+
+        <div class="item" data-id="h7">
+          <div class="sev">H7</div>
+          <input type="checkbox" onchange="save()">
+          <div class="desc">
+            <strong>500ms gate in loop()</strong>
+            <div class="detail">All tasks run every 500ms only. Motors, servos, and NeoPixel animations are extremely choppy.</div>
+            <span class="file">src/src.ino</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ═══ MEDIUM ═══ -->
+    <div class="phase" data-level="medium">
+      <div class="phase-hdr" onclick="toggle(this)">
+        <span class="arrow">▾</span>
+        <span class="emoji">🔧</span>
+        <h2>Phase 3 — Medium</h2>
+        <span class="badge" id="bm">0 / 5</span>
+      </div>
+      <div class="items">
+
+        <div class="item" data-id="m1">
+          <div class="sev">M1</div>
+          <input type="checkbox" onchange="save()">
+          <div class="desc">
+            <strong>Blocking delay(80) in neopixels_star()</strong>
+            <div class="detail">Use <code>millis()</code>-based timing like <code>neopixels_waving_french_flag()</code> already does.</div>
+            <span class="file">src/06_neopixels.cpp</span>
+          </div>
+        </div>
+
+        <div class="item" data-id="m2">
+          <div class="sev">M2</div>
+          <input type="checkbox" onchange="save()">
+          <div class="desc">
+            <strong>String concatenation fragments heap</strong>
+            <div class="detail"><code>String(...) + "V ("</code> allocates on heap. Use <code>sprintf()</code> — already used elsewhere in same function.</div>
+            <span class="file">src/13_oled.cpp : line 78</span>
+          </div>
+        </div>
+
+        <div class="item" data-id="m3">
+          <div class="sev">M3</div>
+          <input type="checkbox" onchange="save()">
+          <div class="desc">
+            <strong>CRGB constants shadow FastLED names</strong>
+            <div class="detail"><code>const CRGB BLUE(...)</code>, <code>RED(...)</code> collide with FastLED built-ins. Add a prefix.</div>
+            <span class="file">src/16_neopixels_waving_french_flag.cpp : lines 53–64</span>
+          </div>
+        </div>
+
+        <div class="item" data-id="m4">
+          <div class="sev">M4</div>
+          <input type="checkbox" onchange="save()">
+          <div class="desc">
+            <strong>leds[] array ownership unclear</strong>
+            <div class="detail">Multiple files use <code>extern</code> for <code>leds[]</code>. Verify single definition with consistent size.</div>
+            <span class="file">src/06_neopixels.cpp, 15_*.cpp, 16_*.cpp</span>
+          </div>
+        </div>
+
+        <div class="item" data-id="m5">
+          <div class="sev">M5</div>
+          <input type="checkbox" onchange="save()">
+          <div class="desc">
+            <strong>FastLED.delay() blocks loop</strong>
+            <div class="detail">Demo uses <code>FastLED.delay()</code> which is blocking. Convert to non-blocking pattern.</div>
+            <span class="file">src/15_neopixels_demo.cpp : line 75</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ═══ LOW ═══ -->
+    <div class="phase" data-level="low">
+      <div class="phase-hdr" onclick="toggle(this)">
+        <span class="arrow">▾</span>
+        <span class="emoji">✨</span>
+        <h2>Phase 4 — Low (cleanup)</h2>
+        <span class="badge" id="bl">0 / 5</span>
+      </div>
+      <div class="items">
+
+        <div class="item" data-id="l1">
+          <div class="sev">L1</div>
+          <input type="checkbox" onchange="save()">
+          <div class="desc">
+            <strong>Mystery comment in buzzer</strong>
+            <div class="detail"><code>// ?????????????</code> around a commented <code>return;</code>. Remove or document intent.</div>
+            <span class="file">src/05_buzzer.cpp</span>
+          </div>
+        </div>
+
+        <div class="item" data-id="l2">
+          <div class="sev">L2</div>
+          <input type="checkbox" onchange="save()">
+          <div class="desc">
+            <strong>Magic numbers everywhere</strong>
+            <div class="detail"><code>sin8(wave + section * 85)</code>, <code>128 +</code>, brightness <code>%=150</code>. Extract as named constants.</div>
+            <span class="file">src/06_neopixels.cpp, 16_*.cpp</span>
+          </div>
+        </div>
+
+        <div class="item" data-id="l3">
+          <div class="sev">L3</div>
+          <input type="checkbox" onchange="save()">
+          <div class="desc">
+            <strong>Inconsistent naming convention</strong>
+            <div class="detail"><code>g_</code> prefix used sometimes, not others. <code>dutyCycle</code> is global without prefix.</div>
+            <span class="file">src/14_leds.cpp : line 13</span>
+          </div>
+        </div>
+
+        <div class="item" data-id="l4">
+          <div class="sev">L4</div>
+          <input type="checkbox" onchange="save()">
+          <div class="desc">
+            <strong>#if 0 / #if 1 toggle blocks</strong>
+            <div class="detail">Use proper feature flags in config.h instead of raw preprocessor toggles.</div>
+            <span class="file">src/00_config.h, 13_oled.cpp</span>
+          </div>
+        </div>
+
+        <div class="item" data-id="l5">
+          <div class="sev">L5</div>
+          <input type="checkbox" onchange="save()">
+          <div class="desc">
+            <strong>Potential dead code</strong>
+            <div class="detail">Multiple animation functions defined but never called. Audit call graph &amp; remove unused.</div>
+            <span class="file">src/06_neopixels.cpp, 16_*.cpp</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ═══ BUG REPORTS ═══ -->
+    <div class="bugs-section">
+      <h2>🐛 Bug Reports</h2>
+
+      <div class="bug" id="bug-001">
+        <div class="bug-hdr">
+          <span class="bug-id fixed">BUG-001</span>
+          <span class="bug-title">Guru Meditation crash on boot — Instruction access fault</span>
+          <span class="bug-date">2026-05-05</span>
+          <span class="bug-status fixed">✅ Fixed</span>
+        </div>
+        <div class="bug-body">
+          <div class="bug-row">
+            <div class="label">Symptom</div>
+            <div class="val">Board reboots immediately after flashing with <code>Guru Meditation Error: Core 0 panic'ed (Instruction access fault)</code>. Infinite reboot loop. <code>MEPC: 0x3fc9027c</code> points to RAM (not executable flash).</div>
+          </div>
+          <div class="bug-row">
+            <div class="label">Root cause</div>
+            <div class="val"><strong>Stack overflow from runaway FastLED RMT interrupt re-entry.</strong> <code>addr2line</code> on the crash addresses pointed to <code>ESP32RMTController::interruptHandler</code> at <code>FastLED/src/platforms/esp/32/rmt_4/idf4_rmt_impl.cpp:827</code>, calling <code>vPortEnterCritical</code> repeatedly with 192-byte stack frames. The decrementing T4 counter (9→4) is the recursion depth.<br><br>The ESP-IDF 4.x RMT driver bundled with PlatformIO <code>espressif32 ~6.4.0</code> has a known race on ESP32-C3 (only 2 RMT channels): the ISR doesn't reliably clear its interrupt flag before <code>iret</code>, so it immediately re-fires and overflows the stack within ~9 calls.</div>
+          </div>
+          <div class="bug-row" style="align-items:start">
+            <div class="label" style="padding-top:4px">What is RMT?</div>
+            <div class="val">
+              <strong>RMT = Remote Control Transceiver</strong> — a hardware peripheral built into every ESP32 that generates or receives precise pulse trains without any CPU involvement. Originally designed for IR remote controls (38 kHz carrier, variable pulse lengths), it turned out to be perfect for driving addressable LEDs.<br><br>
+
+              <strong>Why FastLED uses RMT for WS2812 NeoPixels</strong><br>
+              WS2812 LEDs speak a one-wire self-clocking protocol: each bit is a fixed-width pulse at 800 kHz, and the 0 vs 1 distinction is in the <em>duty cycle</em>:
+              <div class="crash-dump" style="font-size:11px;line-height:1.6;max-height:none">Bit 0:  ▄___   400 ns HIGH  →  850 ns LOW   (tolerance ±150 ns)
+Bit 1:  ▄▄▄_   800 ns HIGH  →  450 ns LOW   (tolerance ±150 ns)
+Reset:  _________  &gt; 50 µs LOW  (latch all data)</div>
+              Software bit-bang would need to toggle a GPIO with &lt;150 ns jitter while running an OS, handling Wi-Fi ISRs, and doing BLE stack work — impossible on a non-RTOS core. RMT encodes the entire LED frame as a waveform table and streams it out in hardware, bit-perfect, zero CPU load.<br><br>
+
+              <strong>ESP32 family RMT channel count</strong><br>
+              <div class="crash-dump" style="font-size:11px;max-height:none">ESP32 classic   →  8 RMT channels  (plenty of headroom)
+ESP32-S2        →  4 RMT channels
+ESP32-S3        →  4 RMT channels
+ESP32-C3        →  2 RMT channels  ← this board  ⚠️
+ESP32-C6        →  2 RMT channels</div>
+              With only 2 channels, any additional concurrent RMT user (e.g. IR receive, second LED strip) directly competes with FastLED.<br><br>
+
+              <strong>The ESP-IDF 4.x race condition</strong><br>
+              In the IDF 4.x RMT driver (<code>idf4_rmt_impl.cpp</code>), the ISR handler that fires at the end of each LED frame didn't reliably clear the RMT interrupt status register <em>before</em> executing <code>iret</code> (interrupt return). On ESP32-C3's RISC-V core, the hardware re-checks the pending interrupt line during <code>iret</code> itself — so the ISR re-entered <em>immediately</em>. Each re-entry consumed ~192 bytes of stack (one <code>vPortEnterCritical</code> frame), and with ~9 recursive calls the stack pointer hit non-executable RAM → <code>MCAUSE=0x01</code> Instruction access fault.<br><br>
+
+              <strong>ESP-IDF 5.1 fix</strong><br>
+              The entire RMT driver was rewritten in IDF 5.x as a DMA-backed transaction model. The ISR-based ping-pong buffer loop (the source of the race) was replaced by the DMA engine, eliminating the re-entry window entirely. PlatformIO <code>espressif32 @ 6.7.0</code> bundles IDF 5.1 — pinning to that version is the fix.
+            </div>
+          </div>
+
+          <div class="bug-row">
+            <div class="label">Initial wrong diagnosis</div>
+            <div class="val">First suspected an out-of-bounds write into the 4-element <code>leds[]</code> array via duplicate <code>FastLED.addLeds()</code> with hardcoded <code>NUM_LEDS=16</code> in demo files. That WAS a latent bug (would crash if the dead code ran), but wasn't the trigger — sizing the array to 256 didn't stop the crash, and the crash address only shifted (to <code>0x3fc9027c</code>) because the larger global pushed RAM layout around.</div>
+          </div>
+          <div class="bug-row">
+            <div class="label">Evidence</div>
+            <div class="val">Stack dump showed repeating frames with decrementing counter (9→8→7→6→5→4) = FastLED's LED index loop stomping through memory. <code>MCAUSE=0x01</code> confirmed execution of non-executable address.
+              <div class="crash-dump">Guru Meditation Error: Core  0 panic'ed (Instruction access fault)
+Core  0 register dump:
+MEPC    : 0x3fc90000  RA      : 0x4038c53c  SP      : 0x3fc8f5e0  GP      : 0x3fc8de00
+TP      : 0x3fc9090c  T0      : 0x4038c538  T1      : 0x600c2140  T2      : 0x00000005
+S0/FP   : 0x3fc8f4f0  S1      : 0x8000000b  A0      : 0x3fc8ff8c  A1      : 0x3fc8f694
+A2      : 0x00000000  A3      : 0x00000004  A4      : 0x600c2000  A5      : 0x3fc90000
+MSTATUS : 0x00001881  MTVEC   : 0x40380001  MCAUSE  : 0x00000001  MTVAL   : 0x3fc90000
+
+Stack memory (repeating pattern — decrementing T4 = LED index):
+3fc8f5e0: ...T4=0x09 T5=0x0a...  ← frame with index 9
+3fc8f660: ...T4=0x08 T5=0x09...  ← frame with index 8
+3fc8f740: ...T4=0x07 T5=0x08...  ← frame with index 7
+3fc8f820: ...T4=0x06 T5=0x07...  ← frame with index 6
+3fc8f8e0: ...T4=0x05 T5=0x06...  ← frame with index 5
+3fc8f9a0: ...T4=0x04 T5=0x05...  ← frame with index 4
+Each frame 0xC0 bytes apart — stack consumed until overflow</div>
+            </div>
+          </div>
+          <div class="bug-row">
+            <div class="label">Real fix</div>
+            <div class="val">
+              <strong>1.</strong> Pinned <code>platform = espressif32 @ 6.7.0</code> (ships ESP-IDF 5.1 with the rewritten RMT driver that fixes the ISR re-entry race).<br>
+              <strong>2.</strong> Pinned <code>fastled/FastLED @ ^3.7.0</code> for reproducibility.<br>
+              <strong>3.</strong> Added belt-and-suspenders build flags:
+              <code>FASTLED_RMT_MAX_CHANNELS=1</code> (C3 has only 2) and <code>FASTLED_RMT_BUILTIN_DRIVER=1</code> (use IDF's tested driver instead of FastLED's custom one).
+            </div>
+          </div>
+          <div class="bug-row">
+            <div class="label">Latent fixes (still useful)</div>
+            <div class="val">
+              <strong>1.</strong> Sized <code>leds[]</code> to <code>CONFIG_NEOPIXELS_MAX_LEDS</code> (256).<br>
+              <strong>2.</strong> Removed duplicate <code>FastLED.addLeds()</code> from demo + french flag files.<br>
+              <strong>3.</strong> Removed hardcoded <code>NUM_LEDS</code>, <code>LED_PIN</code>, <code>BRIGHTNESS</code> redefinitions.<br>
+              <strong>4.</strong> Wrapped dead code with hardcoded indices (<code>leds[16+pos2]</code>, <code>leds[24]</code>, etc.) in <code>#if NB_LEDS &gt;= 32</code> guards — uncommenting them on a small strip will no longer crash.
+            </div>
+          </div>
+          <div class="bug-row">
+            <div class="label">Files</div>
+            <div class="val">
+              <div class="bug-files">
+                <span class="file">src/00_config.h</span>
+                <span class="file">src/06_neopixels.cpp</span>
+                <span class="file">src/06_neopixels.h</span>
+                <span class="file">src/15_neopixels_demo.cpp</span>
+                <span class="file">src/16_neopixels_waving_french_flag.cpp</span>
+              </div>
+            </div>
+          </div>
+          <div class="bug-row">
+            <div class="label">Audit refs</div>
+            <div class="val">C2 (out-of-bounds), C3 (duplicate addLeds), C5 (macro redefinitions), M3 (CRGB name shadows)</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bug" id="bug-002">
+        <div class="bug-hdr">
+          <span class="bug-id open">BUG-002</span>
+          <span class="bug-title">Ctrl+C doesn't quit serial monitor in MSYS2/MinGW</span>
+          <span class="bug-date">2026-05-05</span>
+          <span class="bug-status open">🔍 Open</span>
+        </div>
+        <div class="bug-body">
+          <div class="bug-row">
+            <div class="label">Symptom</div>
+            <div class="val"><code>pio device monitor</code> launched via <code>launch.sh</code> option 8 ignores Ctrl+C in MSYS2/MinGW terminals. The monitor hangs and cannot be exited normally.</div>
+          </div>
+          <div class="bug-row">
+            <div class="label">Root cause</div>
+            <div class="val">MSYS2/MinGW intercepts Ctrl+C at the shell level before it reaches PlatformIO's monitor process. The signal is caught by bash instead of being forwarded to the serial monitor.</div>
+          </div>
+          <div class="bug-row">
+            <div class="label">Workaround</div>
+            <div class="val">
+              <strong>1.</strong> Use <code>Ctrl+]</code> — PlatformIO's alternate quit shortcut<br>
+              <strong>2.</strong> Use <code>Ctrl+T</code> then <code>Q</code> — PlatformIO's menu quit sequence<br>
+              <strong>3.</strong> Close and reopen the terminal window
+            </div>
+          </div>
+          <div class="bug-row">
+            <div class="label">Proposed fix</div>
+            <div class="val">Add <code>monitor_flags = --raw</code> to <code>platformio.ini</code> or configure a different exit key. Alternatively, wrap the monitor call with proper signal forwarding in <code>launch.sh</code>.</div>
+          </div>
+          <div class="bug-row">
+            <div class="label">Files</div>
+            <div class="val">
+              <div class="bug-files">
+                <span class="file">launch.sh (act_monitor)</span>
+                <span class="file">platformio.ini</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bug" id="bug-003">
+        <div class="bug-hdr">
+          <span class="bug-id fixed">BUG-003</span>
+          <span class="bug-title">Unpinned platform &amp; libs — non-reproducible builds</span>
+          <span class="bug-date">2026-05-05</span>
+          <span class="bug-status fixed">✅ Fixed</span>
+        </div>
+        <div class="bug-body">
+          <div class="bug-row">
+            <div class="label">Symptom</div>
+            <div class="val"><code>platformio.ini</code> had unpinned <code>platform = espressif32</code> and lib_deps with no version constraints. Different machines / different times = different ESP-IDF, different FastLED, different bugs. Direct cause of why BUG-001's RMT crash showed up.</div>
+          </div>
+          <div class="bug-row">
+            <div class="label">Fix</div>
+            <div class="val">
+              Pinned <code>platform = espressif32 @ 6.7.0</code>, <code>fastled/FastLED @ ^3.7.0</code>, qualified all Adafruit libs with author prefix, added <code>monitor_speed = 115200</code>, moved FastLED build flags into <code>build_flags</code>.
+            </div>
+          </div>
+          <div class="bug-row">
+            <div class="label">Files</div>
+            <div class="val">
+              <div class="bug-files">
+                <span class="file">platformio.ini</span>
+                <span class="file">src/01_includes.h</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bug" id="bug-004">
+        <div class="bug-hdr">
+          <span class="bug-id open">BUG-004</span>
+          <span class="bug-title">RemoteXY "No PRO license" dialog — phone refuses to connect</span>
+          <span class="bug-date">2026-05-05</span>
+          <span class="bug-status open">🔍 Open</span>
+        </div>
+        <div class="bug-body">
+          <div class="bug-row">
+            <div class="label">Symptom</div>
+            <div class="val">RemoteXY mobile app shows <code>No PRO license</code> dialog and refuses to connect:
+              <div class="crash-dump">A PRO license is required to connect to this device.
+
+Elements count:    5
+Variables count:   8 (more than 5)
+PRO elements:      NO
+
+[Get PRO]   [Preview]</div>
+            </div>
+          </div>
+          <div class="bug-row">
+            <div class="label">Initial hypothesis (wrong)</div>
+            <div class="val">First suspected the unpinned <code>RemoteXY</code> library jumped from <code>3.1.14</code> → <code>4.1.10</code> on a clean build, and that 4.x had introduced the PRO enforcement. Pinned to <code>~3.1.14</code>, wiped the cache, reflashed.<br><br>
+            <strong>Result: same dialog. Pinning the library does NOT bypass the check.</strong> Reverted the pin back to unconstrained <code>RemoteXY</code>.</div>
+          </div>
+          <div class="bug-row">
+            <div class="label">Real root cause</div>
+            <div class="val">The PRO check is enforced <strong>by the RemoteXY mobile app</strong>, not by the library on the device. The firmware sends its <code>RemoteXY_CONF[]</code> blob over BLE; the app parses it, counts elements + variables, and if either exceeds the free quota it short-circuits the connection regardless of which library version generated the blob. Downgrading the firmware library has no effect because the gatekeeper isn't on the device.</div>
+          </div>
+          <div class="bug-row">
+            <div class="label">Variable inventory (8 — need ≤ 5)</div>
+            <div class="val">
+              <div class="crash-dump">INPUT (3 — all needed):
+  joystick_01_x          int8_t   drive left/right
+  joystick_01_y          int8_t   drive forward/back
+  button_01              uint8_t  action button
+
+OUTPUT (5 — drop 3):
+  onlineGraph_01_distance  float    distance chart    keep
+  onlineGraph_02_speed     float    speed chart       drop (= joystick_y)
+  onlineGraph_03_battery   float    battery chart     drop (use circularBar)
+  circularBar_01           int8_t   battery gauge     keep
+  sound_01                 int16_t  buzzer trigger    drop (button → buzzer locally)
+
+connect_flag is implicit — doesn't count.</div>
+            </div>
+          </div>
+          <div class="bug-row">
+            <div class="label">Fix paths</div>
+            <div class="val">
+              <strong>A. Shrink the UI</strong> — regenerate <code>RemoteXY_CONF[]</code> in the editor with only 5 variables (joystick_x, joystick_y, button_01, distance graph, circularBar battery). Replace the blob + struct in <code>src/03_remotexy.cpp</code>. Compute speed locally from joystick_y, drive buzzer locally from button_01.<br>
+              <strong>B. Buy PRO license</strong> — paid, removes the limit.<br>
+              <strong>C. Switch UI library</strong> — Blynk, Bluetooth Electronics, or a custom web UI over Wi-Fi.
+            </div>
+          </div>
+          <div class="bug-row">
+            <div class="label">Status</div>
+            <div class="val">Library pin reverted to unconstrained <code>RemoteXY</code> (latest). Awaiting decision on which fix path to take.</div>
+          </div>
+          <div class="bug-row">
+            <div class="label">Files</div>
+            <div class="val">
+              <div class="bug-files">
+                <span class="file">platformio.ini</span>
+                <span class="file">src/03_remotexy.cpp</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bug" id="bug-005">
+        <div class="bug-hdr">
+          <span class="bug-id open">BUG-005</span>
+          <span class="bug-title">esptool: "Could not open COM8, the port doesn't exist" — Windows/MSYS2</span>
+          <span class="bug-date">2026-05-05</span>
+          <span class="bug-status open">🔍 Open</span>
+        </div>
+        <div class="bug-body">
+          <div class="bug-row">
+            <div class="label">Symptom</div>
+            <div class="val"><code>pio run --target upload</code> fails immediately with:
+              <div class="crash-dump">esptool.py v4.5.1
+Serial port COM8
+
+A fatal error occurred: Could not open COM8, the port doesn't exist
+*** [upload] Error 2</div>
+              But <code>pio device list</code> clearly shows the port:
+              <div class="crash-dump">COM8
+----
+Hardware ID: USB VID:PID=303A:1001 SER=8C:D0:B2:A8:98:57
+Description: Périphérique série USB (COM8)</div>
+            </div>
+          </div>
+          <div class="bug-row">
+            <div class="label">Suspected cause</div>
+            <div class="val">ESP32-C3 Super Mini uses <strong>native USB CDC</strong> (VID 303A:1001 = built-in USB-Serial/JTAG), not an external UART chip. When esptool toggles DTR/RTS to enter bootloader mode, the CDC port disappears from Windows for a few hundred ms while the chip re-enumerates as the bootloader's USB-Serial/JTAG interface. esptool then tries to reopen "COM8" but Windows hasn't finished re-enumerating, OR the bootloader has come back on a different COM port number.<br><br>
+            Compounded on MSYS2: the bash environment's Python/serial layer may handle Windows COM port access differently than native CMD.</div>
+          </div>
+          <div class="bug-row">
+            <div class="label">Things tried (none worked)</div>
+            <div class="val">
+              <strong>1.</strong> <code>upload_flags = --connect-attempts 10</code> — wrong syntax, esptool rejected.<br>
+              <strong>2.</strong> Manual bootloader entry (BOOT + RESET + release BOOT before upload).<br>
+              <strong>3.</strong> Removed hardcoded <code>upload_port = COM8</code>, let auto-detect find it.<br>
+              <strong>4.</strong> Verified port exists with <code>pio device list</code> right before flashing.
+            </div>
+          </div>
+          <div class="bug-row">
+            <div class="label">Things to try next</div>
+            <div class="val">
+              <strong>A.</strong> Run from native <code>cmd.exe</code> instead of MSYS2 — rules out MSYS2 Python COM access.<br>
+              <strong>B.</strong> Device Manager → Disable/Re-enable COM8 → unplug + replug USB.<br>
+              <strong>C.</strong> Check what COM port the bootloader presents (different VID:PID maybe) — run <code>pio device list</code> AFTER the BOOT+RESET sequence.<br>
+              <strong>D.</strong> Switch to <code>upload_protocol = esp-builtin</code> (uses built-in USB JTAG, bypasses CDC reset entirely). Requires OpenOCD path setup.<br>
+              <strong>E.</strong> <code>mode COM8</code> in CMD to verify nothing else is holding the port (RemoteXY mobile app can do this via BLE-bridge).
+            </div>
+          </div>
+          <div class="bug-row">
+            <div class="label">Files</div>
+            <div class="val">
+              <div class="bug-files">
+                <span class="file">platformio.ini</span>
+                <span class="file">launch.sh (act_upload)</span>
+              </div>
+            </div>
+          </div>
+          <div class="bug-row">
+            <div class="label">Workaround</div>
+            <div class="val">When stuck: close every program that touches serial (RemoteXY, VS Code, Arduino IDE), then unplug/replug USB and retry. Eventually catches.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bug" id="bug-006">
+        <div class="bug-hdr">
+          <span class="bug-id fixed">BUG-006</span>
+          <span class="bug-title">Geolocation permission popup on every page load</span>
+          <span class="bug-date">2026-05-06 07:24</span>
+          <span class="bug-status fixed">✅ Fixed</span>
+        </div>
+        <div class="bug-body">
+          <div class="bug-row">
+            <div class="label">Symptom</div>
+            <div class="val">Browser shows <code>"Allow this site to know your location?"</code> dialog every time the launcher opens. Three buttons: <em>Allow this visit · Allow once · Never</em>. Hits all 5 pages (index, start-here, flash, monitor, audit) because they share <code>wdiy-script.js</code>.</div>
+          </div>
+          <div class="bug-row">
+            <div class="label">Root cause</div>
+            <div class="val">Workshop-DIY template's <code>initNightMode()</code> in <code>02_web/assets/wdiy-script.js</code> (lines 928–944) called <code>navigator.geolocation.getCurrentPosition()</code> to compute precise local sunset, so it could auto-switch the theme to dark after dusk. The simple version (<code>new Date().getHours() &gt;= 21</code>) ran first; the geolocation block ran on top to refine. Net effect: every page load triggered the OS-level location prompt for a feature 99% of users never notice.</div>
+          </div>
+          <div class="bug-row">
+            <div class="label">Fix</div>
+            <div class="val">
+              Removed the geolocation block entirely (lines 928–944). Kept the cheap clock-only check: 21:00–06:00 still auto-applies <code>lab-dark</code> if the user hasn't picked a theme.<br>
+              <code>calcSunset()</code> kept in source as dead code (API compat) but no longer called.
+            </div>
+          </div>
+          <div class="bug-row">
+            <div class="label">Files</div>
+            <div class="val">
+              <div class="bug-files">
+                <span class="file">01_software/01_app/02_web/assets/wdiy-script.js</span>
+              </div>
+            </div>
+          </div>
+          <div class="bug-row">
+            <div class="label">Lesson</div>
+            <div class="val">Vendored UI templates can ship feel-good features (auto-night-mode, ghost cursors, AR mode, etc.) that quietly request elevated permissions. Audit any imported <code>navigator.*</code>, <code>fetch()</code> to external hosts, or <code>localStorage</code> writes before deploying.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bug" id="bug-007">
+        <div class="bug-hdr">
+          <span class="bug-id fixed">BUG-007</span>
+          <span class="bug-title">Splash screen renders as flex sibling instead of full-screen overlay</span>
+          <span class="bug-date">2026-05-06 07:27</span>
+          <span class="bug-status fixed">✅ Fixed</span>
+        </div>
+        <div class="bug-body">
+          <div class="bug-row">
+            <div class="label">Symptom</div>
+            <div class="val">On <code>index.html</code> the splash screen (logo + "ESP32-C3 ROBOT APP" title + tap-to-skip) appeared <strong>beside</strong> the main app on the left half of the page, not as a full-screen overlay. It also never auto-dismissed.</div>
+          </div>
+          <div class="bug-row">
+            <div class="label">Root cause</div>
+            <div class="val">Selector mismatch between markup and CSS in the Workshop-DIY template:
+              <div class="crash-dump" style="font-size:11px">// markup (in shell.js + start-here.html)
+&lt;div id="splash" onclick="dismissSplash()"&gt;
+  ...
+&lt;/div&gt;
+
+// CSS (in wdiy-template.css)
+.splash { position: fixed; inset: 0; z-index: 10000; ... }
+.splash.hidden { opacity: 0; pointer-events: none; }</div>
+              The element used <code>id="splash"</code> but the CSS targeted the <code>.splash</code> <em>class</em>. Selector never matched → no <code>position: fixed</code> → splash inherited <code>display: flex</code> from <code>body</code> and rendered as a sibling flex item next to the app. Even worse, <code>dismissSplash()</code> adds a <code>hidden</code> class but <code>.splash.hidden</code> never matched either, so the dismiss had no visual effect.</div>
+          </div>
+          <div class="bug-row">
+            <div class="label">Why we didn't see it on start-here.html first</div>
+            <div class="val">Because <code>initSplash()</code> calls <code>setTimeout(dismissSplash, 2500)</code> and <code>dismissSplash()</code> calls <code>setTimeout(() =&gt; s.remove(), 600)</code>. After ~3.1 s the element is removed from the DOM regardless of CSS. So on most loads we never noticed the misplacement — until the user happened to look at <code>index.html</code> within the first 3 s.</div>
+          </div>
+          <div class="bug-row">
+            <div class="label">Fix</div>
+            <div class="val">Two-character change in <code>wdiy-template.css</code>:
+              <div class="crash-dump" style="font-size:11px">.splash         →  #splash
+.splash.hidden  →  #splash.hidden</div>
+              Inner classes (<code>.splash-inner</code>, <code>.splash-logo</code>, <code>.splash-title</code>, <code>.splash-sub</code>, <code>.splash-hint</code>) stayed as-is — they always matched correctly because those elements have proper <code>class=</code> attributes.
+            </div>
+          </div>
+          <div class="bug-row">
+            <div class="label">Files</div>
+            <div class="val">
+              <div class="bug-files">
+                <span class="file">01_software/01_app/02_web/assets/wdiy-template.css</span>
+              </div>
+            </div>
+          </div>
+          <div class="bug-row">
+            <div class="label">Lesson</div>
+            <div class="val">When porting a vendored template, run a quick <code>id</code> vs <code>class</code> audit: pull every <code>id="..."</code> in the markup and check the CSS targets each one consistently. Mixed-mode templates (id on outer container, class on children) are a common source of phantom selectors.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bug" id="bug-008">
+        <div class="bug-hdr">
+          <span class="bug-id fixed">BUG-008</span>
+          <span class="bug-title">Pixel pet appeared twice in the app footer</span>
+          <span class="bug-date">2026-05-06 06:40</span>
+          <span class="bug-status fixed">✅ Fixed</span>
+        </div>
+        <div class="bug-body">
+          <div class="bug-row">
+            <div class="label">Symptom</div>
+            <div class="val">Two robot icons rendered side-by-side at the start of the <code>.app-footer</code> on <code>start-here.html</code>. Only one was animated; the other was a static duplicate.</div>
+          </div>
+          <div class="bug-row">
+            <div class="label">Root cause</div>
+            <div class="val"><code>initPixelPet()</code> in <code>wdiy-script.js</code> always created and inserted a new <code>&lt;div id="pixelPet"&gt;</code> regardless of whether one already existed. Any double-init scenario (hot-reload, theme toggle re-running init, etc.) appended another one instead of reusing.</div>
+          </div>
+          <div class="bug-row">
+            <div class="label">Fix</div>
+            <div class="val">Idempotency guard at the top of <code>initPixelPet()</code>:
+              <div class="crash-dump" style="font-size:11px">function initPixelPet() {
+  if (document.getElementById('pixelPet')) return; // ← added
+  const pet = document.createElement('div');
+  ...
+}</div>
+            </div>
+          </div>
+          <div class="bug-row">
+            <div class="label">Files</div>
+            <div class="val">
+              <div class="bug-files">
+                <span class="file">01_software/01_app/02_web/assets/wdiy-script.js</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bug" id="bug-009">
+        <div class="bug-hdr">
+          <span class="bug-id fixed">BUG-009</span>
+          <span class="bug-title">Light-theme polish: muddy cards · invisible footer · display fonts illegible at small sizes</span>
+          <span class="bug-date">2026-05-06 07:00</span>
+          <span class="bug-status fixed">✅ Fixed</span>
+        </div>
+        <div class="bug-body">
+          <div class="bug-row">
+            <div class="label">Symptom</div>
+            <div class="val">On the three light themes (<code>lab-light</code>, <code>solarized</code>, <code>bot-pop</code>) — and later <code>kapow</code>, <code>dino</code> — multiple visual issues:
+              <ul style="margin-left:16px;line-height:1.6">
+                <li>Mission cards (<code>.m-cell</code>) and stat blocks rendered with a <strong>dirty grey wash</strong> instead of clean white panels.</li>
+                <li>Footer text "workshop-diy.org · Robot-01 ·" was nearly invisible on the pale-blue <code>bot-pop</code> background.</li>
+                <li>Bismillah Arabic calligraphy was ghost-pale at <code>opacity: .45</code>.</li>
+                <li>On <code>dino</code>: <strong>Lilita One</strong> chunky display font applied to <em>every</em> heading (mission summaries, card titles, sidebar labels) — squashed letterforms, hard to read at 14 px.</li>
+                <li>On <code>kapow</code>: same issue with <strong>Bangers</strong> font cascading to all UI labels.</li>
+                <li>On <code>bot-pop</code>: initial <strong>Bangers</strong> heading font for everything → comic-book lettering on UI chrome.</li>
+              </ul>
+            </div>
+          </div>
+          <div class="bug-row">
+            <div class="label">Root causes (3 distinct)</div>
+            <div class="val">
+              <strong>1. Hardcoded dark backgrounds.</strong> Mission-specific styles in <code>start-here.html</code> used <code>background: rgba(0,0,0,.22)</code> for cards, statbar, <code>&lt;pre&gt;</code>, file tree, pipeline, bootreset. Designed for dark themes only. On light themes that 22% black wash turned crisp panels into wet concrete.<br><br>
+
+              <strong>2. Footer/bismillah opacity.</strong> Template CSS hardcoded <code>.app-footer { opacity: .45 }</code> and <code>.bismillah { opacity: .45 }</code>. On dark backgrounds .45 reads as muted-but-visible. On bright backgrounds it reads as not-there.<br><br>
+
+              <strong>3. Display-font scope.</strong> Themes set <code>--font-h: 'Bangers'</code> or <code>'Lilita One'</code> as the heading font, and the template applies <code>var(--font-h)</code> to <em>every</em> heading-class element: <code>h1</code>, <code>.card-title</code>, <code>details.collapsible &gt; summary</code>, <code>.sidebar-title</code>, <code>.help-tab</code>, <code>.section-title</code>. Display fonts are designed for hero moments at large sizes — not 14 px UI labels with <code>text-transform: uppercase</code> already on top.
+            </div>
+          </div>
+          <div class="bug-row">
+            <div class="label">Fix</div>
+            <div class="val">
+              Three layered patches:<br><br>
+
+              <strong>A.</strong> Added a <code>.light-theme</code> override block in <code>start-here.html</code>'s inline <code>&lt;style&gt;</code>:
+              <div class="crash-dump" style="font-size:11px">.light-theme .m-cell,
+.light-theme .m-statusbar,
+.light-theme pre,
+.light-theme .m-tree,
+.light-theme .m-pipeline,
+.light-theme .m-bootreset {
+  background: rgba(0,0,0,.04);
+  color: var(--text);
+}
+.light-theme .app-footer { opacity: .7; }
+.light-theme .bismillah  { opacity: .65; }
+.light-theme code { color: var(--text); }</div>
+              The terminal mockup (<code>.m-term</code>) was deliberately <em>not</em> overridden — its dark CRT aesthetic is intentional even on light themes.<br><br>
+
+              <strong>B.</strong> Per-theme display-font scope in <code>wdiy-template.css</code> for <code>kapow</code> and <code>dino</code>:
+              <div class="crash-dump" style="font-size:11px">[data-theme="dino"] details.collapsible > summary,
+[data-theme="dino"] .card-title,
+[data-theme="dino"] .sidebar-title,
+[data-theme="dino"] .help-tab,
+[data-theme="dino"] .section-title,
+[data-theme="dino"] .m-h3,
+[data-theme="dino"] .m-cell h3 {
+  font-family: 'Fredoka', 'Nunito', system-ui, sans-serif;
+  font-weight: 700;
+  letter-spacing: .02em;
+}</div>
+              Result: Bangers / Lilita One stay on the hero <code>h1</code> + splash title (where they look heroic), Fredoka 700 takes over for sub-headings (where it reads chunky-but-legible).<br><br>
+
+              <strong>C.</strong> Switched <code>bot-pop</code>'s <code>--font-h</code> from Bangers → <code>'Fredoka', 'Nunito'</code> outright. Bangers turned out to only fit <code>kapow</code>'s comic-book aesthetic.
+            </div>
+          </div>
+          <div class="bug-row">
+            <div class="label">Files</div>
+            <div class="val">
+              <div class="bug-files">
+                <span class="file">01_software/01_app/02_web/start-here.html</span>
+                <span class="file">01_software/01_app/02_web/assets/wdiy-template.css</span>
+              </div>
+            </div>
+          </div>
+          <div class="bug-row">
+            <div class="label">Lesson</div>
+            <div class="val">When designing a multi-theme system, the test matrix is N&times;M: every component × every theme. Backgrounds, opacities, and display fonts that look right on one theme can break on another. Three rules emerged:
+              <ol style="margin-left:16px;line-height:1.6">
+                <li><strong>No hardcoded <code>rgba(0,0,0,.X)</code> backgrounds</strong> for component fills — use <code>var(--panel)</code> + a <code>.light-theme</code> override if needed.</li>
+                <li><strong>Opacity for chrome ≠ opacity for content.</strong> Footer + decoration may be muted, but never invisible.</li>
+                <li><strong>Display fonts are hero-only.</strong> Scope to <code>h1</code>, splash title, banners — never cascade to UI labels.</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bug" id="bug-010">
+        <div class="bug-hdr">
+          <span class="bug-id investigating">BUG-010</span>
+          <span class="bug-title">Firmware audit pin assertions don't match the v3 schematic</span>
+          <span class="bug-date">2026-05-06 09:58</span>
+          <span class="bug-status investigating">🔍 Investigating</span>
+        </div>
+        <div class="bug-body">
+          <div class="bug-row">
+            <div class="label">Symptom</div>
+            <div class="val">The firmware-side audit items (C1, H1, H2) describe pin conflicts that don't exist on the v3 board. Discovered when the v3 schematic was finally pulled into the repo at <code><a href="hardware.html">02_hardware/v3/</a></code>.</div>
+          </div>
+          <div class="bug-row">
+            <div class="label">v3 schematic — what's actually on the board</div>
+            <div class="val">
+              <strong>U1 = TB6612FNG dual H-bridge.</strong> Drives 2 DC motors (J8, J9). Pins:
+              <ul style="margin-left:18px;line-height:1.6">
+                <li><code>GPIO 1</code> = AIN1 + LEDs D5/D6 + J2</li>
+                <li><code>GPIO 2</code> = AIN2</li>
+                <li><code>GPIO 3</code> = PWMA <em>or</em> J3 (via JP2 solder jumper)</li>
+                <li><code>GPIO 6</code> = BIN1 + J4 servo</li>
+                <li><code>GPIO 7</code> = BIN2</li>
+                <li><code>GPIO 10</code> = PWMB + LEDs D7/D8 + J5 servo</li>
+              </ul>
+              <code>GPIO 0</code> = SW1 push-button (10 kΩ pull-up R2). <code>GPIO 4</code> = buzzer with transistor stage (R7/R8/R9). <code>GPIO 8/9</code> = OLED I²C with 10 kΩ pull-ups (R10/R11). <code>GPIO 20/21</code> = expansion (J6, J7).
+            </div>
+          </div>
+          <div class="bug-row">
+            <div class="label">Pre-v3 audit items — re-verify</div>
+            <div class="val">
+              <strong>C1 (buzzer/battery on GPIO 4):</strong> v3 puts the buzzer on GPIO 4 with transistor amp; <em>no</em> battery sense is wired to GPIO 4. If firmware <code>00_config.h</code> still says <code>CONFIG_PIN_BATTERY = 4</code>, the firmware is reading random ADC noise — bug remains, but it's a firmware problem not a wiring problem.<br><br>
+              <strong>H1 (OLED SDA = onboard LED on GPIO 8):</strong> on the C3 SuperMini, GPIO 8 does double-duty as the onboard LED. The schematic uses GPIO 8 as I²C SDA with a 10 kΩ pull-up. Pull-up wins at boot; the LED behavior depends on whether the firmware actively pulls GPIO 8 low between I²C transactions. Likely benign in practice but worth confirming.<br><br>
+              <strong>H2 (OLED SCL = BOOT button on GPIO 9):</strong> v3 has GPIO 9 as I²C SCL with a 10 kΩ pull-up (R11). Pull-up keeps it high at boot, which is the BOOT-button-released state, so the chip boots normally. Hardware <strong>resolves</strong> the concern. This audit item can be marked done <em>provided the pull-up is populated</em> on the assembled board.
+            </div>
+          </div>
+          <div class="bug-row">
+            <div class="label">Schematic-only items found</div>
+            <div class="val">
+              <ol style="margin-left:18px;line-height:1.6">
+                <li><strong>C1' (new):</strong> Firmware <code>05_buzzer.cpp</code> needs to be on GPIO 4 (matches schematic) — NOT GPIO 3 as the earlier audit C1 fix proposed. GPIO 3 is now PWMA for motor A.</li>
+                <li><strong>JP2 jumper state matters:</strong> firmware should NOT assume GPIO 3 is free for general use. If JP2 is in motor mode, GPIO 3 is PWMA. If JP2 reroutes to J3, GPIO 3 is whatever's plugged in (likely a NeoPixel strip).</li>
+                <li><strong>1000 µF bulk cap missing:</strong> per the 2025-07-28 schematic note, populate this if servos are connected to J2-J5, or stall current will brown out the C3.</li>
+                <li><strong>Protection diode missing:</strong> per the 2025-06-21 note, a reverse-biased 1N4148 on the PWMA / J3 line protects against servo back-EMF.</li>
+              </ol>
+            </div>
+          </div>
+          <div class="bug-row">
+            <div class="label">Action</div>
+            <div class="val">
+              <ol style="margin-left:18px;line-height:1.6">
+                <li>Re-read <code>01_src/00_config.h</code> against the new pin map. Update any <code>CONFIG_PIN_*</code> defines that conflict.</li>
+                <li>Mark C1, H1, H2 as either fixed-by-hardware or amended once verified.</li>
+                <li>Add the 1000 µF cap + 1N4148 to the BOM (already done in <a href="build-guide.html">build-guide</a>).</li>
+                <li>Re-run a full-board boot test on a v3-fab'd PCB before declaring resolution.</li>
+              </ol>
+            </div>
+          </div>
+          <div class="bug-row">
+            <div class="label">Files</div>
+            <div class="val">
+              <div class="bug-files">
+                <span class="file">01_software/01_app/01_src/00_config.h</span>
+                <span class="file">01_software/01_app/01_src/05_buzzer.cpp</span>
+                <span class="file">02_hardware/v3/37_rich_light_move_v3.kicad_sch</span>
+                <span class="file">02_web/hardware.html</span>
+                <span class="file">02_web/build-guide.html</span>
+              </div>
+            </div>
+          </div>
+          <div class="bug-row">
+            <div class="label">Lesson</div>
+            <div class="val">Audit pin assertions need <strong>two-source verification</strong> — the firmware <code>00_config.h</code> defines, and the schematic. Whichever you write first, validate against the other before publishing. The earlier audit was firmware-only and made guesses about the hardware that turned out wrong on at least 5 GPIOs.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bug" id="bug-011">
+        <div class="bug-hdr">
+          <span class="bug-id fixed">BUG-011</span>
+          <span class="bug-title">Web Bluetooth picker shows no devices — NUS UUID lives in scan-response, not advertisement</span>
+          <span class="bug-date">2026-05-06 15:09</span>
+          <span class="bug-status fixed">✅ Fixed</span>
+        </div>
+        <div class="bug-body">
+          <div class="bug-row">
+            <div class="label">Symptom</div>
+            <div class="val">In the new <code><a href="https://abourdim.github.io/esp32c3-lab/">esp32c3-lab</a></code> sister project, clicking <strong>Connect</strong> in any lab page opened the Chrome BLE picker and immediately showed <code>"Aucun appareil compatible détecté"</code> ("No compatible device detected") — even with the ESP32-C3 powered, advertising, and within range. Multiple browser refreshes, BT toggles, and re-pair attempts didn't help.</div>
+          </div>
+          <div class="bug-row">
+            <div class="label">Initial filter (broken)</div>
+            <div class="val">
+              <div class="crash-dump">device = await navigator.bluetooth.requestDevice({
+  filters: [{ services: [NUS_SERVICE] }],
+  optionalServices: [NUS_SERVICE],
+});</div>
+              Filtering by Nordic UART Service (<code>6e400001-…ca9e</code>) is the documented pattern — that's what maqueen-lab uses, and the firmware <em>did</em> add the UUID to the advertisement via <code>adv-&gt;addServiceUUID(NUS_SERVICE_UUID)</code>.
+            </div>
+          </div>
+          <div class="bug-row">
+            <div class="label">Root cause</div>
+            <div class="val">
+              <strong>BLE 4.x advertisement packet capacity = 31 bytes.</strong>
+              When the device name (<code>esp32c3-lab</code> = 11 bytes wrapped in length+type = 13 bytes) plus standard flags (3 bytes) plus the 128-bit NUS UUID (16 bytes wrapped = 18 bytes) plus advertising-data overhead all add up, you exceed 31 bytes.<br><br>
+              <strong>NimBLE-Arduino's silent fallback:</strong> when the primary advertisement payload would overflow, the library moves the long 128-bit service UUID into the <em>scan-response</em> packet (a separate 31-byte packet returned only when the central actively scans).<br><br>
+              <strong>Web Bluetooth's filter behaviour:</strong> Chrome's <code>requestDevice()</code> matches its <code>filters</code> against the <strong>primary advertisement only</strong>, not the scan response. The browser sees the device's name, sees no NUS UUID in the advertisement payload, and rejects it during filter evaluation. Picker shows nothing.
+            </div>
+          </div>
+          <div class="bug-row">
+            <div class="label">Why maqueen-lab didn't hit this</div>
+            <div class="val">A micro:bit advertising as <code>BBC micro:bit [xxxxx]</code> (~22 bytes including formatting) leaves enough room for the NUS UUID in the primary advertisement. The Workshop-DIY team's chosen device name was just short enough to squeeze in. ESP32-C3 + the chosen <code>esp32c3-lab</code> name overflows the budget.</div>
+          </div>
+          <div class="bug-row">
+            <div class="label">Fix</div>
+            <div class="val">
+              Extend the filter list to also match by <strong>name prefix</strong>:
+              <div class="crash-dump">filters: [
+  { services:   [NUS_SERVICE] },
+  { namePrefix: 'esp32c3'      },   // ← new fallback
+  { name:       'esp32c3-lab'  },
+],
+optionalServices: [NUS_SERVICE],</div>
+              Multiple filter entries are OR'd. The browser shows any device matching <em>any</em> of them. <code>optionalServices</code> ensures NUS is still accessible after pairing, regardless of which filter triggered the match.
+            </div>
+          </div>
+          <div class="bug-row">
+            <div class="label">Files</div>
+            <div class="val">
+              <div class="bug-files">
+                <span class="file">esp32c3-lab/js/ble.js</span>
+                <span class="file">esp32c3-lab/firmware/esp32c3-lab/esp32c3-lab.ino</span>
+              </div>
+            </div>
+          </div>
+          <div class="bug-row">
+            <div class="label">Lessons</div>
+            <div class="val">
+              <ol style="padding-left:18px;line-height:1.7;margin:6px 0">
+                <li><strong>Don't filter only by 128-bit UUID</strong> when your device name + UUID exceeds the 31-byte advertisement budget. Always provide a <code>namePrefix</code> fallback.</li>
+                <li>The 128-bit NUS UUID is the worst-case for advertisement budgets. 16-bit UUIDs (Bluetooth-SIG-assigned) take only 2 bytes in advertising data and don't have this problem.</li>
+                <li>To diagnose: install <em>nRF Connect</em> on a phone and scan — it shows both advertisement and scan-response packets explicitly. If the UUID appears under "Scan Response Data" but not "Advertisement Data", you have this problem.</li>
+                <li>Alternative firmware fix (untaken): set a shorter device name (<code>c3lab</code> = 5 bytes) so UUID + name both fit in advertisement. Less user-friendly.</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bug" id="bug-012">
+        <div class="bug-hdr">
+          <span class="bug-id fixed">BUG-012</span>
+          <span class="bug-title">esp32c3-lab firmware: PlatformIO layout + Serial-symbol-missing on C3 SuperMini</span>
+          <span class="bug-date">2026-05-06 17:30</span>
+          <span class="bug-status fixed">✅ Fixed</span>
+        </div>
+        <div class="bug-body">
+          <div class="bug-row">
+            <div class="label">Symptom</div>
+            <div class="val">Three sequential failures while building the new esp32c3-lab firmware sketch from scratch:
+              <div class="crash-dump"># Failure 1
+Warning! Ignore unknown configuration option `build_flags_extra` in section [env:esp32-c3-devkitm-1]
+
+# Failure 2
+Error: Nothing to build. Please put your source code files
+to the 'D:\…\firmware\src' folder
+
+# Failure 3 (after fixing layout)
+esp32c3-lab.ino: In function 'void setup()':
+esp32c3-lab.ino:387:3: error: 'Serial' was not declared in this scope
+   Serial.begin(115200);
+   ^~~~~~
+   note: suggested alternative: 'Serial1'</div>
+            </div>
+          </div>
+
+          <div class="bug-row">
+            <div class="label">Root cause 1 — invalid PIO directive</div>
+            <div class="val">
+              <code>build_flags_extra</code> is not a real PlatformIO option. Originally invented by me to "append" without overwriting the board defaults, but the real way to do that is just put everything in <code>build_flags</code> (it's additive to the board's defaults already).<br><br>
+              Fix: collapsed the <code>build_flags_extra</code> + <code>build_unflags</code> dance into a single <code>build_flags</code> list.
+            </div>
+          </div>
+
+          <div class="bug-row">
+            <div class="label">Root cause 2 — src_dir convention</div>
+            <div class="val">
+              PlatformIO's default <code>src_dir</code> is <code>src</code> (relative to the directory containing <code>platformio.ini</code>). The sketch was at <code>firmware/esp32c3-lab.ino</code>, so PIO scanned <code>firmware/src/</code>, found nothing, refused to build.<br><br>
+              <strong>Solutions considered:</strong>
+              <ul style="padding-left:18px;margin:6px 0">
+                <li><code>src_dir = .</code> — keep .ino at <code>firmware/</code>; PIO would also scan <code>README.md</code> etc.</li>
+                <li>Move .ino to <code>firmware/src/esp32c3-lab.ino</code> — works for PIO but Arduino IDE complains "folder name must match .ino name".</li>
+                <li>✅ <strong>Move .ino to <code>firmware/esp32c3-lab/esp32c3-lab.ino</code> + set <code>src_dir = esp32c3-lab</code></strong> — works for both. Folder name matches sketch name (Arduino IDE happy); PIO follows <code>src_dir</code>.</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="bug-row">
+            <div class="label">Root cause 3 — Serial symbol missing (deeper than first thought)</div>
+            <div class="val">
+              On <code>arduino-esp32 2.0.16</code> (shipped by <code>espressif32 @ 6.7.0</code>), the <code>esp32-c3-devkitm-1</code> board profile has an inconsistent macro state when <code>ARDUINO_USB_CDC_ON_BOOT=1</code> is set without a paired <code>ARDUINO_USB_MODE=0</code>:
+              <div class="crash-dump">// HardwareSerial.h (framework)
+#if SOC_RX0 != -1 && !ARDUINO_USB_CDC_ON_BOOT
+extern HardwareSerial Serial;     // ← skipped when CDC ON BOOT
+#endif
+
+// HWCDC.h / HWCDC.cpp (framework)
+#if !ARDUINO_USB_MODE && ARDUINO_USB_CDC_ON_BOOT
+extern HWCDC USBSerial;
+// (#define Serial USBSerial happens elsewhere conditionally)
+#endif</div>
+              On the <code>esp32-c3-devkitm-1</code> profile, <code>ARDUINO_USB_MODE</code> is undefined → preprocessor treats it as 0 → the HWCDC block <em>should</em> fire and define <code>Serial</code>. But due to a header-ordering / macro-evaluation quirk in 2.0.16, the <code>#define Serial USBSerial</code> doesn't propagate to the framework's own <code>HardwareSerial.cpp</code> compilation unit — only to user code.<br><br>
+
+              <strong>Phase 1 fix (insufficient):</strong> dropped <code>Serial.*</code> calls from the .ino. <em>This stopped <strong>user-code</strong> from referencing Serial, but the framework's own <code>HardwareSerial.cpp:60</code> calls <code>Serial.available()</code> in <code>serialEventRun()</code> — that file still failed to compile.</em><br><br>
+
+              <strong>Phase 2 fix (correct):</strong> remove the <code>-DARDUINO_USB_CDC_ON_BOOT=1</code> flag entirely. The board's default (CDC OFF) makes the framework declare <code>Serial</code> as <code>HardwareSerial(0)</code> via the standard SOC_RX0 path. Framework compiles cleanly. User code doesn't reference <code>Serial</code> anyway. <strong>esptool upload still works</strong> via the chip's built-in USB JTAG/Serial peripheral — that path is independent of Arduino's HWCDC class.<br><br>
+
+              <strong>Fixes not taken (for reference):</strong>
+              <ul style="padding-left:18px;margin:6px 0">
+                <li>Pair <code>-DARDUINO_USB_CDC_ON_BOOT=1</code> with <code>-DARDUINO_USB_MODE=0</code> — would in theory fire the HWCDC declaration cleanly. Untested; CDC-off default is simpler.</li>
+                <li>Switch to <code>arduino-esp32 3.x</code> (via <code>espressif32 @ 53.x</code>) — fixes the Serial issue but breaks NimBLE-Arduino 1.x compatibility (NimBLE 2.x has API breakage).</li>
+                <li>Use <code>USBSerial.begin()</code> directly — would work for user code but not the framework's <code>HardwareSerial.cpp</code> internal call.</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="bug-row">
+            <div class="label">Final layout</div>
+            <div class="val">
+              <div class="crash-dump">esp32c3-lab/firmware/
+├── platformio.ini              ← src_dir = esp32c3-lab
+├── README.md
+└── esp32c3-lab/
+    └── esp32c3-lab.ino         ← matches Arduino IDE folder rule
+                                   matches PIO src_dir setting</div>
+            </div>
+          </div>
+
+          <div class="bug-row">
+            <div class="label">Files</div>
+            <div class="val">
+              <div class="bug-files">
+                <span class="file">esp32c3-lab/firmware/platformio.ini</span>
+                <span class="file">esp32c3-lab/firmware/esp32c3-lab/esp32c3-lab.ino</span>
+                <span class="file">esp32c3-lab/firmware/README.md</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="bug-row">
+            <div class="label">Lessons</div>
+            <div class="val">
+              <ol style="padding-left:18px;line-height:1.7;margin:6px 0">
+                <li>Verify every <code>platformio.ini</code> directive against the official docs — typos / made-up options only emit warnings, not errors.</li>
+                <li>The <code>firmware/&lt;sketch-name&gt;/&lt;sketch-name&gt;.ino</code> + <code>src_dir = &lt;sketch-name&gt;</code> pattern is the cleanest way to satisfy both PlatformIO and Arduino IDE simultaneously. Recommend for any hybrid-build project.</li>
+                <li>Don't trust <code>Serial</code> on ESP32-C3 with arduino-esp32 2.0.x. Either use <code>USBSerial</code> directly, or drop the dependency entirely (the BLE log can substitute for diagnostics).</li>
+                <li>When in doubt, <code>pio run -v</code> shows the exact compiler invocation including which <code>-D</code> macros are defined. Helps disambiguate "is this flag actually being applied?" questions.</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- .bugs-section -->
+
+  </div><!-- .rows-container -->
+</div><!-- .app -->
+
+<!-- ═══ SCRIPTS ═══ -->
+<script src="assets/wdiy-script.js"></script>
+<script src="assets/wdiy-shell.js"></script>
+<script>
+/* ═══ Audit-specific state — checkbox persistence ═══ */
+const KEY = 'fw-audit-todo';
+
+function load() {
+  try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch { return {}; }
+}
+
+function save() {
+  const state = {};
+  document.querySelectorAll('.item').forEach(el => {
+    const cb = el.querySelector('input');
+    if (cb && !cb.disabled) state[el.dataset.id] = cb.checked;
+  });
+  localStorage.setItem(KEY, JSON.stringify(state));
+  refresh();
+}
+
+function refresh() {
+  const state = load();
+  let total = 0, done = 0;
+  const phaseDone  = { critical: 0, high: 0, medium: 0, low: 0 };
+  const phaseTotal = { critical: 0, high: 0, medium: 0, low: 0 };
+
+  document.querySelectorAll('.phase').forEach(phase => {
+    const lvl = phase.dataset.level;
+    phase.querySelectorAll('.item').forEach(el => {
+      const cb = el.querySelector('input');
+      if (cb.disabled) return; // skip false-positives
+      const checked = state[el.dataset.id] || false;
+      cb.checked = checked;
+      el.classList.toggle('done', checked);
+      total++;
+      phaseTotal[lvl]++;
+      if (checked) { done++; phaseDone[lvl]++; }
+    });
+  });
+
+  // progress
+  const pct = total ? Math.round(done / total * 100) : 0;
+  document.getElementById('bar').style.width = pct + '%';
+  document.getElementById('bar-label').textContent = done + ' / ' + total + '  (' + pct + '%)';
+
+  // stat cards
+  document.getElementById('sc').textContent = phaseDone.critical + '/' + phaseTotal.critical;
+  document.getElementById('sh').textContent = phaseDone.high     + '/' + phaseTotal.high;
+  document.getElementById('sm').textContent = phaseDone.medium   + '/' + phaseTotal.medium;
+  document.getElementById('sl').textContent = phaseDone.low      + '/' + phaseTotal.low;
+
+  // phase badges
+  document.querySelectorAll('.phase').forEach(phase => {
+    const lvl = phase.dataset.level;
+    phase.querySelector('.badge').textContent = phaseDone[lvl] + ' / ' + phaseTotal[lvl];
+  });
+}
+
+function toggle(hdr) {
+  hdr.classList.toggle('collapsed');
+  const items = hdr.nextElementSibling;
+  items.style.display = hdr.classList.contains('collapsed') ? 'none' : '';
+}
+
+function toggleAll(checked) {
+  document.querySelectorAll('.item input').forEach(cb => {
+    if (!cb.disabled) cb.checked = checked;
+  });
+  save();
+}
+
+function expandAll(open) {
+  document.querySelectorAll('.phase-hdr').forEach(h => {
+    h.classList.toggle('collapsed', !open);
+    h.nextElementSibling.style.display = open ? '' : 'none';
+  });
+}
+
+// init
+document.getElementById('date').textContent = new Date().toLocaleDateString();
+refresh();
+</script>
+</body>
+</html>

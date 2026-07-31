@@ -1,0 +1,1304 @@
+<!doctype html>
+<html lang="en" dir="ltr" data-theme="robot">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ESP32-C3 Robot App — Workshop DIY</title>
+<link rel="stylesheet" href="assets/wdiy-template.css">
+<style>
+/* ── Mission-specific overrides (adapted to template CSS vars) ── */
+
+/* Wider app shell for content-heavy layout */
+.app { max-width: 1040px; }
+
+/* ── code / pre ── */
+code {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: var(--accent); padding: 1px 6px; border-radius: 3px;
+  font-size: .83em;
+  font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+pre {
+  background: rgba(0,0,0,.45); border: 1px solid var(--border);
+  border-radius: 8px; padding: 12px 14px; overflow-x: auto;
+  margin: 10px 0; position: relative;
+  font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+pre code {
+  background: transparent; color: var(--text); padding: 0;
+  font-size: .83em; display: block; line-height: 1.55;
+}
+.copy-btn {
+  position: absolute; top: 6px; right: 6px;
+  font: 11px "SF Mono", ui-monospace, monospace;
+  background: var(--panel); border: 1px solid var(--border);
+  color: var(--text-muted); padding: 3px 8px; border-radius: 4px;
+  cursor: pointer; letter-spacing: .05em; transition: all .15s;
+}
+.copy-btn:hover  { color: var(--accent) !important; border-color: var(--accent) !important; transform: none !important; }
+.copy-btn.ok     { color: #22c55e !important; border-color: #22c55e !important; }
+
+/* ── HUD alerts ── */
+.m-alert {
+  border-left: 3px solid var(--accent); padding: 10px 14px;
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  border-radius: 0 6px 6px 0; margin: 12px 0; font-size: .82em;
+  line-height: 1.5;
+}
+.m-alert.warn   { border-left-color: #f59e0b; background: rgba(245,158,11,.08); }
+.m-alert.danger { border-left-color: #ef4444; background: rgba(239,68,68,.08); }
+.m-alert.win    { border-left-color: #22c55e; background: rgba(34,197,94,.08); }
+.m-alert strong {
+  color: var(--accent); display: block; margin-bottom: 4px;
+  font-size: .8em; letter-spacing: .04em;
+}
+.m-alert.warn   strong { color: #f59e0b; }
+.m-alert.danger strong { color: #ef4444; }
+.m-alert.win    strong { color: #22c55e; }
+
+/* ── Card grid for missions ── */
+.m-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 10px; margin: 12px 0;
+}
+.m-cell {
+  background: rgba(0,0,0,.22); border: 1px solid var(--border);
+  border-radius: 10px; padding: 14px; transition: all .15s;
+}
+.m-cell:hover {
+  border-color: var(--accent);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--accent) 18%, transparent);
+  transform: translateY(-2px);
+}
+.m-cell h3 {
+  margin: 0 0 6px; font-size: .84em; color: var(--accent);
+  letter-spacing: .04em; font-family: var(--font-h); text-transform: uppercase;
+}
+.m-cell p  { margin: 0; font-size: .79em; color: var(--text-muted); line-height: 1.5; }
+.m-cell .icon {
+  width: 30px; height: 30px; margin-bottom: 8px;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--accent); border-radius: 6px;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+.m-cell .icon svg { width: 16px; height: 16px; }
+
+/* ── Objective line ── */
+.obj { color: var(--text-muted); font-size: .8em; margin: 0 0 14px; font-style: italic; }
+
+/* ── Mission badges ── */
+.m-badge {
+  display: inline-block; padding: 2px 8px; border-radius: 3px;
+  font-size: .74em; letter-spacing: .06em; border: 1px solid;
+  background: rgba(0,0,0,.3); margin-right: 6px;
+}
+.m-badge.go   { color: #22c55e; border-color: #22c55e; }
+.m-badge.warn { color: #f59e0b; border-color: #f59e0b; }
+.m-badge.crit { color: #ef4444; border-color: #ef4444; }
+.m-badge.info { color: var(--accent); border-color: var(--accent); }
+
+/* ── Table ── */
+.m-table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: .8em; }
+.m-table th, .m-table td {
+  text-align: left; padding: 7px 10px;
+  border-bottom: 1px solid var(--border); vertical-align: top;
+}
+.m-table th {
+  color: var(--accent2); font-weight: 600; font-size: .74em;
+  text-transform: uppercase; letter-spacing: .08em;
+}
+.m-table tr:hover td {
+  background: color-mix(in srgb, var(--accent) 4%, transparent);
+}
+
+/* ── File tree ── */
+.m-tree {
+  background: rgba(0,0,0,.4); border: 1px solid var(--border);
+  border-radius: 6px; padding: 12px 14px;
+  font: .8em "SF Mono", ui-monospace, monospace;
+  white-space: pre; overflow-x: auto; color: var(--text);
+  margin: 10px 0; line-height: 1.75;
+}
+.m-tree .c { color: var(--text-muted); }
+.m-tree .h { color: var(--accent); }
+.m-tree .m { color: var(--accent2); }
+
+/* ── Terminal mockup ── */
+.m-term {
+  background: rgba(0,0,0,.88); border: 2px solid var(--accent);
+  border-radius: 10px; padding: 26px 20px 16px; margin: 12px 0;
+  font: .8em/1.65 "SF Mono", ui-monospace, monospace;
+  color: #a4f0a4; position: relative; white-space: pre; overflow-x: auto;
+  box-shadow: 0 0 24px color-mix(in srgb, var(--accent) 10%, transparent);
+}
+.m-term::before {
+  content: "● ● ●"; position: absolute; top: 7px; left: 10px;
+  color: var(--text-muted); font-size: 9px; letter-spacing: 4px;
+}
+.m-term .tp  { color: var(--accent); }
+.m-term .td  { color: #558855; }
+.m-term .th  { color: var(--accent2); }
+.m-term .tok { color: #22c55e; }
+
+/* ── Flash memory map ── */
+.m-flashmap {
+  display: flex; border: 1px solid var(--border);
+  border-radius: 6px; overflow: hidden; margin: 12px 0;
+  font-size: .76em; letter-spacing: .04em; height: 54px;
+}
+.m-flashmap > div {
+  display: flex; flex-direction: column; justify-content: center;
+  align-items: center; padding: 6px; font-weight: 600;
+}
+.m-flashmap .seg-boot { background: var(--accent); flex: 1; color: var(--bg); }
+.m-flashmap .seg-part { background: #f59e0b; flex: 1; color: #111; }
+.m-flashmap .seg-app  { background: var(--accent2); flex: 8; color: var(--bg); }
+.m-flashmap .ofs { display: block; font-size: .7em; opacity: .85; margin-top: 2px; }
+
+/* ── INO split ── */
+.m-split {
+  display: grid; grid-template-columns: 1fr auto 1fr;
+  gap: 12px; align-items: stretch; margin: 14px 0;
+}
+.m-split .arrow {
+  display: flex; align-items: center; justify-content: center;
+  color: var(--accent); font-size: 22px;
+  animation: m-pulse-arrow 2s ease-in-out infinite;
+}
+@keyframes m-pulse-arrow {
+  50% { transform: scale(1.2); text-shadow: 0 0 12px var(--accent); }
+}
+.m-split pre { margin: 0; height: 100%; }
+.m-split .lbl { font-size: .74em; color: var(--accent2); letter-spacing: .08em; margin: 0 0 6px; }
+
+/* ── Build pipeline SVG ── */
+.m-pipeline {
+  margin: 14px 0; padding: 14px; background: rgba(0,0,0,.28);
+  border: 1px solid var(--border); border-radius: 8px;
+}
+.m-pipeline svg { display: block; width: 100%; height: auto; max-height: 240px; }
+.m-pipeline svg .flow {
+  stroke-dasharray: 6 6; stroke: var(--accent);
+  animation: m-flow 1.5s linear infinite;
+}
+@keyframes m-flow { to { stroke-dashoffset: -24; } }
+.m-pipeline svg text { fill: var(--text); font: 12px "SF Mono", ui-monospace, monospace; }
+.m-pipeline svg .label { fill: var(--accent); font-size: 9px; letter-spacing: .08em; }
+.m-pipeline svg .box-c { stroke: var(--accent); }
+.m-pipeline svg .box-m { stroke: var(--accent2); }
+.m-pipeline svg .box-g { stroke: #22c55e; }
+.m-pipeline svg .t-c   { fill: var(--accent); }
+.m-pipeline svg .t-m   { fill: var(--accent2); }
+.m-pipeline svg .t-g   { fill: #22c55e; }
+.m-pipeline svg .t-mu  { fill: var(--text-muted); }
+
+/* ── Boot/reset diagram ── */
+.m-bootreset {
+  background: rgba(0,0,0,.28); border: 1px solid var(--border);
+  border-radius: 8px; padding: 16px; margin: 12px 0; text-align: center;
+}
+.m-bootreset svg { max-width: 400px; width: 100%; height: auto; }
+.m-bootreset .step { font-size: .78em; color: var(--text-muted); margin-top: 8px; }
+
+/* ── Status mini-bar ── */
+.m-statusbar {
+  display: flex; gap: 12px; flex-wrap: wrap;
+  padding: 8px 14px; background: rgba(0,0,0,.22);
+  border: 1px solid var(--border); border-radius: 8px;
+  font-size: .76em; letter-spacing: .05em; margin: 0 0 6px;
+}
+.m-statusbar .item { display: flex; align-items: center; gap: 5px; }
+.m-statusbar .dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: #22c55e; box-shadow: 0 0 6px #22c55e;
+  animation: m-dot 2s infinite;
+}
+.m-statusbar .dot.amber { background: #f59e0b; box-shadow: 0 0 6px #f59e0b; }
+.m-statusbar .dot.cyan  { background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+@keyframes m-dot { 50% { opacity: .4; } }
+
+/* ── Headings inside missions ── */
+.m-h3 {
+  color: var(--accent); margin: 16px 0 6px;
+  font-size: .88em; font-family: var(--font-h);
+  text-transform: uppercase; letter-spacing: .04em;
+}
+.m-h3.mag { color: var(--accent2); }
+
+/* ── Generic text helpers ── */
+.m-p     { font-size: .82em; color: var(--text); line-height: 1.6; margin: 8px 0; }
+.m-muted { color: var(--text-muted); font-size: .78em; text-align: center; margin: 8px 0; }
+ul { padding-left: 20px; margin: 8px 0; }
+li { font-size: .81em; color: var(--text); line-height: 1.65; margin-bottom: 4px; }
+a  { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ── Log panel tweaks ── */
+#logPanel {
+  display: flex; flex-direction: column;
+  position: fixed; top: 0; bottom: 0;
+  inset-inline-end: 0;
+}
+.log-body { flex: 1; overflow: hidden; padding: 6px 8px; }
+.log-body .log { height: 100%; max-height: none; border: none; border-radius: 6px; }
+
+@media (max-width: 720px) {
+  .m-split { grid-template-columns: 1fr; }
+  .m-split .arrow { transform: rotate(90deg); }
+}
+
+/* ════════════════════════════════════════════════════════════
+   LIGHT-THEME OVERRIDES
+   On lab-light / solarized / bot-pop, the dark rgba(0,0,0,.22+)
+   panel backgrounds look like dirty concrete. Lighten them.
+   The .m-term (CRT mockup) stays dark on purpose.
+   ════════════════════════════════════════════════════════════ */
+
+.light-theme .m-cell,
+.light-theme .m-statusbar,
+.light-theme pre,
+.light-theme .m-tree,
+.light-theme .m-pipeline,
+.light-theme .m-bootreset {
+  background: rgba(0,0,0,.04);
+  color: var(--text);
+}
+.light-theme .m-tree { color: var(--text); }
+.light-theme .m-tree .c { color: var(--text-muted); }
+
+/* code chip — on light themes use real text color so accent-on-accent
+   doesn't melt into a single hue */
+.light-theme code {
+  color: var(--text);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+}
+.light-theme pre code { color: var(--text); background: transparent; }
+
+/* alerts — slightly stronger background on light bg for readability */
+.light-theme .m-alert        { background: color-mix(in srgb, var(--accent)  10%, transparent); }
+.light-theme .m-alert.warn   { background: rgba(245,158,11,.12); }
+.light-theme .m-alert.danger { background: rgba(239,68,68,.10); }
+.light-theme .m-alert.win    { background: rgba(34,197,94,.10); }
+
+/* status dots — the green/amber pulse with shadow looks fine,
+   but the muted text needs a touch more contrast */
+.light-theme .m-statusbar { color: var(--text); }
+
+/* tables — alternate row hover is too subtle on light bg */
+.light-theme .m-table tr:hover td {
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+/* footer + bismillah — template uses .45 opacity which vanishes on light bg */
+.light-theme .app-footer { opacity: .7; }
+.light-theme .bismillah  { opacity: .65; }
+
+/* copy button — needs contrast on light <pre> */
+.light-theme .copy-btn {
+  background: rgba(255,255,255,.85);
+  color: var(--text-muted);
+  border-color: var(--border);
+}
+
+/* mission card hover glow on light themes — softer */
+.light-theme .m-cell:hover {
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--accent) 22%, transparent);
+}
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════
+     SPLASH SCREEN
+     ════════════════════════════════════════ -->
+<div id="splash" onclick="dismissSplash()" aria-label="Loading splash, click to skip">
+  <div class="splash-inner">
+    <div class="splash-logo" id="splashLogo"></div>
+    <div class="splash-title">ESP32-C3 Robot App</div>
+    <div class="splash-sub">🤖 explore · 🛠️ build · 🚀 deploy</div>
+    <div class="splash-hint" data-i18n="splashHint">tap to skip</div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     OVERLAYS
+     ════════════════════════════════════════ -->
+<div class="sidebar-overlay" id="helpOverlay"></div>
+<div class="sidebar-overlay" id="settingsOverlay"></div>
+
+<!-- ════════════════════════════════════════
+     HELP PANEL — left sidebar
+     ════════════════════════════════════════ -->
+<div class="sidebar sidebar-left" id="helpPanel"
+     role="dialog" aria-label="Help" aria-modal="true">
+  <div class="sidebar-header">
+    <span class="sidebar-title" data-i18n="help">❓ Help</span>
+    <button class="btn-icon-only" id="helpCloseBtn" aria-label="Close help">✕</button>
+  </div>
+
+  <div class="help-tabs">
+    <button class="help-tab active" data-tab="faq"   data-i18n="faq">FAQ</button>
+    <button class="help-tab"        data-tab="howto" data-i18n="howto">How-To</button>
+    <button class="help-tab"        data-tab="wiki"  data-i18n="wiki">Wiki</button>
+  </div>
+
+  <div class="sidebar-body" style="padding:12px 14px">
+
+    <!-- FAQ -->
+    <div class="help-content active" id="helpFaq">
+      <details class="help-item">
+        <summary data-i18n="faq_q1">What is this robot?</summary>
+        <p data-i18n="faq_a1">An ESP32-C3 RISC-V robot with servos, NeoPixels, OLED, ultrasonic sensor, and Bluetooth control via RemoteXY.</p>
+      </details>
+      <details class="help-item">
+        <summary data-i18n="faq_q2">How do I flash firmware?</summary>
+        <p data-i18n="faq_a2">Run <code>./launch.sh</code> → option <code>10</code> (full flash = compile + upload + monitor).</p>
+      </details>
+      <details class="help-item">
+        <summary data-i18n="faq_q3">Upload fails — what now?</summary>
+        <p data-i18n="faq_a3">Hold BOOT, tap RESET, release BOOT, retry. See Mission 09 for the diagram.</p>
+      </details>
+      <details class="help-item">
+        <summary data-i18n="faq_q4">Where is the source code?</summary>
+        <p data-i18n="faq_a4">In <code>01_src/</code> — one <code>.h/.cpp</code> pair per subsystem. Entry point: <code>01_src.ino</code>.</p>
+      </details>
+    </div>
+
+    <!-- How-To -->
+    <div class="help-content" id="helpHowto">
+      <div class="help-step">
+        <div class="help-step-num">1</div>
+        <p data-i18n="howto_1">Run <code>./launch.sh</code> and pick option <strong>0</strong> to install all tools automatically.</p>
+      </div>
+      <div class="help-step">
+        <div class="help-step-num">2</div>
+        <p data-i18n="howto_2">Open each mission below to understand what each file and tool does.</p>
+      </div>
+      <div class="help-step">
+        <div class="help-step-num">3</div>
+        <p data-i18n="howto_3">Check the Activity Log (📜) for timestamped events and messages.</p>
+      </div>
+      <div class="help-step">
+        <div class="help-step-num">4</div>
+        <p data-i18n="howto_4">Use Settings (⚙️) to switch between 8 themes and 3 languages.</p>
+      </div>
+    </div>
+
+    <!-- Wiki -->
+    <div class="help-content" id="helpWiki">
+      <div class="wiki-entry">
+        <h3 data-i18n="wiki_themes_title">🎨 Themes</h3>
+        <p data-i18n="wiki_themes">8 built-in themes: 6 dark (Mosque, Zellige, Andalus, Space, Jungle, Robot) and 2 light themes (Riad, Medina).</p>
+      </div>
+      <div class="wiki-entry">
+        <h3 data-i18n="wiki_i18n_title">🌐 Languages</h3>
+        <p data-i18n="wiki_i18n">Trilingual: English, Français, العربية. Arabic enables RTL automatically.</p>
+      </div>
+      <div class="wiki-entry">
+        <h3 data-i18n="wiki_log_title">📜 Activity Log</h3>
+        <p data-i18n="wiki_log">Timestamped, color-coded log. Filter by type. Clear or copy to clipboard.</p>
+      </div>
+      <div class="wiki-entry">
+        <h3>🤖 ESP32-C3</h3>
+        <p>RISC-V 32-bit MCU · 4 MB flash · 400 KB SRAM · WiFi + BLE · Arduino via PlatformIO.</p>
+      </div>
+      <div class="wiki-entry">
+        <h3>⚡ RMT driver</h3>
+        <p>Platform pinned to <code>espressif32@6.7.0</code> (ESP-IDF 5.1) to fix a FastLED ISR recursion crash. See <a href="audit.html">audit.html → BUG-001</a>.</p>
+      </div>
+      <div class="wiki-entry">
+        <h3 data-i18n="wiki_privacy_title">🔒 Privacy</h3>
+        <p data-i18n="wiki_privacy">100% local. No tracking, no analytics. Everything stays in your browser.</p>
+      </div>
+    </div>
+
+  </div>
+  <div class="sidebar-footer">
+    <span>Workshop DIY v1.2</span>
+    <span id="hijriDate"></span>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     SETTINGS PANEL — right sidebar
+     ════════════════════════════════════════ -->
+<div class="sidebar" id="settingsPanel"
+     role="dialog" aria-label="Settings" aria-modal="true">
+  <div class="sidebar-header">
+    <span class="sidebar-title" data-i18n="settings">⚙️ Settings</span>
+    <button class="btn-icon-only" id="settingsCloseBtn" aria-label="Close settings">✕</button>
+  </div>
+  <div class="sidebar-body">
+
+    <div class="sidebar-group">
+      <label class="sidebar-label" data-i18n="theme">Theme</label>
+      <select class="sidebar-select" id="themeSelect">
+        <optgroup label="🔬 Science">
+          <option value="lab-light" data-i18n-opt="t_lab-light">🔬 Lab (light)</option>
+          <option value="lab-dark"  data-i18n-opt="t_lab-dark">🔬 Lab (dark)</option>
+        </optgroup>
+        <optgroup label="💻 Hacker">
+          <option value="terminal"  data-i18n-opt="t_terminal">💻 Terminal</option>
+          <option value="solarized" data-i18n-opt="t_solarized">💻 Solarized</option>
+        </optgroup>
+        <optgroup label="🤖 Pro">
+          <option value="robot"     data-i18n-opt="t_robot">🤖 Robot</option>
+        </optgroup>
+        <optgroup label="🦸 Kids action">
+          <option value="bot-pop"   data-i18n-opt="t_bot-pop">🤖 Bot Pop</option>
+          <option value="kapow"     data-i18n-opt="t_kapow">⚡ Kapow!</option>
+          <option value="blastoff"  data-i18n-opt="t_blastoff">🚀 Blastoff</option>
+          <option value="dino"      data-i18n-opt="t_dino">🦖 Dino</option>
+        </optgroup>
+      </select>
+    </div>
+
+    <div class="sidebar-group">
+      <label class="sidebar-label" data-i18n="language">Language</label>
+      <select class="sidebar-select" id="langSelect">
+        <option value="en">English</option>
+        <option value="fr">Français</option>
+        <option value="ar">العربية</option>
+      </select>
+    </div>
+
+    <div class="sidebar-group">
+      <label class="sidebar-label" data-i18n="soundEffects">🔊 Sound Effects</label>
+      <label class="toggle-ctrl">
+        <input type="checkbox" class="checkbox-ctrl" id="soundToggle">
+        <span>Enable sounds</span>
+      </label>
+    </div>
+
+    <div class="sidebar-group">
+      <label class="sidebar-label">🫁 Focus tools</label>
+      <button class="btn-sm" id="breathingBtn" data-i18n="breathingGuide">Breathing guide</button>
+      <div id="dhikrDisplay" style="display:none;align-items:center;gap:8px;margin-top:8px">
+        <span style="font-size:.76rem;color:var(--text-muted)" data-i18n="dhikrTap">Tap</span>
+        <button class="btn-sm primary" id="dhikrBtn">📿</button>
+        <span id="dhikrCounter" style="color:var(--accent);font-weight:700">0</span>
+      </div>
+    </div>
+
+    <div class="sidebar-group">
+      <label class="sidebar-label">🎤 Voice</label>
+      <button class="btn-sm" id="whisperBtn" data-i18n="whisperMode">Whisper mode</button>
+    </div>
+
+    <div class="sidebar-group">
+      <label class="sidebar-label">🎵 Audio</label>
+      <button class="btn-sm" id="musicBtn" data-i18n="musicMode">Music reactive</button>
+    </div>
+
+    <div class="sidebar-group">
+      <label class="sidebar-label">📋 Project links</label>
+      <a href="audit.html"  class="btn-sm" style="display:inline-flex;align-items:center;gap:4px;margin-bottom:6px">📋 Audit &amp; Bugs</a>
+      <a href="index.html"  class="btn-sm" style="display:inline-flex;align-items:center;gap:4px;margin-bottom:6px">🏠 Home</a>
+      <a href="flash.html"  class="btn-sm" style="display:inline-flex;align-items:center;gap:4px">⚡ Web Flasher</a>
+    </div>
+
+  </div>
+  <div class="sidebar-footer">
+    <span>Workshop DIY v1.2</span>
+    <span>Robot-01 · ESP32-C3</span>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     LOG PANEL — docked right
+     ════════════════════════════════════════ -->
+<div class="sidebar" id="logPanel" role="complementary" aria-label="Activity Log">
+  <div id="logResizeHandle" class="resize-handle"></div>
+  <div class="sidebar-header">
+    <span class="sidebar-title" data-i18n="activityLog">Activity Log</span>
+    <div style="display:flex;gap:4px;flex-wrap:wrap">
+      <button class="btn-sm" id="clearLogBtn"  data-i18n="clear">Clear</button>
+      <button class="btn-sm" id="copyLogBtn"   data-i18n="copy">Copy</button>
+      <button class="btn-sm" id="exportLogBtn" data-i18n="export">Export</button>
+      <button class="btn-icon-only" id="logCloseBtn" aria-label="Close log">✕</button>
+    </div>
+  </div>
+  <div class="log-filters">
+    <button class="log-filter active" data-filter="all"     data-i18n="filterAll">All</button>
+    <button class="log-filter"        data-filter="info">Info</button>
+    <button class="log-filter"        data-filter="success">OK</button>
+    <button class="log-filter"        data-filter="error">ERR</button>
+    <button class="log-filter"        data-filter="tx">TX</button>
+    <button class="log-filter"        data-filter="rx">RX</button>
+  </div>
+  <div class="log-body">
+    <div class="log" id="logContainer"></div>
+  </div>
+  <div class="sidebar-footer">
+    <span data-i18n="eventsMsg">Events &amp; messages</span>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     TOAST
+     ════════════════════════════════════════ -->
+<div class="toast-indicator" id="toastIndicator">
+  <div class="toast-inner">
+    <div class="spinner"></div>
+    <span class="toast-text" id="toastMessage"></span>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     MAIN APP SHELL
+     ════════════════════════════════════════ -->
+<div class="app">
+
+  <div class="deco-band"></div>
+
+  <!-- ── HEADER ── -->
+  <header class="header">
+    <div class="bismillah">
+      <span class="bism-ornament">✦</span>
+      بِسْمِ اللهِ الرَّحْمٰنِ الرَّحِيْمِ
+      <span class="bism-ornament">✦</span>
+    </div>
+
+    <div class="title-block">
+      <div class="logo-wrap" id="logoWrap"
+           style="width:54px;height:30px;color:var(--accent);flex-shrink:0"></div>
+      <div>
+        <h1>ESP32-C3 Robot App</h1>
+        <p class="subtitle">🤖 explore · 🛠️ build · 🚀 deploy</p>
+      </div>
+    </div>
+
+    <div class="header-right">
+      <div class="header-buttons">
+        <button class="btn-icon-only" id="helpBtn"
+                aria-label="Help" title="Help (❓)">❓</button>
+        <button class="btn-icon-only" id="logBtn"
+                aria-label="Activity log" title="Activity Log (📜)">📜</button>
+        <button class="btn-icon-only" id="settingsBtn"
+                aria-label="Settings" title="Settings (⚙️)">⚙️</button>
+      </div>
+      <div class="status-pill" id="statusPill">
+        <div class="status-dot"></div>
+        <span id="statusText" data-i18n="disconnected">Disconnected</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── CONTENT ── -->
+  <div class="rows-container">
+
+    <!-- Mini status bar -->
+    <div class="m-statusbar">
+      <span class="item"><span class="dot"></span> STATUS: ONLINE</span>
+      <span class="item"><span class="dot cyan"></span> CHIP: ESP32-C3</span>
+      <span class="item"><span class="dot cyan"></span> CORE: arduino-esp32</span>
+      <span class="item"><span class="dot amber"></span> CLEARANCE: NEWBIE</span>
+      <span class="item"><span class="dot"></span> 14 MISSIONS LOADED</span>
+    </div>
+
+    <!-- ══════════════════════════════════════
+         MISSION 01 — BRIEFING
+         ══════════════════════════════════════ -->
+    <details class="collapsible" id="brief" open>
+      <summary>⚡ MISSION 01 — BRIEFING — what are we hacking?</summary>
+      <div class="card">
+        <p class="obj">// objective: understand the rig before touching it</p>
+        <div class="m-grid">
+          <div class="m-cell">
+            <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><circle cx="9" cy="9" r="1.2" fill="currentColor"/><circle cx="15" cy="15" r="1.2" fill="currentColor"/></svg></div>
+            <h3>ESP32-C3</h3>
+            <p>RISC-V chip with built-in WiFi + Bluetooth. The brain of your robot.</p>
+          </div>
+          <div class="m-cell">
+            <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h10"/></svg></div>
+            <h3>Arduino framework</h3>
+            <p>The friendly C++ dialect with <code>setup()</code>, <code>loop()</code>, <code>digitalWrite()</code>.</p>
+          </div>
+          <div class="m-cell">
+            <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18"/></svg></div>
+            <h3>PlatformIO</h3>
+            <p>The build tool. Downloads libs, compiles, flashes, monitors. Driven from <code>launch.sh</code>.</p>
+          </div>
+          <div class="m-cell">
+            <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3 6 6 1-4.5 4.5L18 20l-6-3-6 3 1.5-6.5L3 9l6-1z"/></svg></div>
+            <h3>HARDWARE</h3>
+            <p>Servos · NeoPixel LEDs · buzzer · OLED · ultrasonic · BT phone control</p>
+          </div>
+        </div>
+        <div class="m-alert win">
+          <strong>// FAST PATH</strong>
+          Skip the reading. Run <code>./launch.sh</code> → option <code>0</code> → grab a snack. The launcher does everything.
+        </div>
+      </div>
+    </details>
+
+    <!-- ══════════════════════════════════════
+         MISSION 02 — LAYOUT
+         ══════════════════════════════════════ -->
+    <details class="collapsible" id="layout">
+      <summary>🗺 MISSION 02 — LAYOUT — the bunker map</summary>
+      <div class="card">
+        <p class="obj">// objective: know which file does what</p>
+        <div class="m-tree"><span class="h">01_app/</span>                          <span class="c"># project root (you are here)</span>
+├── <span class="m">platformio.ini</span>               <span class="c"># ⚙ build orders</span>
+├── <span class="m">launch.sh</span>                    <span class="c"># 🎮 the menu</span>
+│
+├── <span class="h">01_src/</span>                      <span class="c"># 🔧 firmware — one .h/.cpp per system</span>
+│   ├── 01_src.ino               <span class="c"># entry point (setup + loop)</span>
+│   ├── 00_config.h              <span class="c"># pin map</span>
+│   ├── 02_data.{h,cpp}          <span class="c"># shared state</span>
+│   ├── 03_remotexy.{h,cpp}      <span class="c"># 📱 phone control</span>
+│   ├── 05_buzzer.{h,cpp}        <span class="c"># 🔊 sounds</span>
+│   ├── 06_neopixels.{h,cpp}     <span class="c"># 💡 LEDs</span>
+│   ├── 09_servos.{h,cpp}        <span class="c"># 🦾 motors</span>
+│   ├── 12_ultrasonic.{h,cpp}    <span class="c"># 📡 distance</span>
+│   ├── 13_oled.{h,cpp}          <span class="c"># 📺 display</span>
+│   └── ...
+│
+├── <span class="h">02_web/</span>                      <span class="c"># 🌐 browser flasher + docs</span>
+├── <span class="h">03_logs/</span>                     <span class="c"># 📜 past command logs</span>
+└── <span class="h">.pio/</span>                        <span class="c"># 🛠 build cache (ignore)</span></div>
+        <div class="m-alert">
+          <strong>// PRO TIP</strong>
+          The <code>NN_</code> prefix is reading order only. Compiler ignores it. Top-down = config → data → features → demos.
+        </div>
+      </div>
+    </details>
+
+    <!-- ══════════════════════════════════════
+         MISSION 03 — INO MAGIC
+         ══════════════════════════════════════ -->
+    <details class="collapsible" id="ino">
+      <summary>🔮 MISSION 03 — .INO MAGIC — what Arduino does behind your back</summary>
+      <div class="card">
+        <p class="obj">// objective: stop being mystified by .ino files</p>
+        <p class="m-p">An <code>.ino</code> file is C++ with <strong>two cheats</strong>:</p>
+        <div class="m-grid" style="grid-template-columns:1fr 1fr">
+          <div class="m-cell">
+            <h3>CHEAT 1</h3>
+            <p>Auto-injects <code>#include &lt;Arduino.h&gt;</code> at the top — gives you <code>pinMode</code>, <code>Serial</code>, etc. for free.</p>
+          </div>
+          <div class="m-cell">
+            <h3>CHEAT 2</h3>
+            <p>Auto-generates forward declarations — call any function before defining it.</p>
+          </div>
+        </div>
+        <div class="m-split">
+          <div>
+            <p class="lbl">// WHAT YOU WRITE (.ino)</p>
+<pre><code>void setup() {
+    pinMode(LED, OUTPUT);
+    blink();          // OK in .ino
+}
+void loop() { delay(1000); }
+void blink() {
+    digitalWrite(LED, HIGH);
+}</code></pre>
+          </div>
+          <div class="arrow">▶</div>
+          <div>
+            <p class="lbl">// WHAT COMPILER SEES</p>
+<pre><code>#include &lt;Arduino.h&gt;   // injected
+void blink();          // injected
+
+void setup() {
+    pinMode(LED, OUTPUT);
+    blink();
+}
+void loop() { delay(1000); }
+void blink() {
+    digitalWrite(LED, HIGH);
+}</code></pre>
+          </div>
+        </div>
+        <div class="m-alert">
+          <strong>// REQUIRED</strong>
+          Every sketch needs <code>setup()</code> (runs once) and <code>loop()</code> (runs forever). The framework calls them — <code>main()</code> is hidden inside Arduino.h.
+        </div>
+      </div>
+    </details>
+
+    <!-- ══════════════════════════════════════
+         MISSION 04 — CONFIG
+         ══════════════════════════════════════ -->
+    <details class="collapsible" id="config">
+      <summary>⚙️ MISSION 04 — CONFIG — platformio.ini decoded</summary>
+      <div class="card">
+        <p class="obj">// objective: read the build orders</p>
+<pre><code>[env:esp32-c3-devkitm-1]
+platform     = espressif32 @ 6.7.0   ; <span style="color:var(--accent)">PINNED — ESP-IDF 5.1, fixes RMT bug</span>
+board        = esp32-c3-devkitm-1    ; <span style="color:var(--accent)">pin map + flash size</span>
+framework    = arduino               ; <span style="color:var(--accent)">activates Arduino API</span>
+monitor_speed = 115200               ; <span style="color:var(--accent)">serial baud rate</span>
+
+build_flags =
+    -D FASTLED_RMT_MAX_CHANNELS=1    ; <span style="color:var(--accent)">C3 has only 2 RMT slots</span>
+    -D FASTLED_RMT_BUILTIN_DRIVER=1  ; <span style="color:var(--accent)">use IDF's tested RMT driver</span>
+
+lib_deps =
+    RemoteXY                         ; <span style="color:var(--accent)">phone control via BLE</span>
+    fastled/FastLED @ ^3.7.0         ; <span style="color:var(--accent)">NeoPixel (version pinned)</span>
+    madhephaestus/ESP32Servo         ; <span style="color:var(--accent)">servo library</span>
+    adafruit/Adafruit GFX Library    ; <span style="color:var(--accent)">OLED graphics</span>
+    adafruit/Adafruit SSD1306        ; <span style="color:var(--accent)">OLED driver</span></code></pre>
+        <div class="m-alert">
+          <strong>// VERSION PINNING — why bother?</strong>
+          <code>@ 6.7.0</code> = exactly this version. <code>@ ^3.7.0</code> = 3.x but ≥ 3.7. Without pins, today's build differs from tomorrow's — silent regressions sneak in. Pinning = reproducibility.
+        </div>
+        <div class="m-alert warn">
+          <strong>// LESSON LEARNED</strong>
+          The old unpinned <code>platform = espressif32</code> shipped ESP-IDF 4.x with a buggy RMT ISR. NeoPixels caused random Guru Meditation crashes. Pinning to <code>6.7.0</code> (ESP-IDF 5.1) fixed it. See <a href="audit.html#bug-001">BUG-001</a>.
+        </div>
+      </div>
+    </details>
+
+    <!-- ══════════════════════════════════════
+         MISSION 05 — LAUNCHER
+         ══════════════════════════════════════ -->
+    <details class="collapsible" id="launcher">
+      <summary>🚀 MISSION 05 — LAUNCHER — the cockpit</summary>
+      <div class="card">
+        <p class="obj">// objective: stop typing commands. Press numbers.</p>
+        <div class="m-term"><span class="td">+============================================================+</span>
+<span class="th">| * ROBOT-01 LAUNCHER  .  ESP32-C3 firmware toolkit          |</span>
+<span class="td">+============================================================+</span>
+   [O.O]    os: <span class="tp">windows-bash</span>   port: <span class="tok">COM8</span>   pio: <span class="tok">OK</span>
+
+<span class="tp">&gt;&gt;&gt;  0) [bot] SETUP MY ROBOT  (one-click install)         &lt;&lt;&lt;</span>
+
+  s) <span class="td">▸</span> ⚙️  toolchain   <span class="td">— check &amp; install the goods</span>
+  b) <span class="th">▾</span> 🔥 deploy
+       4)  compile          <span class="td"># pio run</span>
+       5)  clean            <span class="td"># pio run -t clean</span>
+       6)  upload (flash)   <span class="td"># pio run -t upload</span>
+       7)  erase flash      <span class="td"># esptool erase_flash</span>
+       8)  serial monitor   <span class="td"># pio device monitor</span>
+       9)  select port      <span class="td"># pick COM / ttyUSB</span>
+      10)  full flash       <span class="th">←  the one-shot mission</span>
+  w) <span class="td">▸</span> 🌐 cyberspace   <span class="td">— IDE, dashboards &amp; web tools</span>
+  g) <span class="td">▸</span> 📡 git ops      <span class="td">— track your code</span>
+
+  <span class="td">⚡ shortcuts:  4=build  10=flash  8=monitor  q=quit</span></div>
+        <p class="m-p">
+          <strong>Accordion menu:</strong> press a letter (<code>s</code>, <code>b</code>, <code>w</code>, <code>g</code>) to expand a section, or just type the number directly. Numbers <strong>always</strong> work whether expanded or not.
+        </p>
+        <div class="m-grid">
+          <div class="m-cell">
+            <h3>🎯 ONE-SHOT</h3>
+            <p><code>./launch.sh flash</code> — compile + upload + monitor in one command.</p>
+          </div>
+          <div class="m-cell">
+            <h3>🔧 HOTKEYS</h3>
+            <p><code>./launch.sh compile</code><br><code>./launch.sh upload</code><br><code>./launch.sh monitor</code></p>
+          </div>
+          <div class="m-cell">
+            <h3>🚨 PORT OVERRIDE</h3>
+            <p><code>PORT=COM7 ./launch.sh upload</code><br>forces a specific port</p>
+          </div>
+        </div>
+      </div>
+    </details>
+
+    <!-- ══════════════════════════════════════
+         MISSION 06 — FIRST DEPLOY
+         ══════════════════════════════════════ -->
+    <details class="collapsible" id="setup">
+      <summary>🛠 MISSION 06 — FIRST DEPLOY — bootstrap sequence</summary>
+      <div class="card">
+        <p class="obj">// objective: install everything, transparently</p>
+        <p class="m-p">Pick option <strong>0</strong>. The launcher runs four automatic levels:</p>
+        <div class="m-grid">
+          <div class="m-cell">
+            <span class="m-badge info">L1</span>
+            <h3 style="display:inline">Python check</h3>
+            <p>If missing, runs <code>winget install Python.Python.3.13</code> automatically. No clicks.</p>
+          </div>
+          <div class="m-cell">
+            <span class="m-badge info">L2</span>
+            <h3 style="display:inline">PlatformIO</h3>
+            <p><code>pip install -U platformio</code> · ~30 MB download.</p>
+          </div>
+          <div class="m-cell">
+            <span class="m-badge warn">L3</span>
+            <h3 style="display:inline">esp32 platform</h3>
+            <p>The big one. Arduino-ESP32 core + toolchain + libs · ~150 MB. Grab a snack.</p>
+          </div>
+          <div class="m-cell">
+            <span class="m-badge go">L4</span>
+            <h3 style="display:inline">VS Code ext</h3>
+            <p>Optional. Adds PlatformIO IDE in the editor sidebar.</p>
+          </div>
+        </div>
+        <div class="m-alert warn">
+          <strong>// MSYS2 WARNING</strong>
+          If you're in a UCRT64/MINGW64 shell, the launcher dodges MSYS2's broken POSIX Python automatically. If only MSYS2 Python is found, you'll get a clear <code>pacman</code> / python.org instruction.
+        </div>
+      </div>
+    </details>
+
+    <!-- ══════════════════════════════════════
+         MISSION 07 — BUILD PIPELINE
+         ══════════════════════════════════════ -->
+    <details class="collapsible" id="pipeline">
+      <summary>🔄 MISSION 07 — BUILD PIPELINE — code → robot</summary>
+      <div class="card">
+        <p class="obj">// objective: see what happens when you press "compile"</p>
+        <div class="m-pipeline">
+          <svg viewBox="0 0 720 200">
+            <g>
+              <rect x="10" y="60" width="120" height="80" rx="6" fill="none" class="box-c" stroke-width="1.5"/>
+              <text x="70" y="95" text-anchor="middle" class="t-c" font-size="13" font-weight="600">YOUR CODE</text>
+              <text x="70" y="115" text-anchor="middle" class="t-mu" font-size="10">01_src/*.cpp+.ino</text>
+            </g>
+            <g>
+              <rect x="190" y="60" width="120" height="80" rx="6" fill="none" class="box-c" stroke-width="1.5"/>
+              <text x="250" y="90" text-anchor="middle" class="t-c" font-size="13" font-weight="600">PIO RUN</text>
+              <text x="250" y="108" text-anchor="middle" class="t-mu" font-size="10">compile + link</text>
+              <text x="250" y="124" text-anchor="middle" class="t-mu" font-size="10">~60 s</text>
+            </g>
+            <g>
+              <rect x="370" y="40" width="120" height="120" rx="6" fill="none" class="box-m" stroke-width="1.5"/>
+              <text x="430" y="70"  text-anchor="middle" class="t-m" font-size="13" font-weight="600">3 BINARIES</text>
+              <text x="430" y="92"  text-anchor="middle" class="t-mu" font-size="10">bootloader.bin</text>
+              <text x="430" y="108" text-anchor="middle" class="t-mu" font-size="10">partitions.bin</text>
+              <text x="430" y="124" text-anchor="middle" class="t-mu" font-size="10">firmware.bin</text>
+            </g>
+            <g>
+              <rect x="550" y="60" width="160" height="80" rx="6" fill="none" class="box-g" stroke-width="1.5"/>
+              <text x="630" y="95"  text-anchor="middle" class="t-g" font-size="13" font-weight="600">ROBOT BOOTS</text>
+              <text x="630" y="115" text-anchor="middle" class="t-mu" font-size="10">via USB · esptool</text>
+            </g>
+            <line class="flow" x1="135" y1="100" x2="185" y2="100" stroke-width="2" fill="none"/>
+            <line class="flow" x1="315" y1="100" x2="365" y2="100" stroke-width="2" fill="none"/>
+            <line class="flow" x1="495" y1="100" x2="545" y2="100" stroke-width="2" fill="none"/>
+            <text x="160" y="92" class="label" text-anchor="middle">option 4</text>
+            <text x="340" y="92" class="label" text-anchor="middle">option 6</text>
+            <text x="520" y="92" class="label" text-anchor="middle">USB</text>
+          </svg>
+        </div>
+        <p class="m-muted">Option <code>10</code> = full flash = compile + upload + monitor in one shot.</p>
+      </div>
+    </details>
+
+    <!-- ══════════════════════════════════════
+         MISSION 08 — FLASH MAP
+         ══════════════════════════════════════ -->
+    <details class="collapsible" id="flashmem">
+      <summary>💾 MISSION 08 — FLASH MAP — where bytes live</summary>
+      <div class="card">
+        <p class="obj">// objective: know what gets written where</p>
+        <p class="m-p">The 3 binaries are written at fixed offsets in the chip's 4 MB flash:</p>
+        <div class="m-flashmap">
+          <div class="seg-boot">BOOT<span class="ofs">0x0</span></div>
+          <div class="seg-part">PART<span class="ofs">0x8000</span></div>
+          <div class="seg-app">FIRMWARE (your code)<span class="ofs">0x10000 → end</span></div>
+        </div>
+        <table class="m-table">
+          <tr><th>Segment</th><th>What it does</th></tr>
+          <tr><td>bootloader.bin</td><td>The first code that runs on power-up. Loads the partition table, then jumps to firmware.</td></tr>
+          <tr><td>partitions.bin</td><td>A tiny table saying "firmware lives here, OTA backup there, NVS data over there."</td></tr>
+          <tr><td>firmware.bin</td><td>YOUR sketch — every <code>.cpp</code> in <code>01_src/</code> compiled together.</td></tr>
+        </table>
+        <div class="m-alert">
+          <strong>// ERASE</strong>
+          Option <code>7</code> wipes ALL flash. Use after flashing weird firmware or when the chip acts haunted.
+        </div>
+      </div>
+    </details>
+
+    <!-- ══════════════════════════════════════
+         MISSION 09 — BOOT/RESET TRICK
+         ══════════════════════════════════════ -->
+    <details class="collapsible" id="bootreset">
+      <summary>🔁 MISSION 09 — BOOT/RESET TRICK — when upload fails</summary>
+      <div class="card">
+        <p class="obj">// objective: force the chip into bootloader mode manually</p>
+        <div class="m-bootreset">
+          <svg viewBox="0 0 400 160" xmlns="http://www.w3.org/2000/svg">
+            <rect x="40" y="40" width="320" height="80" rx="4" fill="none"
+                  stroke="rgba(100,130,200,.4)" stroke-width="2"/>
+            <text x="200" y="30" text-anchor="middle"
+                  fill="var(--text-muted)" font-size="10" font-family="ui-monospace,monospace">ESP32-C3</text>
+            <rect x="20" y="68" width="20" height="24" fill="rgba(100,130,200,.3)"/>
+            <rect x="170" y="60" width="60" height="40" fill="none"
+                  stroke="var(--text-muted)" stroke-width="1.5"/>
+            <text x="200" y="84" text-anchor="middle"
+                  fill="var(--text-muted)" font-size="9" font-family="ui-monospace,monospace">CHIP</text>
+            <!-- BOOT button -->
+            <g>
+              <rect x="80" y="68" width="40" height="24" rx="2" fill="var(--panel)"
+                    stroke="var(--accent2)" stroke-width="2"/>
+              <text x="100" y="83" text-anchor="middle" fill="var(--accent2)"
+                    font-size="10" font-weight="600" font-family="ui-monospace,monospace">BOOT</text>
+              <circle cx="100" cy="55" r="4" fill="#f59e0b">
+                <animate attributeName="cy" values="40;55;55;40" dur="3s" repeatCount="indefinite"/>
+                <animate attributeName="opacity" values="0;1;1;0" dur="3s" repeatCount="indefinite"/>
+              </circle>
+            </g>
+            <!-- RST button -->
+            <g>
+              <rect x="280" y="68" width="40" height="24" rx="2" fill="var(--panel)"
+                    stroke="var(--accent)" stroke-width="2"/>
+              <text x="300" y="83" text-anchor="middle" fill="var(--accent)"
+                    font-size="10" font-weight="600" font-family="ui-monospace,monospace">RST</text>
+              <circle cx="300" cy="55" r="4" fill="var(--accent)">
+                <animate attributeName="cy" values="40;40;55;40;40" dur="3s" repeatCount="indefinite"
+                         keyTimes="0;0.4;0.5;0.6;1"/>
+                <animate attributeName="opacity" values="0;0;1;1;0;0" dur="3s" repeatCount="indefinite"
+                         keyTimes="0;0.35;0.45;0.55;0.65;1"/>
+              </circle>
+            </g>
+            <text x="200" y="145" text-anchor="middle"
+                  fill="var(--text-muted)" font-size="11"
+                  font-family="ui-monospace,monospace">
+              HOLD BOOT · TAP RESET · RELEASE BOOT · RETRY UPLOAD
+            </text>
+          </svg>
+          <p class="step">// the chip enters bootloader mode and accepts the next flash operation</p>
+        </div>
+      </div>
+    </details>
+
+    <!-- ══════════════════════════════════════
+         MISSION 10 — WEB FLASHER
+         ══════════════════════════════════════ -->
+    <details class="collapsible" id="web">
+      <summary>🌐 MISSION 10 — WEB FLASHER — share without installing</summary>
+      <div class="card">
+        <p class="obj">// objective: let anyone flash via Chrome — no terminal required</p>
+        <div class="m-grid">
+          <div class="m-cell">
+            <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 5l7 7-7 7"/></svg></div>
+            <h3>Step 1 · Package</h3>
+            <p><code>./launch.sh package-web</code> — builds + copies bins to <code>02_web/firmware/</code></p>
+          </div>
+          <div class="m-cell">
+            <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1018 0 9 9 0 00-18 0z"/><path d="M3 12h18M12 3v18"/></svg></div>
+            <h3>Step 2 · Serve</h3>
+            <p><code>./launch.sh serve</code> — starts <code>http://localhost:8000</code></p>
+          </div>
+          <div class="m-cell">
+            <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M9 12l2 2 4-4"/></svg></div>
+            <h3>Step 3 · Click</h3>
+            <p>Plug board → <a href="flash.html">flash.html</a> → click <em>Connect &amp; install</em>. Done.</p>
+          </div>
+        </div>
+        <div class="m-alert danger">
+          <strong>// COMPATIBILITY</strong>
+          Web Serial only works in Chrome and Edge. Firefox + Safari don't support it yet.
+        </div>
+      </div>
+    </details>
+
+    <!-- ══════════════════════════════════════
+         MISSION 11 — TROUBLESHOOTING
+         ══════════════════════════════════════ -->
+    <details class="collapsible" id="trouble">
+      <summary>🚨 MISSION 11 — TROUBLESHOOTING — when things go sideways</summary>
+      <div class="card">
+        <p class="obj">// objective: diagnose like a pro</p>
+        <div class="m-alert danger">
+          <strong>// "FAILED TO CONNECT" / TIMEOUT</strong>
+          See <a href="#bootreset">MISSION 09</a> — the BOOT/RESET trick. Works 90% of the time.
+        </div>
+        <div class="m-alert warn">
+          <strong>// NO PORT DETECTED</strong>
+          <strong>Windows:</strong> install CP210x or CH340 USB-serial driver.<br>
+          <strong>macOS:</strong> use <code>/dev/cu.usbserial-*</code>, not <code>/dev/tty.*</code>.<br>
+          <strong>Linux:</strong> <code>sudo usermod -aG dialout $USER</code> then log out/in.
+        </div>
+        <div class="m-alert warn">
+          <strong>// "ImportError: pyexpat" (MSYS2 only)</strong>
+          Your <code>/usr/bin/python3</code> is broken. Either install python.org Python (launcher auto-detects it) or:
+<pre><code>pacman -Syu
+pacman -S mingw-w64-ucrt-x86_64-python mingw-w64-ucrt-x86_64-python-pip</code></pre>
+        </div>
+        <div class="m-alert">
+          <strong>// "library X not found"</strong>
+          Pick option <code>3</code> (install board files) or <code>16</code> (update libs).
+        </div>
+        <div class="m-alert">
+          <strong>// "pio: command not found" — but install succeeded</strong>
+          Pip put it in a dir not on PATH. The launcher works around this via <code>python -m platformio</code>. To fix permanently, paste the suggested <code>export PATH=…</code> into your <code>~/.bashrc</code>.
+        </div>
+      </div>
+    </details>
+
+    <!-- ══════════════════════════════════════
+         MISSION 12 — DEBUG / addr2line
+         ══════════════════════════════════════ -->
+    <details class="collapsible" id="debug">
+      <summary>🔍 MISSION 12 — DEBUG — decoding crash dumps with addr2line</summary>
+      <div class="card">
+        <p class="obj">// objective: turn a wall of hex into a function name</p>
+        <p class="m-p">
+          When the ESP32-C3 panics, you get a "Guru Meditation" register dump. Those <code>0x4038xxxx</code>
+          addresses look like noise — but they're <strong>real instructions in your firmware</strong>.
+          The <code>addr2line</code> tool maps them back to <code>filename.cpp:line_number</code>.
+          This is the move that solved <a href="audit.html#bug-001">BUG-001</a>.
+        </p>
+        <div class="m-term"><span class="td">Guru Meditation Error: Core 0 panic'ed (Instruction access fault)</span>
+<span class="td">Core 0 register dump:</span>
+MEPC    : <span class="th">0x3fc9027c</span>  RA    : <span class="th">0x4038c53c</span>  SP : 0x3fc8f8d0
+MCAUSE  : <span class="tp">0x00000001</span>  <span class="td">; 1 = instruction access fault</span>
+MTVAL   : <span class="th">0x3fc9027c</span>  <span class="td">; jumped to RAM (not executable!)</span></div>
+
+        <p class="m-p">Three registers to read first:</p>
+        <ul>
+          <li><code>MEPC</code> — <strong>where the CPU was when it died</strong>. <code>0x4038xxxx</code> = inside flash code (decode!). <code>0x3fc8xxxx</code> = inside RAM = corrupted return address.</li>
+          <li><code>RA</code> — <strong>where it was returning to</strong>. Decode this to find the caller.</li>
+          <li><code>MCAUSE</code> — <strong>why it died</strong>. <code>0x01</code> = invalid code jump. <code>0x05/0x07</code> = bad memory access. <code>0x02</code> = illegal instruction.</li>
+        </ul>
+
+        <h3 class="m-h3">// run addr2line</h3>
+<pre><code><span style="color:var(--text-muted)"># Linux / macOS / Git Bash:</span>
+~/.platformio/packages/toolchain-riscv32-esp/bin/riscv32-esp-elf-addr2line \
+    -fipe .pio/build/esp32-c3-devkitm-1/firmware.elf \
+    0x4038c53c 0x403801ee 0x4038907e 0x40389094
+
+<span style="color:var(--text-muted)"># Output:</span>
+_global_interrupt_handler at .../riscv/interrupt.c:66
+ESP32RMTController::interruptHandler at .../idf4_rmt_impl.cpp:827
+vPortEnterCritical at .../freertos/port/riscv/port.c:246</code></pre>
+
+        <div class="m-alert">
+          <strong>// flag soup decoded</strong>
+          <code>-f</code> = show function name · <code>-i</code> = inline expansion · <code>-p</code> = pretty print · <code>-e</code> = ELF file path
+        </div>
+
+        <h3 class="m-h3">// reading the stack</h3>
+        <ul>
+          <li><strong>Repeating frames at fixed offsets</strong> (e.g. every 0xC0 bytes) = recursion. Intentional or runaway (stack overflow).</li>
+          <li><strong>Counter decrementing</strong> across frames = loop variable, often recursion depth.</li>
+          <li><strong>Same RA repeated</strong> across many frames = function calling itself (or being re-interrupted).</li>
+        </ul>
+        <p class="m-p">
+          That's exactly what BUG-001 looked like: <code>ESP32RMTController::interruptHandler</code> repeating
+          9× with 192-byte frames = the ISR re-entering itself before <code>iret</code>, overflowing the stack in milliseconds.
+        </p>
+
+        <div class="m-alert warn">
+          <strong>// gotcha: ELF file SHA256 = all zeros</strong>
+          <code>addr2line</code> still works — but decode against the <strong>same firmware.elf you flashed</strong>. A stale ELF gives wrong line numbers.
+        </div>
+
+        <h3 class="m-h3">// the workflow</h3>
+        <div class="m-grid">
+          <div class="m-cell"><span class="m-badge info">1</span><h3 style="display:inline">Capture</h3><p>Run <code>./launch.sh monitor</code>, reproduce the crash, copy the full register dump.</p></div>
+          <div class="m-cell"><span class="m-badge info">2</span><h3 style="display:inline">Decode</h3><p>Feed <code>MEPC</code>, <code>RA</code>, and a few stack pointers through <code>addr2line</code>.</p></div>
+          <div class="m-cell"><span class="m-badge warn">3</span><h3 style="display:inline">Pattern-match</h3><p>Look for repeating frames, decrementing counters, RAM-pointed MEPC.</p></div>
+          <div class="m-cell"><span class="m-badge go">4</span><h3 style="display:inline">Log it</h3><p>Add a bug entry to <a href="audit.html">audit.html</a>. Future-you will thank present-you.</p></div>
+        </div>
+      </div>
+    </details>
+
+    <!-- ══════════════════════════════════════
+         MISSION 13 — PRO MODE
+         ══════════════════════════════════════ -->
+    <details class="collapsible" id="cheat">
+      <summary>💻 MISSION 13 — PRO MODE — raw commands</summary>
+      <div class="card">
+        <p class="obj">// objective: skip the menu when you know what you're doing</p>
+<pre><code># compile
+python -m platformio run
+
+# upload
+python -m platformio run -t upload --upload-port COM3
+
+# erase chip
+python -m esptool --chip esp32c3 --port COM3 erase_flash
+
+# serial monitor
+python -m platformio device monitor -b 115200 --port COM3
+
+# clean
+python -m platformio run -t clean
+
+# update everything
+python -m platformio pkg update</code></pre>
+        <p class="m-muted">If <code>pio</code> is on PATH, drop the <code>python -m</code> prefix.</p>
+      </div>
+    </details>
+
+    <!-- ══════════════════════════════════════
+         MISSION 14 — ARDUINO IDE
+         ══════════════════════════════════════ -->
+    <details class="collapsible" id="arduino">
+      <summary>🎨 MISSION 14 — ARDUINO IDE — the fallback path</summary>
+      <div class="card">
+        <p class="obj">// objective: build the same code without PlatformIO</p>
+        <p class="m-p">
+          The source in <code>01_src/</code> is plain Arduino C++ — Arduino IDE 2.x can compile it too.
+          You'll redo the config by hand (no <code>platformio.ini</code> in IDE land).
+        </p>
+
+        <h3 class="m-h3">Setup checklist</h3>
+        <div class="m-grid">
+          <div class="m-cell">
+            <span class="m-badge info">1</span><h3 style="display:inline">Open the sketch</h3>
+            <p>File → Open → pick <code>01_src/01_src.ino</code>. Folder name must match the .ino name — Arduino IDE requirement.</p>
+          </div>
+          <div class="m-cell">
+            <span class="m-badge info">2</span><h3 style="display:inline">Install board</h3>
+            <p>Boards Manager → search <code>esp32</code> → install <strong>esp32 by Espressif Systems</strong></p>
+          </div>
+          <div class="m-cell">
+            <span class="m-badge warn">3</span><h3 style="display:inline">Install 5 libraries</h3>
+            <p>Library Manager: <code>FastLED</code>, <code>ESP32Servo</code>, <code>Adafruit GFX Library</code>, <code>Adafruit SSD1306</code>, <code>RemoteXY</code></p>
+          </div>
+          <div class="m-cell">
+            <span class="m-badge info">4</span><h3 style="display:inline">Pick the board</h3>
+            <p>Tools → Board → ESP32 Arduino → <strong>ESP32C3 Dev Module</strong></p>
+          </div>
+          <div class="m-cell">
+            <span class="m-badge warn">5</span><h3 style="display:inline">Tools menu config</h3>
+            <p>
+              <code>USB CDC On Boot = Enabled</code><br>
+              <code>Core Debug Level = Info</code><br>
+              <code>Upload Speed = 921600</code><br>
+              <code>Partition Scheme = Huge APP</code>
+            </p>
+          </div>
+          <div class="m-cell">
+            <span class="m-badge go">6</span><h3 style="display:inline">Upload</h3>
+            <p>Plug board → pick port → click ✅ Verify, then ➜ Upload. If it fails, try the <a href="#bootreset">BOOT/RESET trick</a>.</p>
+          </div>
+        </div>
+
+        <h3 class="m-h3 mag">What won't carry over from PlatformIO</h3>
+        <table class="m-table">
+          <tr><th>PlatformIO feature</th><th>Arduino IDE equivalent</th></tr>
+          <tr><td>pinned <code>lib_deps</code> versions</td><td>Library Manager — no version pinning</td></tr>
+          <tr><td><code>build_flags = -DXYZ=…</code></td><td>only what's in the Tools menu</td></tr>
+          <tr><td><code>[env:debug]</code> / <code>[env:release]</code></td><td>none — change settings each time</td></tr>
+          <tr><td><code>esp32_exception_decoder</code> filter</td><td>none — crash dumps stay raw hex</td></tr>
+          <tr><td><code>./launch.sh flash</code> one-shot</td><td>Verify + Upload separately</td></tr>
+        </table>
+
+        <div class="m-alert">
+          <strong>// WHEN TO USE WHICH</strong>
+          <strong>PlatformIO</strong> for daily work — faster, reproducible, scriptable, the launcher works.<br>
+          <strong>Arduino IDE</strong> for a quick test on a borrowed laptop, or when teaching someone who already knows Arduino.
+        </div>
+        <div class="m-alert win">
+          <strong>// SAME SOURCE</strong>
+          Both tools compile the exact same code in <code>01_src/</code>. Different toolchains, identical firmware.
+        </div>
+      </div>
+    </details>
+
+    <!-- ── Footer nav links ── -->
+    <div style="padding:10px 4px 4px;display:flex;gap:10px;flex-wrap:wrap;font-size:.8em;color:var(--text-muted)">
+      <a href="index.html">🏠 Home</a>
+      <a href="audit.html">📋 Audit &amp; Bugs</a>
+      <a href="flash.html">⚡ Web Flasher</a>
+    </div>
+
+  </div><!-- .rows-container -->
+
+  <div class="deco-band bottom-band"></div>
+
+  <footer class="app-footer">
+    <span class="footer-text">
+      <a href="https://workshop-diy.org" target="_blank" rel="noopener">workshop-diy.org</a>
+      · <a href="https://github.com/abourdim/esp32c3_super_mini_robot" target="_blank" rel="noopener" title="Source on GitHub">⭐ github</a>
+      · Robot-01 · ESP32-C3 · <a href="audit.html">audit.html</a>
+    </span>
+  </footer>
+
+</div><!-- .app -->
+
+<!-- ════════════════════════════════════════
+     SCRIPTS
+     ════════════════════════════════════════ -->
+<script>
+/* ── Stale-localStorage guard: scrub themes that no longer exist ──
+   Run BEFORE wdiy-script.js loads so its restore step doesn't apply a removed theme. */
+(function () {
+  const VALID = ['lab-light', 'lab-dark', 'terminal', 'solarized',
+                 'robot', 'bot-pop', 'kapow', 'blastoff', 'dino'];
+  try {
+    const saved = localStorage.getItem('wdiy-theme');
+    if (saved && !VALID.includes(saved)) {
+      localStorage.removeItem('wdiy-theme');  // fall back to default 'robot'
+    }
+  } catch {}
+})();
+</script>
+<script src="assets/wdiy-script.js"></script>
+<script>
+/* ── Customize i18n strings for Robot project ── */
+if (typeof LANG !== 'undefined') {
+  // English
+  LANG.en.title    = 'esp32-c3-robot-app';
+  LANG.en.subtitle = '🤖 explore · 🛠️ build · 🚀 deploy';
+  LANG.en.faq_q1   = 'What is this robot?';
+  LANG.en.faq_a1   = 'An ESP32-C3 RISC-V robot with servos, NeoPixels, OLED, ultrasonic sensor, and Bluetooth phone control via RemoteXY.';
+  LANG.en.faq_q2   = 'How do I flash firmware?';
+  LANG.en.faq_a2   = 'Run ./launch.sh → option 10 (full flash = compile + upload + monitor).';
+  LANG.en.faq_q3   = 'Upload fails — what now?';
+  LANG.en.faq_a3   = 'Hold BOOT, tap RESET, release BOOT, retry upload. See Mission 09.';
+  LANG.en.faq_q4   = 'Where is the source code?';
+  LANG.en.faq_a4   = 'In 01_src/ — one .h/.cpp pair per subsystem. Entry point: 01_src.ino.';
+  LANG.en.howto_1  = 'Run ./launch.sh and choose option 0 to install all tools automatically.';
+  LANG.en.howto_2  = 'Open each mission below to learn what each file and tool does.';
+  LANG.en.howto_3  = 'Watch the Activity Log (📜) for timestamped events and messages.';
+  LANG.en.howto_4  = 'Use Settings (⚙️) to switch between 8 themes and 3 languages.';
+
+  // Français
+  LANG.fr.title    = 'esp32-c3-robot-app';
+  LANG.fr.subtitle = '🤖 explorer · 🛠️ construire · 🚀 déployer';
+  LANG.fr.faq_q1   = 'C\'est quoi ce robot ?';
+  LANG.fr.faq_a1   = 'Un robot ESP32-C3 RISC-V avec servos, NeoPixels, OLED, capteur ultrasonique et commande Bluetooth via RemoteXY.';
+  LANG.fr.faq_q2   = 'Comment flasher le firmware ?';
+  LANG.fr.faq_a2   = 'Lance ./launch.sh → option 10 (flash complet = compilation + upload + monitoring).';
+  LANG.fr.faq_q3   = 'L\'upload échoue — que faire ?';
+  LANG.fr.faq_a3   = 'Maintiens BOOT, appuie sur RESET, relâche BOOT, réessaie. Voir Mission 09.';
+  LANG.fr.faq_q4   = 'Où est le code source ?';
+  LANG.fr.faq_a4   = 'Dans 01_src/ — une paire .h/.cpp par sous-système. Point d\'entrée : 01_src.ino.';
+  LANG.fr.howto_1  = 'Lance ./launch.sh et choisis l\'option 0 pour tout installer automatiquement.';
+  LANG.fr.howto_2  = 'Ouvre chaque mission pour comprendre chaque fichier et outil.';
+  LANG.fr.howto_3  = 'Consulte le Journal d\'activité (📜) pour les événements horodatés.';
+  LANG.fr.howto_4  = 'Utilise Paramètres (⚙️) pour choisir parmi 8 thèmes et 3 langues.';
+
+  // العربية
+  LANG.ar.title    = 'تطبيق-روبوت-ESP32';
+  LANG.ar.subtitle = '🤖 استكشف · 🛠️ ابنِ · 🚀 انشر';
+  LANG.ar.faq_q1   = 'ما هذا الروبوت؟';
+  LANG.ar.faq_a1   = 'روبوت ESP32-C3 RISC-V مع سيرفو ومصابيح NeoPixels وشاشة OLED ومستشعر موجات فوق صوتية وتحكم بلوتوث عبر RemoteXY.';
+  LANG.ar.faq_q2   = 'كيف أرفع الفيرموير؟';
+  LANG.ar.faq_a2   = 'شغّل ./launch.sh ← اختر option 10 (رفع كامل = تجميع + رفع + مراقبة).';
+  LANG.ar.faq_q3   = 'فشل الرفع — ماذا أفعل؟';
+  LANG.ar.faq_a3   = 'اضغط BOOT باستمرار، انقر RESET، اترك BOOT، أعد المحاولة. انظر Mission 09.';
+  LANG.ar.faq_q4   = 'أين الكود المصدري؟';
+  LANG.ar.faq_a4   = 'في مجلد 01_src/ — ملف .h/.cpp لكل نظام فرعي. نقطة الدخول: 01_src.ino.';
+  LANG.ar.howto_1  = 'شغّل ./launch.sh واختر option 0 لتثبيت كل شيء تلقائيًا.';
+  LANG.ar.howto_2  = 'افتح كل مهمة في الأسفل لفهم كل ملف وأداة.';
+  LANG.ar.howto_3  = 'تابع سجل النشاط (📜) للأحداث المؤرخة.';
+  LANG.ar.howto_4  = 'استخدم الإعدادات (⚙️) للتبديل بين 8 مظاهر و3 لغات.';
+}
+
+/* ── Copy buttons for <pre> blocks ── */
+document.querySelectorAll('pre').forEach(pre => {
+  const btn = document.createElement('button');
+  btn.className = 'copy-btn';
+  btn.textContent = 'COPY';
+  btn.addEventListener('click', e => {
+    e.preventDefault();
+    const text = pre.querySelector('code')?.textContent ?? pre.textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = 'COPIED';
+      btn.classList.add('ok');
+      setTimeout(() => { btn.textContent = 'COPY'; btn.classList.remove('ok'); }, 1400);
+    }).catch(() => {});
+  });
+  pre.appendChild(btn);
+});
+
+/* ── Boot the template engine ── */
+init();
+</script>
+</body>
+</html>

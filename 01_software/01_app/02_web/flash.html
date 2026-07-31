@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en" dir="ltr" data-theme="robot">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Flash — ESP32-C3 Robot App</title>
+<link rel="stylesheet" href="assets/wdiy-template.css">
+
+<!-- esp-web-tools (Web Serial flasher) -->
+<script type="module"
+        src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script>
+
+<style>
+.app { max-width: 760px; }
+
+code {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: var(--accent); padding: 1px 6px; border-radius: 3px;
+  font-size: .82em;
+  font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+.light-theme code { color: var(--text); }
+
+.action-zone {
+  text-align: center;
+  padding: 30px 16px 26px;
+  border: 1px dashed var(--border);
+  border-radius: 14px;
+  background: rgba(0,0,0,.18);
+  margin: 16px 0;
+}
+.light-theme .action-zone { background: rgba(0,0,0,.03); }
+
+.intro { font-size: .9em; color: var(--text); line-height: 1.6; margin: 0 0 12px; }
+.intro .em { color: var(--accent); font-weight: 600; }
+
+/* Style the slot button inside esp-web-install-button */
+.install-btn {
+  font-family: var(--font-h);
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  padding: 14px 32px;
+  border: none; border-radius: 999px;
+  background: linear-gradient(135deg, var(--accent), var(--band2));
+  color: var(--bg);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--accent) 35%, transparent);
+  cursor: pointer;
+  transition: transform .15s, box-shadow .15s;
+}
+.install-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 30px color-mix(in srgb, var(--accent) 50%, transparent);
+}
+.install-btn:active { transform: translateY(0); }
+
+.unsupported, .not-allowed {
+  display: block;
+  padding: 12px 16px;
+  border-left: 3px solid #f59e0b;
+  background: rgba(245,158,11,.10);
+  font-size: .85em;
+  color: var(--text);
+  border-radius: 0 8px 8px 0;
+  margin: 8px 0;
+}
+
+.steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+  margin: 14px 0;
+}
+.step {
+  background: rgba(0,0,0,.18);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+.step .num {
+  display: inline-block;
+  width: 24px; height: 24px; line-height: 24px;
+  text-align: center;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--band2));
+  color: var(--bg);
+  font-weight: 700; font-size: .78em;
+  margin-bottom: 6px;
+}
+.step h4 {
+  font-family: var(--font-h);
+  font-size: .85em; color: var(--accent);
+  margin: 0 0 4px; text-transform: uppercase; letter-spacing: .04em;
+}
+.step p { font-size: .78em; color: var(--text-muted); line-height: 1.5; margin: 0; }
+.light-theme .step { background: rgba(0,0,0,.04); }
+
+.foot-note { font-size: .78em; color: var(--text-muted); text-align: center; padding: 14px 4px 4px; }
+
+details.collapsible > summary { font-size: .92rem; }
+</style>
+</head>
+
+<body
+  data-app-title="Flash firmware"
+  data-app-subtitle="📡 connect · 💾 install · 🚀 boot"
+  data-help-page="flash"
+  data-status-text="Awaiting USB"
+  data-status-online="false">
+
+<div class="app">
+  <div class="rows-container">
+
+    <p class="intro">
+      Plug the ESP32-C3 in over USB, then click <span class="em">Connect &amp; install</span>.
+      The flasher writes 3 binaries (bootloader · partitions · firmware) to chip memory and reboots.
+      Total time: ~30 seconds.
+    </p>
+
+    <!-- ═══ The flash button ═══ -->
+    <div class="action-zone">
+      <esp-web-install-button manifest="manifest.json">
+        <button slot="activate" class="install-btn">⚡ Connect &amp; install</button>
+        <span slot="unsupported" class="unsupported">
+          <strong>Unsupported browser.</strong>
+          Web Serial only works in <strong>Chrome / Edge</strong>. Firefox + Safari don't have it yet.
+        </span>
+        <span slot="not-allowed" class="not-allowed">
+          <strong>Page must be served over HTTPS or localhost.</strong>
+          If you opened this from a network share, run <code>./launch.sh serve</code> first.
+        </span>
+      </esp-web-install-button>
+    </div>
+
+    <!-- ═══ How it works ═══ -->
+    <h3 style="font-family:var(--font-h);font-size:.9em;color:var(--accent);text-transform:uppercase;letter-spacing:.04em;margin:20px 0 8px">// How it works</h3>
+    <div class="steps">
+      <div class="step">
+        <div class="num">1</div>
+        <h4>Connect</h4>
+        <p>Click the button. Pick the <em>USB JTAG/Serial</em> port from the list.</p>
+      </div>
+      <div class="step">
+        <div class="num">2</div>
+        <h4>Erase</h4>
+        <p>Old firmware is wiped from flash memory.</p>
+      </div>
+      <div class="step">
+        <div class="num">3</div>
+        <h4>Write</h4>
+        <p>Bootloader, partition table, firmware → written at offsets <code>0x0</code>, <code>0x8000</code>, <code>0x10000</code>.</p>
+      </div>
+      <div class="step">
+        <div class="num">4</div>
+        <h4>Verify &amp; reboot</h4>
+        <p>Flash hash compared to source. Chip reboots into your code.</p>
+      </div>
+    </div>
+
+    <!-- ═══ Troubleshooting ═══ -->
+    <details class="collapsible">
+      <summary>🚨 Trouble connecting?</summary>
+      <div class="card">
+        <ul style="padding-left:20px;font-size:.84em;line-height:1.7;color:var(--text);margin:8px 0">
+          <li><strong>"Failed to connect" / timeout:</strong> hold <strong>BOOT</strong>, tap <strong>RESET</strong>, release <strong>BOOT</strong>, click again. (See <a href="start-here.html#bootreset">Mission 09</a>.)</li>
+          <li><strong>Port already open:</strong> close PlatformIO/Arduino monitor — only one app holds the port.</li>
+          <li><strong>Windows:</strong> install the USB-serial driver (CP210x or CH340) if the board doesn't appear in the picker.</li>
+          <li><strong>macOS:</strong> pick the <code>/dev/cu.usbserial-*</code> device, not <code>/dev/tty.*</code>.</li>
+          <li><strong>Linux:</strong> add yourself to <code>dialout</code>: <code>sudo usermod -aG dialout $USER</code> &amp; re-login.</li>
+        </ul>
+      </div>
+    </details>
+
+    <details class="collapsible">
+      <summary>📦 No firmware? Build it first</summary>
+      <div class="card">
+        <p style="font-size:.84em;color:var(--text);line-height:1.6;margin:8px 0">
+          The flasher needs a <code>manifest.json</code> + the 3 binaries next to it. Generate them with:
+        </p>
+<pre><code>./launch.sh package-web</code></pre>
+        <p style="font-size:.84em;color:var(--text-muted);margin:8px 0">
+          That compiles your firmware then copies <code>bootloader.bin</code>, <code>partitions.bin</code>, and <code>firmware.bin</code> into <code>02_web/firmware/</code> and writes the manifest.
+        </p>
+      </div>
+    </details>
+
+    <p class="foot-note">
+      Powered by <a href="https://esphome.github.io/esp-web-tools/" target="_blank" rel="noopener">esp-web-tools</a>.
+      Source: <a href="https://github.com/esphome/esp-web-tools" target="_blank" rel="noopener">github.com/esphome/esp-web-tools</a>.
+    </p>
+
+  </div>
+</div>
+
+<script src="assets/wdiy-script.js"></script>
+<script src="assets/wdiy-shell.js"></script>
+</body>
+</html>

@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en" dir="ltr" data-theme="robot">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ESP32-C3 Robot App — Workshop DIY</title>
+<link rel="stylesheet" href="assets/wdiy-template.css">
+<style>
+.app { max-width: 920px; }
+
+/* page-local code/inline */
+code {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: var(--accent); padding: 1px 6px; border-radius: 3px;
+  font-size: .82em;
+  font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+.light-theme code { color: var(--text); }
+
+a.tile, .tile {
+  display: block;
+  background: rgba(0,0,0,.22);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px 18px 16px;
+  text-decoration: none;
+  color: var(--text);
+  transition: all .15s;
+  position: relative;
+  overflow: hidden;
+}
+a.tile:hover {
+  border-color: var(--accent);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--accent) 22%, transparent);
+  transform: translateY(-2px);
+  text-decoration: none;
+}
+.tile.disabled {
+  opacity: .55; cursor: default; pointer-events: none;
+}
+.tile h2 {
+  font-family: var(--font-h);
+  font-size: 1rem; letter-spacing: .04em;
+  color: var(--accent); margin: 0 0 6px;
+  text-transform: uppercase; font-weight: 700;
+}
+.tile p { font-size: .82em; color: var(--text-muted); line-height: 1.5; margin: 0; }
+.tile .icon-big {
+  font-size: 28px; display: block; margin-bottom: 8px;
+  filter: drop-shadow(0 2px 6px color-mix(in srgb, var(--accent) 30%, transparent));
+}
+
+.light-theme a.tile, .light-theme .tile { background: rgba(0,0,0,.04); }
+.light-theme a.tile:hover { box-shadow: 0 6px 18px color-mix(in srgb, var(--accent) 30%, transparent); }
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 14px;
+  margin: 12px 0 22px;
+}
+
+.grid-section {
+  font-family: var(--font-h);
+  font-size: .95em;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  margin: 22px 4px 6px;
+  font-weight: 700;
+}
+
+.tile-tag {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent2) 18%, transparent);
+  color: var(--accent2);
+  font-size: .72em;
+  font-weight: 600;
+  letter-spacing: .04em;
+}
+.light-theme .tile-tag { background: color-mix(in srgb, var(--accent2) 14%, transparent); }
+
+.intro {
+  font-size: .9em; color: var(--text); line-height: 1.6;
+  margin: 0 0 12px;
+}
+.foot-note {
+  font-size: .78em; color: var(--text-muted);
+  text-align: center; padding: 14px 4px 4px; line-height: 1.55;
+}
+</style>
+</head>
+
+<body
+  data-app-title="ESP32-C3 Robot App"
+  data-app-subtitle="🚀 explore · 🛠️ build · 🚀 deploy"
+  data-help-page="index"
+  data-status-text="Local"
+  data-status-online="true">
+
+<div class="app">
+  <div class="rows-container">
+
+    <p class="intro">
+      Welcome to the local launcher for the <strong>ESP32-C3 Robot App</strong>.
+      Pick a tool below — each one is self-contained, runs in your browser, and works offline.
+    </p>
+
+    <h3 class="grid-section">📚 Guides — pick your audience</h3>
+    <div class="grid">
+
+      <a class="tile" href="user-guide.html">
+        <span class="icon-big">🎮</span>
+        <h2>User Guide</h2>
+        <p>You got a Robot-01 — drive it! Power on, pair phone, controls, light/sound meanings, troubleshooting, safety.</p>
+        <span class="tile-tag">🦸 Kids · end users</span>
+      </a>
+
+      <a class="tile" href="build-guide.html">
+        <span class="icon-big">🛠️</span>
+        <h2>Build Guide</h2>
+        <p>Build your own from parts. BOM (~$30–45) · tools · wiring diagram · step-by-step assembly · 3D parts · first flash.</p>
+        <span class="tile-tag">🔧 Makers</span>
+      </a>
+
+      <a class="tile" href="start-here.html">
+        <span class="icon-big">📖</span>
+        <h2>Start Here · Dev</h2>
+        <p>Firmware narrative tour. Layout, .ino magic, platformio.ini, launcher, build pipeline, flash map, debug. 14 missions.</p>
+        <span class="tile-tag">💻 Developers</span>
+      </a>
+
+      <a class="tile" href="learn.html">
+        <span class="icon-big">🔬</span>
+        <h2>Tech Deep-Dive</h2>
+        <p>Reference manual. Every <code>launch.sh</code> option, every <code>platformio.ini</code> directive, RMT, partition table, addr2line, Web Serial.</p>
+        <span class="tile-tag">🧠 Curious devs</span>
+      </a>
+
+      <a class="tile" href="hardware.html">
+        <span class="icon-big">🔌</span>
+        <h2>Hardware</h2>
+        <p>Live PCB browser — toggle the 5 KiCad layers, see the GPIO pin map, links to schematic source, gerbers, interactive BOM.</p>
+        <span class="tile-tag">⚡ Hardware hackers</span>
+      </a>
+
+      <a class="tile" href="instructor.html">
+        <span class="icon-big">🎓</span>
+        <h2>Instructor Guide</h2>
+        <p>Run a workshop. Prereqs · 90-min lesson plan · student FAQ · panic-button cheat sheet · post-session reset.</p>
+        <span class="tile-tag">🧑‍🏫 Teachers</span>
+      </a>
+
+    </div>
+
+    <h3 class="grid-section">🛠️ Tools — runs in your browser</h3>
+    <div class="grid">
+
+      <a class="tile" href="flash.html">
+        <span class="icon-big">⚡</span>
+        <h2>Flash firmware</h2>
+        <p>Click-to-flash via Web Serial. Plug in the board, click Connect, install. <code>Chrome / Edge</code> only.</p>
+      </a>
+
+      <a class="tile" href="monitor.html">
+        <span class="icon-big">📡</span>
+        <h2>Serial monitor</h2>
+        <p>Live serial logs in the browser. Watch the robot boot, send commands, debug runtime.</p>
+      </a>
+
+      <a class="tile" href="audit.html">
+        <span class="icon-big">📋</span>
+        <h2>Firmware Audit</h2>
+        <p>Bug tracker · fix progress · severity checklist · BUG-NNN forensics with crash-dump analysis.</p>
+      </a>
+
+      <div class="tile disabled">
+        <span class="icon-big">🏠</span>
+        <h2>PlatformIO Home</h2>
+        <p>Run from terminal: <code>./launch.sh home</code></p>
+      </div>
+
+      <div class="tile disabled">
+        <span class="icon-big">📦</span>
+        <h2>Compile / package</h2>
+        <p>Run from terminal: <code>./launch.sh package-web</code></p>
+      </div>
+
+    </div>
+
+    <p class="foot-note">
+      Browser support · the flasher and monitor require <strong>Chrome or Edge</strong>
+      (Web Serial API). Firefox + Safari don't support it yet — but the rest of the launcher works everywhere.
+    </p>
+
+  </div>
+</div>
+
+<script src="assets/wdiy-script.js"></script>
+<script src="assets/wdiy-shell.js"></script>
+</body>
+</html>

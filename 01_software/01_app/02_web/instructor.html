@@ -1,0 +1,570 @@
+<!doctype html>
+<html lang="en" dir="ltr" data-theme="lab-dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Instructor Guide — ESP32-C3 Robot</title>
+<link rel="stylesheet" href="assets/wdiy-template.css">
+<style>
+.app { max-width: 940px; }
+
+code {
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  color: var(--accent); padding: 1px 6px; border-radius: 4px;
+  font-size: .82em; font-family: ui-monospace, Menlo, Consolas, monospace;
+}
+.light-theme code { color: var(--text); }
+
+.intro { font-size: .92em; color: var(--text); line-height: 1.6; margin: 0 0 14px; padding: 0 4px; }
+p.lead { font-size: .9em; color: var(--text); line-height: 1.6; margin: 0 0 10px; }
+
+/* ── Prereqs grid ── */
+.prereq-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin: 12px 0; }
+.prereq {
+  background: rgba(0,0,0,.22); border: 1px solid var(--border);
+  border-radius: 12px; padding: 14px;
+}
+.light-theme .prereq { background: rgba(0,0,0,.04); }
+.prereq h4 {
+  font-family: var(--font-h); font-size: .85em;
+  color: var(--accent); text-transform: uppercase;
+  letter-spacing: .04em; margin: 0 0 8px;
+  display: flex; align-items: center; gap: 6px;
+}
+.prereq ul { padding-left: 18px; margin: 0; }
+.prereq li { font-size: .82em; line-height: 1.55; color: var(--text); margin-bottom: 4px; }
+
+/* ── Lesson timeline ── */
+.lesson-row {
+  display: grid; grid-template-columns: 80px 1fr 80px;
+  gap: 10px; padding: 12px 14px;
+  background: rgba(0,0,0,.22); border-left: 3px solid var(--accent);
+  border-radius: 0 10px 10px 0; margin: 8px 0;
+}
+.light-theme .lesson-row { background: rgba(0,0,0,.04); }
+.lesson-time {
+  font-family: ui-monospace, monospace; font-size: .85em;
+  color: var(--accent2); font-weight: 700;
+  display: flex; align-items: center;
+}
+.lesson-content h5 {
+  font-family: var(--font-h); font-size: .9em;
+  color: var(--accent); text-transform: uppercase;
+  letter-spacing: .03em; margin: 0 0 4px;
+}
+.lesson-content p { font-size: .85em; color: var(--text); line-height: 1.5; margin: 0 0 4px; }
+.lesson-content .obj {
+  font-size: .76em; color: var(--text-muted);
+  font-style: italic;
+}
+.lesson-format {
+  display: flex; align-items: center; justify-content: center;
+  font-size: .72em; font-weight: 700; letter-spacing: .04em;
+  text-transform: uppercase;
+  border-radius: 6px; padding: 4px 8px;
+  align-self: start;
+}
+.lesson-format.demo { background: rgba(59,130,246,.18); color: #60a5fa; }
+.lesson-format.hands-on { background: rgba(34,197,94,.18); color: #22c55e; }
+.lesson-format.lecture { background: rgba(168,85,247,.18); color: #c084fc; }
+.lesson-format.break { background: rgba(245,158,11,.18); color: #f59e0b; }
+
+/* ── FAQ ── */
+.faq-item { margin: 10px 0; }
+.faq-item .q {
+  font-family: var(--font-h); font-size: .88em;
+  color: var(--accent2); text-transform: uppercase;
+  letter-spacing: .03em; margin-bottom: 4px;
+}
+.faq-item .a { font-size: .85em; color: var(--text); line-height: 1.55; }
+.faq-item .a code { font-size: .85em; }
+
+/* ── Cheat sheet ── */
+.cheat {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 12px; margin: 12px 0;
+}
+@media (max-width: 700px) { .cheat { grid-template-columns: 1fr; } }
+.cheat-block {
+  background: rgba(0,0,0,.22); border: 1px solid var(--border);
+  border-radius: 10px; padding: 14px;
+}
+.light-theme .cheat-block { background: rgba(0,0,0,.04); }
+.cheat-block h4 {
+  font-family: var(--font-h); font-size: .82em;
+  color: var(--accent); text-transform: uppercase;
+  letter-spacing: .04em; margin: 0 0 8px;
+}
+.cheat-block .row {
+  display: grid; grid-template-columns: 1fr 1.5fr;
+  gap: 8px; padding: 6px 0;
+  border-bottom: 1px dashed color-mix(in srgb, var(--border) 70%, transparent);
+  font-size: .82em;
+}
+.cheat-block .row:last-child { border-bottom: none; }
+.cheat-block .row .what { color: #ef4444; font-weight: 600; }
+.cheat-block .row .fix  { color: var(--text); }
+
+/* ── Reset checklist ── */
+.checklist {
+  background: rgba(0,0,0,.22); border: 1px solid var(--border);
+  border-radius: 12px; padding: 16px; margin: 12px 0;
+}
+.light-theme .checklist { background: rgba(0,0,0,.04); }
+.checklist h4 {
+  font-family: var(--font-h); font-size: .85em;
+  color: var(--accent); text-transform: uppercase;
+  letter-spacing: .03em; margin: 0 0 10px;
+}
+.checklist label {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 6px 0; font-size: .85em;
+  cursor: pointer; transition: opacity .15s;
+}
+.checklist input[type=checkbox] {
+  width: 18px; height: 18px;
+  accent-color: var(--accent); flex-shrink: 0;
+  margin-top: 2px; cursor: pointer;
+}
+.checklist input:checked ~ span { opacity: .4; text-decoration: line-through; }
+.checklist span { color: var(--text); line-height: 1.5; }
+
+/* ── Alerts ── */
+.alert {
+  border-left: 3px solid var(--accent);
+  padding: 12px 16px;
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  border-radius: 0 8px 8px 0; margin: 12px 0;
+  font-size: .85em; line-height: 1.55;
+}
+.alert.warn   { border-left-color: #f59e0b; background: rgba(245,158,11,.10); }
+.alert.danger { border-left-color: #ef4444; background: rgba(239,68,68,.10); }
+.alert.win    { border-left-color: #22c55e; background: rgba(34,197,94,.10); }
+.alert strong { display: block; margin-bottom: 4px; font-size: .8em; letter-spacing: .04em; color: var(--accent); }
+.alert.warn   strong { color: #f59e0b; }
+.alert.danger strong { color: #ef4444; }
+.alert.win    strong { color: #22c55e; }
+
+/* ── Misc ── */
+.foot-note { font-size: .82em; color: var(--text-muted); text-align: center; padding: 14px 4px 4px; line-height: 1.55; }
+ul.simple { padding-left: 22px; margin: 8px 0; }
+ul.simple li { font-size: .86em; color: var(--text); line-height: 1.6; margin-bottom: 4px; }
+details.collapsible > summary { font-size: .92rem; }
+
+.duration-tag {
+  display: inline-block; font-size: .72em; padding: 2px 8px;
+  border-radius: 999px; background: var(--accent); color: var(--bg);
+  font-weight: 700; letter-spacing: .03em; margin-left: 6px;
+  vertical-align: middle;
+}
+
+.audience-pill {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 10px; border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  color: var(--accent); font-size: .76em; font-weight: 600;
+  letter-spacing: .04em; text-transform: uppercase;
+}
+</style>
+</head>
+
+<body
+  data-app-title="Instructor Guide"
+  data-app-subtitle="🎓 plan · 🧑‍🏫 teach · 🔁 reset"
+  data-help-page="instructor"
+  data-default-theme="lab-dark"
+  data-status-text="Class ready"
+  data-status-online="true">
+
+<div class="app">
+  <div class="rows-container">
+
+    <p class="intro">
+      Running a Robot-01 workshop? This guide is for the teacher / facilitator. It covers what to prep before kids
+      arrive, how to pace a 90-minute session, what students will ask, the panic-button cheat sheet, and the post-session reset checklist.
+      <span class="audience-pill">🎓 Teacher</span>
+      <span class="audience-pill">🧑‍🏫 Workshop lead</span>
+      <span class="audience-pill">📚 Curriculum dev</span>
+    </p>
+
+    <!-- ═══ 1 — PREREQUISITES ═══ -->
+    <details class="collapsible" id="prereqs" open>
+      <summary>📋 1 — Prerequisites — what you need before students arrive</summary>
+      <div class="card">
+
+        <div class="prereq-grid">
+          <div class="prereq">
+            <h4>🤖 Per student</h4>
+            <ul>
+              <li>1× pre-assembled Robot-01</li>
+              <li>1× USB-C cable (charging + flashing)</li>
+              <li>Phone or tablet with RemoteXY installed</li>
+              <li>~1.5 m² floor space to drive in</li>
+            </ul>
+          </div>
+
+          <div class="prereq">
+            <h4>🛠️ Shared bench</h4>
+            <ul>
+              <li>1× USB charger / power strip (4-port minimum for 8 students)</li>
+              <li>2× spare robots (always one breaking mid-session)</li>
+              <li>1× laptop (for re-flashing if needed)</li>
+              <li>Spare USB-C cables (kids will trash them)</li>
+            </ul>
+          </div>
+
+          <div class="prereq">
+            <h4>📱 Phones &amp; apps</h4>
+            <ul>
+              <li>RemoteXY app pre-installed on every device</li>
+              <li>Bluetooth turned on, paired with at least one robot beforehand</li>
+              <li>Wi-Fi optional — robots use BT, not Wi-Fi</li>
+              <li>Screen-time / parental-control allow-list if needed</li>
+            </ul>
+          </div>
+
+          <div class="prereq">
+            <h4>📶 Network</h4>
+            <ul>
+              <li>For the workshop tools: any Wi-Fi works</li>
+              <li>Or local-only: <code>./launch.sh serve</code> on instructor laptop, students hit <code>http://&lt;laptop-ip&gt;:8000</code></li>
+              <li>Live site as backup: <a href="https://abourdim.github.io/esp32c3_super_mini_robot/">abourdim.github.io/esp32c3_super_mini_robot</a></li>
+            </ul>
+          </div>
+
+          <div class="prereq">
+            <h4>🔋 Batteries</h4>
+            <ul>
+              <li><strong>Charge every robot the night before</strong> — robots ship at ~30%</li>
+              <li>Keep 2 spares fully charged for swaps</li>
+              <li>Mid-session battery dip is the #1 reason for "the robot stopped working"</li>
+            </ul>
+          </div>
+
+          <div class="prereq">
+            <h4>📺 Display</h4>
+            <ul>
+              <li>Projector or large screen showing <a href="user-guide.html">user-guide.html</a></li>
+              <li>Pre-load each section as a tab — students follow along</li>
+              <li>Theme: <code>bot-pop</code> for elementary, <code>lab-light</code> for older</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="alert win">
+          <strong>// 30 MINUTES BEFORE</strong>
+          Plug in all robots. Open <a href="user-guide.html">user-guide.html</a> on the projector. Pair your demo robot with your phone. Verify it drives. If anything fails, swap to a spare and debug after class.
+        </div>
+      </div>
+    </details>
+
+    <!-- ═══ 2 — LESSON PLAN ═══ -->
+    <details class="collapsible" id="lesson">
+      <summary>🗓️ 2 — Lesson plan — 90-minute session</summary>
+      <div class="card">
+
+        <p class="lead">Designed for ages 9–14, groups of 4–8 students. Adapt timing for older or younger groups.</p>
+
+        <div class="lesson-row">
+          <div class="lesson-time">00:00<br>05:00</div>
+          <div class="lesson-content">
+            <h5>👋 Welcome &amp; safety</h5>
+            <p>Quick intro, rules, "don't drive off tables," show what we'll build by end of session.</p>
+            <p class="obj">Objective: set expectations, get hands settled.</p>
+          </div>
+          <div class="lesson-format lecture">Lect</div>
+        </div>
+
+        <div class="lesson-row">
+          <div class="lesson-time">05:00<br>15:00</div>
+          <div class="lesson-content">
+            <h5>🤖 Meet Robot-01 — show &amp; tell</h5>
+            <p>Demo your robot. Show all the parts: wheels, LEDs, OLED, sensor, buzzer. Ask: "What do you think this is for?" Open <a href="user-guide.html#hi">user-guide § 1</a> on the projector.</p>
+            <p class="obj">Objective: students recognize each subsystem before they touch one.</p>
+          </div>
+          <div class="lesson-format demo">Demo</div>
+        </div>
+
+        <div class="lesson-row">
+          <div class="lesson-time">15:00<br>25:00</div>
+          <div class="lesson-content">
+            <h5>🔌 Power on &amp; first boot</h5>
+            <p>Each student gets a robot + USB cable. Walk them through the switch + boot animation. Project <a href="user-guide.html#power">user-guide § 2</a>.</p>
+            <p class="obj">Objective: every robot is on, every student saw the rainbow boot sweep.</p>
+          </div>
+          <div class="lesson-format hands-on">Hands</div>
+        </div>
+
+        <div class="lesson-row">
+          <div class="lesson-time">25:00<br>40:00</div>
+          <div class="lesson-content">
+            <h5>📱 Pair phones</h5>
+            <p>Open RemoteXY on each phone. Walk through pairing. Project <a href="user-guide.html#pair">user-guide § 3</a>. Expect: 2-3 phones will fail first try — bluetooth toggle / restart fixes.</p>
+            <p class="obj">Objective: every student has paired and seen the connect-jingle.</p>
+          </div>
+          <div class="lesson-format hands-on">Hands</div>
+        </div>
+
+        <div class="lesson-row">
+          <div class="lesson-time">40:00<br>50:00</div>
+          <div class="lesson-content">
+            <h5>☕ Break — let them play</h5>
+            <p>Students drive freely. Walk around, encourage exploration. Don't structure — this is the wow moment.</p>
+            <p class="obj">Objective: free play. Bonding with the robot.</p>
+          </div>
+          <div class="lesson-format break">Free</div>
+        </div>
+
+        <div class="lesson-row">
+          <div class="lesson-time">50:00<br>65:00</div>
+          <div class="lesson-content">
+            <h5>💡🔊 Lights &amp; sounds — what they mean</h5>
+            <p>Decode LED colors and buzzer sounds. Project <a href="user-guide.html#lights">user-guide § 5</a> + <a href="user-guide.html#sounds">§ 6</a>. Ask: "What does the robot say when it boots? When it sees a wall?"</p>
+            <p class="obj">Objective: students learn to "read" robot status without looking at OLED.</p>
+          </div>
+          <div class="lesson-format lecture">Lect</div>
+        </div>
+
+        <div class="lesson-row">
+          <div class="lesson-time">65:00<br>80:00</div>
+          <div class="lesson-content">
+            <h5>🏁 Mini-challenge</h5>
+            <p>Pick one: <strong>obstacle course</strong> (drive around chairs without hitting them) · <strong>follow-the-leader</strong> (one robot leads, others mimic) · <strong>treasure hunt</strong> (use ultrasonic distance to find a hidden marker).</p>
+            <p class="obj">Objective: apply controls under pressure. Friendly competition.</p>
+          </div>
+          <div class="lesson-format hands-on">Hands</div>
+        </div>
+
+        <div class="lesson-row">
+          <div class="lesson-time">80:00<br>90:00</div>
+          <div class="lesson-content">
+            <h5>🎓 Wrap-up &amp; "what's next"</h5>
+            <p>Recap. Show <a href="build-guide.html">build-guide</a> for kids who want to build their own. Show <a href="start-here.html">start-here</a> for kids who want to write code. Q&amp;A.</p>
+            <p class="obj">Objective: invite continued learning at home.</p>
+          </div>
+          <div class="lesson-format lecture">Lect</div>
+        </div>
+
+        <div class="alert">
+          <strong>// PACING TIPS</strong>
+          For 6-8 year olds: stretch sections 3–4 (power + pair) by 10 min, drop the mini-challenge.<br>
+          For 12+ year olds: shrink section 4 (pair) by 5 min, double the mini-challenge time, finish on the build-guide tour.
+        </div>
+      </div>
+    </details>
+
+    <!-- ═══ 3 — STUDENT QUESTIONS ═══ -->
+    <details class="collapsible" id="faq">
+      <summary>❓ 3 — Things students always ask</summary>
+      <div class="card">
+
+        <div class="faq-item">
+          <div class="q">"Why did mine stop working?!"</div>
+          <div class="a">90% of the time: low battery (check the LEDs — see <a href="user-guide.html#lights">user-guide § 5</a>). Swap to a charged spare; charge the dead one for the next session. 10%: phone walked out of range.</div>
+        </div>
+
+        <div class="faq-item">
+          <div class="q">"Can I make it talk?"</div>
+          <div class="a">It already beeps! For real speech, the C3 doesn't have an audio DAC — that's a future upgrade. For now, point them at the buzzer-tones glossary in <a href="user-guide.html#sounds">user-guide § 6</a>.</div>
+        </div>
+
+        <div class="faq-item">
+          <div class="q">"Why does it stop when I drive at the wall?"</div>
+          <div class="a">Built-in obstacle avoidance — the ultrasonic sensor refuses to drive forward when something's within 10 cm. Backing up and turning still work. Show them the sensor on the front.</div>
+        </div>
+
+        <div class="faq-item">
+          <div class="q">"Can two robots talk to each other?"</div>
+          <div class="a">Not yet — current firmware only talks to phones over BT. Possible upgrade: ESP-NOW (peer-to-peer ESP32 protocol). Mention it as a "what could be next" hook.</div>
+        </div>
+
+        <div class="faq-item">
+          <div class="q">"Why is the screen so small?"</div>
+          <div class="a">It's a 128×32 OLED — chosen because it's tiny, low-power, and crisp. Bigger displays exist; this one fits the chassis without a battery hit.</div>
+        </div>
+
+        <div class="faq-item">
+          <div class="q">"Can I make the lights different colors?"</div>
+          <div class="a">Yes! That's coding territory — point them to <a href="start-here.html#config">start-here § 4</a> and <code>06_neopixels.cpp</code>. For workshop session: hold the action button → "purple party" demo.</div>
+        </div>
+
+        <div class="faq-item">
+          <div class="q">"Why doesn't my phone find it?"</div>
+          <div class="a">Three usual culprits: (1) Bluetooth off in phone settings, (2) robot not powered or showing READY, (3) RemoteXY needs reopening. Power-cycle the robot, restart the app.</div>
+        </div>
+
+        <div class="faq-item">
+          <div class="q">"Can I take it home?"</div>
+          <div class="a">Depends on workshop policy. If yes: hand them a charged battery + USB cable + sticker with <a href="https://abourdim.github.io/esp32c3_super_mini_robot/user-guide.html">user-guide URL</a>. Tell them to come back with broken stuff for the next session.</div>
+        </div>
+      </div>
+    </details>
+
+    <!-- ═══ 4 — CHEAT SHEET ═══ -->
+    <details class="collapsible" id="cheat">
+      <summary>🆘 4 — Panic-button cheat sheet — fix in 30 seconds</summary>
+      <div class="card">
+
+        <p class="lead">When something goes wrong mid-session, fix it fast and move on. Don't troubleshoot in front of 8 impatient kids.</p>
+
+        <div class="cheat">
+
+          <div class="cheat-block">
+            <h4>🤖 Robot side</h4>
+            <div class="row"><div class="what">Won't power on</div><div class="fix">Plug USB. If LEDs come on, battery's dead — swap robot.</div></div>
+            <div class="row"><div class="what">All red blink</div><div class="fix">Hardware fault. Swap robot. Diagnose later.</div></div>
+            <div class="row"><div class="what">Drives in circles</div><div class="fix">Hold action btn 5 s = recalibrate joystick center.</div></div>
+            <div class="row"><div class="what">Whining beep</div><div class="fix">Low battery. Plug USB or swap.</div></div>
+            <div class="row"><div class="what">3-beep alert</div><div class="fix">Obstacle detected. Tell student to back up.</div></div>
+            <div class="row"><div class="what">Stops randomly</div><div class="fix">Out of BT range — get closer to phone.</div></div>
+          </div>
+
+          <div class="cheat-block">
+            <h4>📱 Phone side</h4>
+            <div class="row"><div class="what">RemoteXY won't open</div><div class="fix">Force-close + reopen. Check BT toggle.</div></div>
+            <div class="row"><div class="what">Robot not in list</div><div class="fix">Power-cycle the robot. Re-scan.</div></div>
+            <div class="row"><div class="what">"PRO license required"</div><div class="fix">Known issue (<a href="audit.html#bug-004">audit BUG-004</a>). Use spare robot.</div></div>
+            <div class="row"><div class="what">Connects then drops</div><div class="fix">Phone too far OR low robot battery.</div></div>
+            <div class="row"><div class="what">No joystick on screen</div><div class="fix">App not paired with right device. Re-pair.</div></div>
+            <div class="row"><div class="what">Pairing pin asked</div><div class="fix">Default <code>1234</code> or <code>0000</code>.</div></div>
+          </div>
+
+          <div class="cheat-block">
+            <h4>💻 Instructor laptop</h4>
+            <div class="row"><div class="what">Can't reflash a robot</div><div class="fix">BOOT+RESET trick (<a href="start-here.html#bootreset">Mission 09</a>).</div></div>
+            <div class="row"><div class="what">flash.html doesn't see port</div><div class="fix">Use Chrome/Edge only. Not Firefox.</div></div>
+            <div class="row"><div class="what">Wi-Fi died</div><div class="fix">Live site cached locally — pull files from <code>02_web/</code> on USB stick.</div></div>
+            <div class="row"><div class="what">Projector won't connect</div><div class="fix">Hand out tablets with the URL pre-loaded.</div></div>
+          </div>
+
+          <div class="cheat-block">
+            <h4>🚸 Behavioral</h4>
+            <div class="row"><div class="what">Robot crashed into wall</div><div class="fix">"It's fine — they're built for it." Recover, drive on.</div></div>
+            <div class="row"><div class="what">Two kids fighting over robot</div><div class="fix">Pull out a spare. Pair it with one of their phones.</div></div>
+            <div class="row"><div class="what">Kid overwhelmed</div><div class="fix">Have them pair-program (driver + co-pilot reads guide).</div></div>
+            <div class="row"><div class="what">Kid bored / done early</div><div class="fix">Show <a href="start-here.html">start-here</a>: "want to write the code?"</div></div>
+          </div>
+
+        </div>
+
+        <div class="alert danger">
+          <strong>// HARD STOP</strong>
+          Two robots smoking, sparks visible, or any electrical-safety concern → unplug everything from USB, end session, debug after.
+          Smoke is rare but if it happens, it's the LiPo: get the robot outside immediately.
+        </div>
+      </div>
+    </details>
+
+    <!-- ═══ 5 — RESET CHECKLIST ═══ -->
+    <details class="collapsible" id="reset">
+      <summary>🔁 5 — Post-session reset — between groups / end of day</summary>
+      <div class="card">
+
+        <p class="lead">Tick these off after each group leaves. Boxes save in your browser — they reset on the next page load.</p>
+
+        <div class="checklist">
+          <h4>🔌 Power &amp; battery</h4>
+          <label><input type="checkbox"><span>Switch every robot OFF</span></label>
+          <label><input type="checkbox"><span>Plug every robot into USB to charge for the next group</span></label>
+          <label><input type="checkbox"><span>Note which robots ran low (mark with tape) — these need full charge</span></label>
+          <label><input type="checkbox"><span>Verify spare robots still on full charge</span></label>
+        </div>
+
+        <div class="checklist">
+          <h4>🔧 Hardware</h4>
+          <label><input type="checkbox"><span>Inspect each robot for visible damage (cracked chassis, loose wires, scratched OLED)</span></label>
+          <label><input type="checkbox"><span>Spin all wheels by hand — check for hair / fiber jams</span></label>
+          <label><input type="checkbox"><span>Wipe sensor eyes and OLED screen with microfiber cloth</span></label>
+          <label><input type="checkbox"><span>Pull aside any robot with red-blink LEDs for later debug</span></label>
+        </div>
+
+        <div class="checklist">
+          <h4>📱 Phones / app state</h4>
+          <label><input type="checkbox"><span>Tell students to forget the robot from their phone's BT settings (so the next group can pair)</span></label>
+          <label><input type="checkbox"><span>If using shared tablets: clear paired devices, close RemoteXY</span></label>
+          <label><input type="checkbox"><span>Charge all instructor tablets / phones</span></label>
+        </div>
+
+        <div class="checklist">
+          <h4>📋 Logging / handover</h4>
+          <label><input type="checkbox"><span>Update <a href="audit.html">audit page</a> if any new bug surfaced (use BUG-NNN format with date+time)</span></label>
+          <label><input type="checkbox"><span>Note what worked / didn't in the lesson plan — adjust for next session</span></label>
+          <label><input type="checkbox"><span>Restock USB-C cables, M2 screws, spare batteries</span></label>
+          <label><input type="checkbox"><span>Brief the next instructor on any robot quirks (e.g. "robot #3's left wheel sticks")</span></label>
+        </div>
+
+        <div class="checklist">
+          <h4>🧹 Space</h4>
+          <label><input type="checkbox"><span>Pick up dropped wheels / horns / screws</span></label>
+          <label><input type="checkbox"><span>Sweep the drive zone — hair and dust kill servos</span></label>
+          <label><input type="checkbox"><span>Pack obstacle-course props if used</span></label>
+          <label><input type="checkbox"><span>Lock cabinet / leave robots charging in safe space</span></label>
+        </div>
+
+        <div class="alert">
+          <strong>// END-OF-DAY</strong>
+          Once a week, fully cycle every battery (drain to 15% LED, then full charge). LiPos last longer with regular use than they do sitting at 100% for months.
+        </div>
+      </div>
+    </details>
+
+    <!-- ═══ 6 — RESOURCES ═══ -->
+    <details class="collapsible" id="resources">
+      <summary>📚 6 — Curriculum extensions &amp; resources</summary>
+      <div class="card">
+
+        <div class="prereq-grid">
+          <div class="prereq">
+            <h4>📖 Sister guides</h4>
+            <ul>
+              <li><a href="user-guide.html">user-guide.html</a> — for students</li>
+              <li><a href="build-guide.html">build-guide.html</a> — assembly walkthrough</li>
+              <li><a href="start-here.html">start-here.html</a> — firmware deep-dive</li>
+              <li><a href="audit.html">audit.html</a> — known bugs &amp; fixes</li>
+            </ul>
+          </div>
+
+          <div class="prereq">
+            <h4>🌐 External</h4>
+            <ul>
+              <li><a href="https://workshop-diy.org" target="_blank" rel="noopener">workshop-diy.org</a> — community + more workshops</li>
+              <li><a href="https://github.com/abourdim/esp32c3_super_mini_robot" target="_blank" rel="noopener">github.com/abourdim/esp32c3_super_mini_robot</a> — source</li>
+              <li><a href="https://docs.platformio.org" target="_blank" rel="noopener">docs.platformio.org</a> — build tools</li>
+              <li><a href="https://remotexy.com" target="_blank" rel="noopener">remotexy.com</a> — phone-app docs</li>
+            </ul>
+          </div>
+
+          <div class="prereq">
+            <h4>🎯 Follow-up sessions</h4>
+            <ul>
+              <li><strong>Session 2:</strong> "Make my robot blink the way I want" — first .cpp edit + reflash</li>
+              <li><strong>Session 3:</strong> "Build my own robot" — soldering with build-guide</li>
+              <li><strong>Session 4:</strong> "Talk to two robots" — ESP-NOW peer protocol intro</li>
+            </ul>
+          </div>
+
+          <div class="prereq">
+            <h4>🏆 Stretch goals for advanced kids</h4>
+            <ul>
+              <li>Add a custom LED pattern in <code>06_neopixels.cpp</code></li>
+              <li>Write a new RemoteXY screen (if PRO available)</li>
+              <li>Use ultrasonic data to draw a "map" on OLED</li>
+              <li>Add an external IR sensor for line-following</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </details>
+
+    <p class="foot-note">
+      Bug or curriculum suggestion? Open an issue: <a href="https://github.com/abourdim/esp32c3_super_mini_robot/issues" target="_blank" rel="noopener">github.com/abourdim/esp32c3_super_mini_robot/issues</a>
+      &nbsp;·&nbsp; Reach the team: <a href="https://workshop-diy.org" target="_blank" rel="noopener">workshop-diy.org</a>
+    </p>
+
+  </div><!-- .rows-container -->
+</div><!-- .app -->
+
+<script src="assets/wdiy-script.js"></script>
+<script src="assets/wdiy-shell.js"></script>
+</body>
+</html>

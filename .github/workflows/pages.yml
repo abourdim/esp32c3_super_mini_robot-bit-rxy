@@ -1,0 +1,65 @@
+name: Deploy Web tools to GitHub Pages
+
+# Single source of truth: 01_software/01_app/02_web/
+# This workflow mirrors that folder to GitHub Pages on every push to master,
+# so the site URL https://abourdim.github.io/esp32c3_super_mini_robot/ always reflects HEAD.
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - '01_software/01_app/02_web/**'
+      - '02_hardware/v3/*.svg'
+      - '02_hardware/v3/*.png'
+      - '02_hardware/v3/*.jpg'
+      - '02_hardware/v3/bom/**'
+      - '02_hardware/README.md'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:   # manual trigger from Actions tab
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deploy; cancel in-progress runs on new push
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      # Bundle v3 hardware artifacts (PCB SVGs + interactive BOM) so
+      # hardware.html on the live site can load them via relative paths.
+      # Source of truth stays at 02_hardware/v3/ — this is just a copy.
+      - name: Stage hardware artifacts
+        run: |
+          mkdir -p 01_software/01_app/02_web/hardware/v3
+          cp 02_hardware/v3/*.svg 01_software/01_app/02_web/hardware/v3/ 2>/dev/null || true
+          cp 02_hardware/v3/*.png 01_software/01_app/02_web/hardware/v3/ 2>/dev/null || true
+          cp 02_hardware/v3/*.jpg 01_software/01_app/02_web/hardware/v3/ 2>/dev/null || true
+          if [ -f 02_hardware/v3/bom/ibom.html ]; then
+            mkdir -p 01_software/01_app/02_web/hardware/v3/bom
+            cp 02_hardware/v3/bom/ibom.html 01_software/01_app/02_web/hardware/v3/bom/
+          fi
+          ls -la 01_software/01_app/02_web/hardware/v3/
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: 01_software/01_app/02_web
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
