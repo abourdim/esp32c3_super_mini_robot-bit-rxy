@@ -1,5 +1,5 @@
-#ifndef __DEF_INCLUDE_REMOTE_XY_H__
-#define __DEF_INCLUDE_REMOTE_XY_H__
+#ifndef __DEF_INCLUDE_BIT_RXY_H__
+#define __DEF_INCLUDE_BIT_RXY_H__
 
 extern void remotexy_init(void);
 extern void remotexy_handler(void);
@@ -28,4 +28,4 @@ extern void remotexy_set_circularBar_01( int8_t p_circularBar_01);
 extern void remotexy_set_sound_01(int16_t p_sound_01);
 extern void remotexy_set_connect_flag( uint8_t p_connect_flag);
 
-#endif // __DEF_INCLUDE_REMOTE_XY_H__cd
+#endif // __DEF_INCLUDE_BIT_RXY_H__

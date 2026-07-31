@@ -15,7 +15,7 @@
 #include "00_config.h"
 // #include "01_includes.h"
 #include "02_data.h"
-#include "03_remotexy.h"
+#include "03_bit-rxy.h"
 #include "04_tasks.h"
 #include "05_buzzer.h"
 #include "06_neopixels.h"
