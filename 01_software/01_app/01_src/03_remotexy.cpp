@@ -27,6 +27,7 @@
 // Layout CFG (base64 JSON), built to match this robot's controls:
 //   joy_drive       joystick  -> steering (replaces joystick_01_x/y)
 //   btn_horn        button    -> horn/alarm (replaces button_01)
+//   dpad_drive      dpad      -> alternate steering, drives the same x/y as joy_drive
 //   gauge_speed     gauge     -> motor speed magnitude 0-100
 //   gauge_distance  gauge     -> ultrasonic distance 0-200cm
 //   battery_level   battery   -> battery percentage 0-100
@@ -35,14 +36,16 @@ static const char* LAYOUT_CFG_BASE64 =
   "eyJpZCI6ImpveV9kcml2ZSIsInQiOiJqb3lzdGljayIsIngiOjIwLCJ5IjoyMCwidyI6MTQw"
   "LCJoIjoxNDAsImxhYmVsIjoiRHJpdmUiLCJtb2RlbCI6ImNsYXNzaWMifSx7ImlkIjoiYnRu"
   "X2hvcm4iLCJ0IjoiYnV0dG9uIiwieCI6MjAwLCJ5Ijo1MCwidyI6MTAwLCJoIjoxMDAsImxh"
-  "YmVsIjoiSG9ybiIsIm1vZGVsIjoibmVvIn0seyJpZCI6ImdhdWdlX3NwZWVkIiwidCI6Imdh"
-  "dWdlIiwieCI6MjAsInkiOjE4MCwidyI6MTQwLCJoIjoxNjAsImxhYmVsIjoiU3BlZWQiLCJt"
-  "aW4iOjAsIm1heCI6MTAwLCJ1bml0cyI6IiUiLCJkZWNpbWFscyI6MCwibW9kZWwiOiJjbGFz"
-  "c2ljIn0seyJpZCI6ImdhdWdlX2Rpc3RhbmNlIiwidCI6ImdhdWdlIiwieCI6MTgwLCJ5Ijox"
-  "ODAsInciOjE0MCwiaCI6MTYwLCJsYWJlbCI6IkRpc3RhbmNlIiwibWluIjowLCJtYXgiOjIw"
-  "MCwidW5pdHMiOiJjbSIsImRlY2ltYWxzIjowLCJtb2RlbCI6ImNsYXNzaWMifSx7ImlkIjoi"
-  "YmF0dGVyeV9sZXZlbCIsInQiOiJiYXR0ZXJ5IiwieCI6MzQwLCJ5IjoyMDAsInciOjgwLCJo"
-  "IjoxMDAsImxhYmVsIjoiQmF0dGVyeSIsIm1vZGVsIjoidmVydGljYWwifV19";
+  "YmVsIjoiSG9ybiIsIm1vZGVsIjoibmVvIn0seyJpZCI6ImRwYWRfZHJpdmUiLCJ0IjoiZHBh"
+  "ZCIsIngiOjM0MCwieSI6MjAsInciOjE0MCwiaCI6MTQwLCJsYWJlbCI6IkRyaXZlIiwibW9k"
+  "ZWwiOiJjbGFzc2ljIn0seyJpZCI6ImdhdWdlX3NwZWVkIiwidCI6ImdhdWdlIiwieCI6MjAs"
+  "InkiOjE4MCwidyI6MTQwLCJoIjoxNjAsImxhYmVsIjoiU3BlZWQiLCJtaW4iOjAsIm1heCI6"
+  "MTAwLCJ1bml0cyI6IiUiLCJkZWNpbWFscyI6MCwibW9kZWwiOiJjbGFzc2ljIn0seyJpZCI6"
+  "ImdhdWdlX2Rpc3RhbmNlIiwidCI6ImdhdWdlIiwieCI6MTgwLCJ5IjoxODAsInciOjE0MCwi"
+  "aCI6MTYwLCJsYWJlbCI6IkRpc3RhbmNlIiwibWluIjowLCJtYXgiOjIwMCwidW5pdHMiOiJj"
+  "bSIsImRlY2ltYWxzIjowLCJtb2RlbCI6ImNsYXNzaWMifSx7ImlkIjoiYmF0dGVyeV9sZXZl"
+  "bCIsInQiOiJiYXR0ZXJ5IiwieCI6MzQwLCJ5IjoyMDAsInciOjgwLCJoIjoxMDAsImxhYmVs"
+  "IjoiQmF0dGVyeSIsIm1vZGVsIjoidmVydGljYWwifV19";
 
 // ===========================================================================
 // State
@@ -64,9 +67,13 @@ static String                s_rxBuffer;
 // concurrently, so the pool never starves.
 static volatile bool         s_getCfgRequested = false;
 
-static int8_t s_joy_x = 0;   // -100..100, derived from "angle distance"
-static int8_t s_joy_y = 0;   // -100..100
+static int8_t s_joy_x = 0;   // -100..100, drives tasks_joysticks() (turn)
+static int8_t s_joy_y = 0;   // -100..100, drives tasks_joysticks() (forward/back)
 static uint8_t s_button_01 = 0;
+
+// dpad_drive writes the same s_joy_x/s_joy_y as joy_drive — both widgets
+// drive the identical robot state, whichever was touched most recently wins.
+static bool s_dpad_up = false, s_dpad_down = false, s_dpad_left = false, s_dpad_right = false;
 
 static void handleLine(const String& line);
 static void handleWidget(const String& id, const String& val);
@@ -98,6 +105,7 @@ class RemoteXYServerCallbacks : public NimBLEServerCallbacks {
     s_joy_x = 0;
     s_joy_y = 0;
     s_button_01 = 0;
+    s_dpad_up = s_dpad_down = s_dpad_left = s_dpad_right = false;
     #ifdef DEF_DERIAL_DEBUG
     Serial.printf("[BLE] Client disconnected (reason 0x%02x) - re-advertising\n", reason);
     #endif
@@ -205,9 +213,34 @@ static void handleJoystick(const String& val) {
   s_joy_y = (int8_t)constrain((long)round(-dist * sin(rad)), -100, 100);
 }
 
+// D-Pad sends "<up|down|left|right> <0|1>" immediately on press/release
+// (unlike the joystick, which only streams while actively dragging), so it
+// drives s_joy_x/s_joy_y at a fixed full-speed magnitude from the combined
+// state of whichever direction buttons are currently held.
+static const int8_t DPAD_SPEED = 100;
+
+static void handleDpad(const String& val) {
+  int sp = val.indexOf(' ');
+  if (sp < 0) return;
+  String dir     = val.substring(0, sp);
+  bool   pressed = val.substring(sp + 1) == "1";
+
+  if      (dir == "up")    s_dpad_up    = pressed;
+  else if (dir == "down")  s_dpad_down  = pressed;
+  else if (dir == "left")  s_dpad_left  = pressed;
+  else if (dir == "right") s_dpad_right = pressed;
+  else return;
+
+  s_joy_x = (int8_t)((s_dpad_right ? DPAD_SPEED : 0) - (s_dpad_left ? DPAD_SPEED : 0));
+  // Same forward/back mirror as the joystick (see handleJoystick) — down
+  // is physically forward on this chassis.
+  s_joy_y = (int8_t)((s_dpad_down  ? DPAD_SPEED : 0) - (s_dpad_up   ? DPAD_SPEED : 0));
+}
+
 static void handleWidget(const String& id, const String& val) {
-  if (id == "joy_drive") { handleJoystick(val); return; }
-  if (id == "btn_horn")  { s_button_01 = (val == "1") ? 1 : 0; return; }
+  if (id == "joy_drive")   { handleJoystick(val); return; }
+  if (id == "dpad_drive")  { handleDpad(val); return; }
+  if (id == "btn_horn")    { s_button_01 = (val == "1") ? 1 : 0; return; }
 }
 
 // ===========================================================================
