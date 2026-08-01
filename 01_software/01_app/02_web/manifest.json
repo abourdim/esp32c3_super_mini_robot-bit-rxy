@@ -1,6 +1,6 @@
 {
-  "name": "ESP32-C3 Robot App",
-  "version": "0.1.0",
+  "name": "WDIY Robot (bit-rxy)",
+  "version": "1.0.0",
   "new_install_prompt_erase": true,
   "builds": [
     {

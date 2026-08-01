@@ -522,7 +522,7 @@
     <footer class="app-footer">
       <span class="footer-text">
         <a href="https://workshop-diy.org" target="_blank" rel="noopener">workshop-diy.org</a>
-        · <a href="https://github.com/abourdim/esp32c3_super_mini_robot" target="_blank" rel="noopener" title="Source on GitHub">⭐ github</a>
+        · <a href="https://github.com/abourdim/esp32c3_super_mini_robot-bit-rxy" target="_blank" rel="noopener" title="Source on GitHub">⭐ github</a>
         · ESP32-C3 Robot · <a href="audit.html">audit</a>
       </span>
     </footer>`;
