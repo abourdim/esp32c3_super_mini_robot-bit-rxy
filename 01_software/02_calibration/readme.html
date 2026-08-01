@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🔧 Wheel Calibration - esp32c3_super_mini_robot-bit-rxy</title>
+<style>
+    :root {
+        --bg: #1a1a2e;
+        --surface: #16213e;
+        --card: #1f3460;
+        --accent: #00d4ff;
+        --secondary: #ff9500;
+        --green: #00e676;
+        --text: #ffffff;
+        --text-dim: #8892b0;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+    .header {
+        background: linear-gradient(135deg, var(--surface), var(--card));
+        padding: 36px 20px;
+        text-align: center;
+        border-bottom: 3px solid var(--accent);
+    }
+    .header h1 {
+        font-size: 2rem;
+        background: linear-gradient(90deg, var(--accent), var(--secondary));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 8px;
+    }
+    .header p { color: var(--text-dim); max-width: 650px; margin: 0 auto; }
+    .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+    section { background: var(--surface); border-radius: 16px; padding: 24px; margin: 18px 0; }
+    h2 { color: var(--accent); margin-bottom: 14px; font-size: 1.25rem; }
+    p { margin-bottom: 10px; }
+    a { color: var(--accent); }
+    code { background: var(--card); padding: 2px 6px; border-radius: 4px; font-family: 'Consolas', monospace; font-size: 0.9em; }
+    pre { background: #0d0d1a; border: 1px solid var(--card); border-radius: 10px; padding: 14px; overflow-x: auto; margin: 10px 0; }
+    pre code { background: none; padding: 0; }
+    ul { padding-left: 20px; margin-bottom: 10px; }
+    li { margin-bottom: 6px; }
+    footer { text-align: center; padding: 24px; color: var(--text-dim); font-size: 0.85rem; }
+</style>
+</head>
+<body>
+
+<div class="header">
+    <h1>🔧 Wheel Calibration</h1>
+    <p>Finds each wheel's true stop point on continuous-rotation servos &mdash; same BLE/OLED/OTA plumbing as the main app, but widgets drive raw servo pulses (0&ndash;180) directly.</p>
+</div>
+
+<div class="container">
+
+    <section>
+        <h2>🚀 Flash it</h2>
+        <pre><code>cd 01_software/02_calibration
+./launch.sh flash</code></pre>
+    </section>
+
+    <section>
+        <h2>🎛️ Use it</h2>
+        <p>Open <a href="https://abourdim.github.io/bit-rxy/">bit-rxy</a>, connect to <code>diy_calib_b3</code>. Layout:</p>
+        <ul>
+            <li><strong>Left / Right sliders</strong> &mdash; drag for coarse adjustment (0&ndash;180)</li>
+            <li><strong>Left # / Right # edit fields</strong> &mdash; type an exact number for fine adjustment; slider and edit field for the same wheel share state, whichever you touched last wins</li>
+            <li><strong>Center button</strong> &mdash; resets both wheels to 90 (stop)</li>
+        </ul>
+        <p>The OLED shows the live pulse value for each wheel as you adjust. Watch the actual wheel: find the pulse value where it visibly stops turning, note it down, and put it in <code>01_app/01_src/00_config.h</code> as <code>CONFIG_SERVO_SPEED_STOP_LEFT</code>/<code>_RIGHT</code> (plus whatever small <code>_OFFSET</code> correction gets it dead-centered).</p>
+    </section>
+
+    <section>
+        <h2>📡 OTA</h2>
+        <p>Same as the main app &mdash; hold the debug button ~3s to reconnect to the last WiFi network, ~8s to forget it and open the <code>WDIY-Calib-Setup</code> portal. See the <a href="https://abourdim.github.io/wiki/wdiy-robot-en.html#ota">wiki article's OTA section</a> for the full walkthrough (applies identically here, just a different AP/hostname).</p>
+        <pre><code>./ota_flash.sh &lt;robot-ip&gt;</code></pre>
+    </section>
+
+</div>
+
+<footer>
+    Workshop-DIY &mdash; part of the <a href="https://github.com/abourdim/esp32c3_super_mini_robot-bit-rxy">esp32c3_super_mini_robot-bit-rxy</a> project.
+</footer>
+
+</body>
+</html>

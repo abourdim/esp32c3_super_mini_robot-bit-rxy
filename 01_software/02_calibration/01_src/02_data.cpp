@@ -45,12 +45,6 @@ uint32_t g_elapsed_time_hours;
 uint32_t g_elapsed_time_minutes;
 uint32_t g_elapsed_time_seconds;
 
-int8_t g_speed_slider_s1;
-int8_t g_speed_slider_s2;
-
-int16_t g_speed_edit_01_s1;
-int16_t g_speed_edit_02_s2;
-
 uint32_t g_speed_s1;
 uint32_t g_speed_s2;
 

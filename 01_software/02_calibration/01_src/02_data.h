@@ -29,6 +29,9 @@ extern uint32_t elapsedMillis;
 
 extern int32_t flag_show_ble_name;
 
+extern uint32_t g_speed_s1;
+extern uint32_t g_speed_s2;
+
 // ===========================================================================
 
 extern uint32_t g_previous_millis_u32;
@@ -44,14 +47,5 @@ extern uint32_t g_elapsed_time_startup_millis;
 extern uint32_t g_elapsed_time_hours;
 extern uint32_t g_elapsed_time_minutes;
 extern uint32_t g_elapsed_time_seconds;
-
-extern int8_t g_speed_slider_s1;
-extern int8_t g_speed_slider_s2;
-
-extern int16_t g_speed_edit_01_s1;
-extern int16_t g_speed_edit_02_s2;
-
-extern uint32_t g_speed_s1;
-extern uint32_t g_speed_s2;
 
 #endif // __DEF_INCLUDE_DATA_H__
