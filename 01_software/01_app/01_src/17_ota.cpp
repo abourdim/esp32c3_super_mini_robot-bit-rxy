@@ -4,28 +4,48 @@
 #include <ArduinoOTA.h>
 
 // ===========================================================================
-// WiFi OTA — deliberately kept out of the robot's normal BLE-only boot path.
-// Entered only if the debug button is held for CONFIG_OTA_HOLD_MS right
-// after setup() starts (never during reset itself — GPIO0 is the chip's
-// BOOT strapping pin, so it can't be safely sampled that early). Once
-// entered, this never returns to loop(): the robot either gets reflashed
-// or times out and reboots back into normal BLE mode.
+// WiFi OTA — deliberately kept out of the robot's normal BLE-only operation.
+// Entered by holding the debug button for CONFIG_OTA_HOLD_MS at any point
+// while the robot is running (checked every loop() iteration, not just
+// right after boot — GPIO0 is also the chip's BOOT strapping pin, so
+// sampling it near reset is unreliable; checking during normal runtime
+// avoids that entirely). Once entered, this never returns to loop(): the
+// robot either gets reflashed or times out and reboots back into normal
+// BLE mode.
 // ===========================================================================
 
 static const uint32_t WIFI_CONNECT_TIMEOUT_MS = 20000;
 
+// Tracks an in-progress hold across successive loop() calls. Returns true
+// exactly once, the instant the hold crosses CONFIG_OTA_HOLD_MS, so the
+// caller triggers OTA entry a single time per hold rather than repeatedly.
 static bool buttonHeldForOtaEntry() {
-  uint32_t start = millis();
-  while (millis() - start < CONFIG_OTA_HOLD_MS) {
-    if (!button_pressed()) return false;
-    delay(20);
+  static uint32_t s_pressStartMs = 0;
+  static bool s_wasPressed = false;
+  static bool s_triggeredThisHold = false;
+
+  if (!button_pressed()) {
+    s_wasPressed = false;
+    s_triggeredThisHold = false;
+    return false;
   }
-  return true;
+
+  if (!s_wasPressed) {
+    s_wasPressed = true;
+    s_pressStartMs = millis();
+    return false;
+  }
+
+  if (!s_triggeredThisHold && (millis() - s_pressStartMs >= CONFIG_OTA_HOLD_MS)) {
+    s_triggeredThisHold = true;
+    return true;
+  }
+  return false;
 }
 
 static void otaEnterAndBlock() {
   #ifdef DEF_DERIAL_DEBUG
-  Serial.println("[OTA] Button held at boot — entering OTA mode");
+  Serial.println("[OTA] Button held — entering OTA mode");
   #endif
 
   neopixels_all_blink(CRGB::Blue, 2, 100);
@@ -99,7 +119,7 @@ static void otaEnterAndBlock() {
   }
 }
 
-void ota_maybe_enter() {
+void ota_check_long_press() {
   if (buttonHeldForOtaEntry()) {
     otaEnterAndBlock();
   }
