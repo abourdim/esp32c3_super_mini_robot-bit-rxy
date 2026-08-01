@@ -61,6 +61,8 @@ cd 01_software/01_app
 
 Full walkthrough (captive portal screenshots, troubleshooting): [wiki article, OTA section](https://abourdim.github.io/wiki/wdiy-robot-en.html#ota).
 
+**Why two `.pio/build/` folders?** `platformio.ini` defines two environments — `esp32-c3-devkitm-1` (USB, `upload_protocol = esptool`) and `esp32-c3-devkitm-1-ota` (WiFi, `upload_protocol = espota`, no serial-specific `upload_flags`). PlatformIO always gives each environment its own isolated build cache, even when one `extends` the other and only overrides a couple of settings — that's normal, not a sign anything's wrong.
+
 ## 📁 Structure
 
 ```

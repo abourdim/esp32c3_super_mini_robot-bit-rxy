@@ -119,6 +119,7 @@ cd esp32c3_super_mini_robot-bit-rxy/01_software/01_app
 ./ota_flash.sh &lt;robot-ip&gt;                       <span style="color:var(--text-dim)"># build from source, then flash</span>
 ./ota_flash.sh &lt;robot-ip&gt; path/to/firmware.bin   <span style="color:var(--text-dim)"># flash an exact pre-built .bin instead</span></code></pre>
         <p>Full walkthrough (captive portal screenshots, troubleshooting): <a href="https://abourdim.github.io/wiki/wdiy-robot-en.html#ota">wiki article, OTA section</a>.</p>
+        <p style="color:var(--text-dim);font-size:0.9rem;"><strong>Why two <code>.pio/build/</code> folders?</strong> <code>platformio.ini</code> defines two environments &mdash; <code>esp32-c3-devkitm-1</code> (USB, <code>upload_protocol = esptool</code>) and <code>esp32-c3-devkitm-1-ota</code> (WiFi, <code>upload_protocol = espota</code>, no serial-specific <code>upload_flags</code>). PlatformIO always gives each environment its own isolated build cache, even when one <code>extends</code> the other and only overrides a couple of settings &mdash; that's normal, not a sign anything's wrong.</p>
     </section>
 
     <section>
