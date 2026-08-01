@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🤖 esp32c3_super_mini_robot-bit-rxy - Documentation</title>
+<style>
+    :root {
+        --bg: #1a1a2e;
+        --surface: #16213e;
+        --card: #1f3460;
+        --accent: #00d4ff;
+        --secondary: #ff9500;
+        --green: #00e676;
+        --red: #ff5252;
+        --text: #ffffff;
+        --text-dim: #8892b0;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        line-height: 1.6;
+    }
+    .header {
+        background: linear-gradient(135deg, var(--surface), var(--card));
+        padding: 40px 20px;
+        text-align: center;
+        border-bottom: 3px solid var(--accent);
+    }
+    .header h1 {
+        font-size: 2.2rem;
+        background: linear-gradient(90deg, var(--accent), var(--secondary));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 10px;
+    }
+    .header p { font-size: 1.1rem; color: var(--text-dim); max-width: 700px; margin: 0 auto; }
+    .badges { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 20px; }
+    .badge { background: var(--card); padding: 8px 16px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; border: 2px solid; }
+    .badge.blue { border-color: var(--accent); color: var(--accent); }
+    .badge.green { border-color: var(--green); color: var(--green); }
+    .badge.orange { border-color: var(--secondary); color: var(--secondary); }
+    .container { max-width: 900px; margin: 0 auto; padding: 20px; }
+    section { background: var(--surface); border-radius: 16px; padding: 28px; margin: 20px 0; }
+    h2 { color: var(--accent); margin-bottom: 16px; font-size: 1.4rem; }
+    h3 { color: var(--secondary); margin: 18px 0 10px; font-size: 1.1rem; }
+    p { margin-bottom: 12px; }
+    a { color: var(--accent); }
+    code {
+        background: var(--card);
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-family: 'Consolas', monospace;
+        font-size: 0.9em;
+    }
+    pre {
+        background: #0d0d1a;
+        border: 1px solid var(--card);
+        border-radius: 10px;
+        padding: 16px;
+        overflow-x: auto;
+        margin: 12px 0;
+    }
+    pre code { background: none; padding: 0; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+    th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--card); vertical-align: top; }
+    th { color: var(--secondary); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-top: 12px; }
+    .card { background: var(--card); border-radius: 12px; padding: 16px; }
+    .card h4 { color: var(--text); margin-bottom: 6px; }
+    .card p { color: var(--text-dim); font-size: 0.9rem; margin: 0; }
+    .tree { font-family: 'Consolas', monospace; font-size: 0.85rem; white-space: pre; color: var(--text-dim); }
+    .tree .hl { color: var(--accent); }
+    footer { text-align: center; padding: 30px; color: var(--text-dim); font-size: 0.85rem; }
+</style>
+</head>
+<body>
+
+<div class="header">
+    <h1>🤖 esp32c3_super_mini_robot-bit-rxy</h1>
+    <p>ESP32-C3 differential-drive robot, controlled over Bluetooth Low Energy by the free, unmodified <a href="https://abourdim.github.io/bit-rxy/">bit-rxy</a> web app &mdash; joystick, D-Pad, horn, live gauges, sound feedback, and WiFi OTA updates.</p>
+    <div class="badges">
+        <span class="badge blue">ESP32-C3</span>
+        <span class="badge green">bit-rxy BLE</span>
+        <span class="badge orange">WiFi OTA</span>
+    </div>
+</div>
+
+<div class="container">
+
+    <section>
+        <h2>🌟 What is this?</h2>
+        <p>This is a fork of <a href="https://github.com/abourdim/esp32c3_super_mini_robot">esp32c3_super_mini_robot</a> (the original, still-untouched RemoteXY version) with the control layer replaced end to end &mdash; the robot now speaks the same Bluetooth protocol as a BBC micro:bit running the <a href="https://abourdim.github.io/bit-rxy/">bit-rxy</a> MakeCode template, so the unmodified, free web app can drive it. No paid app, no App Store review.</p>
+        <p>Everything else &mdash; servos, buzzer, NeoPixels, OLED, ultrasonic sensor, battery monitor &mdash; is unchanged from the original. This repo is the sole working directory for all further robot firmware work.</p>
+        <p>📖 <strong>Full write-up</strong>: the <a href="https://abourdim.github.io/wiki/wdiy-robot-en.html">wiki article</a> covers the clone/flash/test walkthrough, protocol internals, the joystick-flood BLE post-mortem, and OTA setup in more depth than this page.</p>
+    </section>
+
+    <section>
+        <h2>🚀 Quick start</h2>
+        <pre><code>git clone https://github.com/abourdim/esp32c3_super_mini_robot-bit-rxy.git
+cd esp32c3_super_mini_robot-bit-rxy/01_software/01_app
+./launch.sh flash              # first flash: compile + upload over USB + monitor</code></pre>
+        <p>Then open <a href="https://abourdim.github.io/bit-rxy/">abourdim.github.io/bit-rxy</a>, tap <strong>Connect</strong>, and pick <code>diy_app_b3</code> (or a <code>uBit</code>-prefixed name) from the device chooser. The app auto-loads the robot's layout &mdash; joystick, D-Pad, horn, gauges, battery, sound &mdash; and switches to Play mode.</p>
+    </section>
+
+    <section>
+        <h2>📡 WiFi OTA updates</h2>
+        <p>After the first USB flash, every update after that can go over WiFi instead. Hold the debug button (GPIO0, also used as an in-game action button):</p>
+        <table>
+            <tr><th>Hold duration</th><th>Result</th></tr>
+            <tr><td>~3 seconds</td><td>Enters OTA mode, reconnects to the last WiFi network it joined</td></tr>
+            <tr><td>~8 seconds (keep holding)</td><td>Forgets the saved network and opens a <code>WDIY-Robot-Setup</code> captive portal to pick a new one</td></tr>
+        </table>
+        <p>No SSID/password compiled in &mdash; <a href="https://github.com/tzapu/WiFiManager">WiFiManager</a> handles storage and the setup portal. Once the OLED shows <code>OTA ready</code> and an IP:</p>
+        <pre><code>cd 01_software/01_app
+./ota_flash.sh &lt;robot-ip&gt;                       <span style="color:var(--text-dim)"># build from source, then flash</span>
+./ota_flash.sh &lt;robot-ip&gt; path/to/firmware.bin   <span style="color:var(--text-dim)"># flash an exact pre-built .bin instead</span></code></pre>
+        <p>Full walkthrough (captive portal screenshots, troubleshooting): <a href="https://abourdim.github.io/wiki/wdiy-robot-en.html#ota">wiki article, OTA section</a>.</p>
+    </section>
+
+    <section>
+        <h2>🌐 Live site</h2>
+        <p><strong><a href="https://abourdim.github.io/esp32c3_super_mini_robot-bit-rxy/">abourdim.github.io/esp32c3_super_mini_robot-bit-rxy</a></strong> &mdash; auto-deployed from <code>01_software/01_app/02_web/</code> on every push to <code>main</code>.</p>
+        <p style="color:var(--text-dim);font-size:0.9rem;">These guides are inherited from the original repo and describe the general chassis/build/hardware &mdash; they predate the bit-rxy/BLE conversion, so anything about <em>controlling</em> the robot is stale there. Driving, BLE, and OTA are covered on this page and the wiki article instead.</p>
+        <div class="card-grid">
+            <div class="card"><h4>👆 <a href="https://abourdim.github.io/esp32c3_super_mini_robot-bit-rxy/user-guide.html">user-guide.html</a></h4><p>Kids/end users: power on, pair, drive, troubleshooting</p></div>
+            <div class="card"><h4>🔧 <a href="https://abourdim.github.io/esp32c3_super_mini_robot-bit-rxy/build-guide.html">build-guide.html</a></h4><p>Makers: BOM, wiring, assembly, first flash</p></div>
+            <div class="card"><h4>💻 <a href="https://abourdim.github.io/esp32c3_super_mini_robot-bit-rxy/start-here.html">start-here.html</a></h4><p>Developers: firmware narrative tour</p></div>
+            <div class="card"><h4>🧠 <a href="https://abourdim.github.io/esp32c3_super_mini_robot-bit-rxy/learn.html">learn.html</a></h4><p>Reference manual: launch.sh, platformio.ini, RMT</p></div>
+            <div class="card"><h4>⚡ <a href="https://abourdim.github.io/esp32c3_super_mini_robot-bit-rxy/hardware.html">hardware.html</a></h4><p>Live PCB browser, GPIO map, KiCad/BOM links</p></div>
+            <div class="card"><h4>📦 <a href="https://abourdim.github.io/esp32c3_super_mini_robot-bit-rxy/flash.html">flash.html</a></h4><p>Click-to-flash via Web Serial (Chrome/Edge)</p></div>
+        </div>
+    </section>
+
+    <section>
+        <h2>📁 Structure</h2>
+        <div class="tree">esp32c3_super_mini_robot-bit-rxy/
+├── 01_software/
+│   ├── 01_app/                    <span class="hl">⚙ main robot firmware (ESP32-C3 Arduino/PlatformIO)</span>
+│   │   ├── 01_src/                source files (one .h/.cpp pair per system)
+│   │   │   ├── <span class="hl">03_bit-rxy.cpp/.h</span>  BLE control layer — speaks bit-rxy's protocol
+│   │   │   ├── <span class="hl">04_tasks.cpp/.h</span>    robot logic (joystick → servos, sensors → gauges)
+│   │   │   └── <span class="hl">17_ota.cpp/.h</span>      WiFi OTA (WiFiManager + ArduinoOTA)
+│   │   ├── 02_web/                browser tools (canonical Pages source, inherited)
+│   │   ├── platformio.ini         build orders — main env + esp32-c3-devkitm-1-ota env
+│   │   ├── launch.sh              interactive launcher menu (USB flash/monitor)
+│   │   ├── <span class="hl">layout_cfg.sh</span>          decode/encode the bit-rxy layout JSON ↔ base64
+│   │   └── <span class="hl">ota_flash.sh</span>           push firmware over WiFi OTA
+│   ├── 02_calibration/            calibration sketch
+│   └── 4_wled/                    vendored WLED source (unrelated sub-project)
+├── 02_hardware/                   PCB design (KiCad, v1–v3)
+└── 03_3d/                         3D-print files</div>
+    </section>
+
+    <section>
+        <h2>🐛 Known issues</h2>
+        <p>See <a href="https://abourdim.github.io/esp32c3_super_mini_robot-bit-rxy/audit.html">audit.html</a> for the live tracker (inherited dashboard, predates the bit-rxy conversion &mdash; treat entries about RemoteXY as historical). Still-relevant platform-level issues:</p>
+        <table>
+            <tr><th>Issue</th><th>Fix</th></tr>
+            <tr><td>RMT ISR recursion crash on ESP32-C3</td><td>Pinned to <code>espressif32 @ 6.7.0</code> (ESP-IDF 5.1) in <code>platformio.ini</code></td></tr>
+            <tr><td>Native USB-CDC upload quirks (mid-upload baud switch, stub hand-off)</td><td><code>upload_speed = 115200</code> + <code>upload_flags = --no-stub</code></td></tr>
+            <tr><td>Joystick-flood BLE bug (<code>rc=6</code>/<code>BLE_HS_ENOMEM</code>)</td><td>Fixed &mdash; full post-mortem in the <a href="https://abourdim.github.io/wiki/wdiy-robot-en.html#postmortem">wiki article</a></td></tr>
+        </table>
+    </section>
+
+</div>
+
+<footer>
+    Vendored WLED is MIT &mdash; see <code>01_software/4_wled/WLED/LICENSE</code>. Project code: license TBD.
+</footer>
+
+</body>
+</html>

@@ -1,12 +1,13 @@
 name: Deploy Web tools to GitHub Pages
 
 # Single source of truth: 01_software/01_app/02_web/
-# This workflow mirrors that folder to GitHub Pages on every push to master,
-# so the site URL https://abourdim.github.io/esp32c3_super_mini_robot/ always reflects HEAD.
+# This workflow mirrors that folder to GitHub Pages on every push to main,
+# so the site URL https://abourdim.github.io/esp32c3_super_mini_robot-bit-rxy/
+# always reflects HEAD.
 
 on:
   push:
-    branches: [master]
+    branches: [main]
     paths:
       - '01_software/01_app/02_web/**'
       - '02_hardware/v3/*.svg'

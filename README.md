@@ -1,78 +1,94 @@
-# 🤖 esp32c3_super_mini_robot — ESP32-C3 RISC-V Robot
+# 🤖 esp32c3_super_mini_robot-bit-rxy — ESP32-C3 RISC-V Robot, bit-rxy BLE control
 
-ESP32-C3 robot project — Arduino/PlatformIO firmware, browser-based flasher and monitor, audit dashboard, and a 9-theme Workshop-DIY web UI.
+ESP32-C3 differential-drive robot, controlled over Bluetooth Low Energy by the free, unmodified **[bit-rxy](https://abourdim.github.io/bit-rxy/)** web app — joystick, D-Pad, horn, live speed/distance/battery gauges, and sound feedback, no paid app required. Firmware also supports **WiFi OTA updates** after the first USB flash.
+
+This is a fork of [`esp32c3_super_mini_robot`](https://github.com/abourdim/esp32c3_super_mini_robot) (the original, still-untouched RemoteXY version) with the control layer replaced end to end. Everything else — servos, buzzer, NeoPixels, OLED, ultrasonic sensor, battery monitor — is unchanged. This repo is the sole working directory for all further robot firmware work.
+
+📖 **Full write-up**: [wiki article](https://abourdim.github.io/wiki/wdiy-robot-en.html) — walkthrough, protocol internals, the joystick-flood post-mortem, and OTA setup, in more depth than this README.
 
 ## 🌐 Live site
 
-**[abourdim.github.io/esp32c3_super_mini_robot](https://abourdim.github.io/esp32c3_super_mini_robot/)** — auto-deployed from `01_software/01_app/02_web/` on every push.
+**[abourdim.github.io/esp32c3_super_mini_robot-bit-rxy](https://abourdim.github.io/esp32c3_super_mini_robot-bit-rxy/)** — auto-deployed from `01_software/01_app/02_web/` on every push to `main`.
 
 ### 📚 Guides — by audience
 
 | Guide | For | What it covers |
 |---|---|---|
-| [`user-guide.html`](https://abourdim.github.io/esp32c3_super_mini_robot/user-guide.html) | 🦸 Kids · end users | Power on · pair phone · drive · light/sound meanings · troubleshooting · safety |
-| [`build-guide.html`](https://abourdim.github.io/esp32c3_super_mini_robot/build-guide.html) | 🔧 Makers | BOM (~$30–45) · tools · wiring · step-by-step assembly · 3D parts · first flash |
-| [`start-here.html`](https://abourdim.github.io/esp32c3_super_mini_robot/start-here.html) | 💻 Developers | Firmware narrative tour. 14 missions: layout, build, flash, debug. |
-| [`learn.html`](https://abourdim.github.io/esp32c3_super_mini_robot/learn.html) | 🧠 Curious devs | Reference manual. Every `launch.sh` option · `platformio.ini` directive · RMT · partition table · addr2line · Web Serial. |
-| [`hardware.html`](https://abourdim.github.io/esp32c3_super_mini_robot/hardware.html) | ⚡ Hardware hackers | Live PCB browser. 5-layer toggle · GPIO pin map · connector reference · links to KiCad source + gerbers + interactive BOM. |
-| [`instructor.html`](https://abourdim.github.io/esp32c3_super_mini_robot/instructor.html) | 🧑‍🏫 Teachers | Prereqs · 90-min lesson plan · student FAQ · cheat sheet · reset checklist |
+| [`user-guide.html`](https://abourdim.github.io/esp32c3_super_mini_robot-bit-rxy/user-guide.html) | 🦸 Kids · end users | Power on · pair phone · drive · light/sound meanings · troubleshooting · safety |
+| [`build-guide.html`](https://abourdim.github.io/esp32c3_super_mini_robot-bit-rxy/build-guide.html) | 🔧 Makers | BOM (~$30–45) · tools · wiring · step-by-step assembly · 3D parts · first flash |
+| [`start-here.html`](https://abourdim.github.io/esp32c3_super_mini_robot-bit-rxy/start-here.html) | 💻 Developers | Firmware narrative tour |
+| [`learn.html`](https://abourdim.github.io/esp32c3_super_mini_robot-bit-rxy/learn.html) | 🧠 Curious devs | Reference manual — `launch.sh` options, `platformio.ini` directives, RMT, partition table |
+| [`hardware.html`](https://abourdim.github.io/esp32c3_super_mini_robot-bit-rxy/hardware.html) | ⚡ Hardware hackers | Live PCB browser, GPIO pin map, links to KiCad source + gerbers + interactive BOM |
+| [`instructor.html`](https://abourdim.github.io/esp32c3_super_mini_robot-bit-rxy/instructor.html) | 🧑‍🏫 Teachers | Prereqs · lesson plan · student FAQ · cheat sheet |
+
+These guides are inherited from the original repo and describe the general chassis/build/hardware — they predate the bit-rxy/BLE conversion, so anything about *controlling* the robot (RemoteXY-specific screenshots, etc.) is stale. Driving, BLE, and OTA are covered by this README and the wiki article instead.
 
 ### 🛠️ Tools — runs in your browser
 
 | Tool | What it does |
 |---|---|
-| [`flash.html`](https://abourdim.github.io/esp32c3_super_mini_robot/flash.html) | Click-to-flash via Web Serial (Chrome/Edge) |
-| [`monitor.html`](https://abourdim.github.io/esp32c3_super_mini_robot/monitor.html) | Live serial monitor in the browser |
-| [`audit.html`](https://abourdim.github.io/esp32c3_super_mini_robot/audit.html) | Bug tracker · severity dashboard · BUG-NNN forensics |
-| [`index.html`](https://abourdim.github.io/esp32c3_super_mini_robot/) | Launcher landing page |
-
-## 📁 Structure
-
-```
-esp32c3_super_mini_robot/
-├── 01_software/
-│   ├── 01_app/                  ⚙ main robot firmware (ESP32-C3 Arduino)
-│   │   ├── 01_src/              source files (one .h/.cpp pair per system)
-│   │   ├── 02_web/              browser tools (canonical Pages source)
-│   │   ├── platformio.ini       build orders (pinned platform & libs)
-│   │   └── launch.sh            interactive launcher menu
-│   ├── 02_calibration/          calibration sketch
-│   ├── 03_demo/                 demo project
-│   ├── 05_bare_minimum/         minimal sketch
-│   └── 4_wled/                  vendored WLED source
-├── 02_hardware/                 (PCB design — TBD)
-└── 03_3d/                       (3D-print files — TBD)
-```
+| [`flash.html`](https://abourdim.github.io/esp32c3_super_mini_robot-bit-rxy/flash.html) | Click-to-flash via Web Serial (Chrome/Edge) |
+| [`monitor.html`](https://abourdim.github.io/esp32c3_super_mini_robot-bit-rxy/monitor.html) | Live serial monitor in the browser |
+| [`audit.html`](https://abourdim.github.io/esp32c3_super_mini_robot-bit-rxy/audit.html) | Bug tracker · severity dashboard |
+| [`index.html`](https://abourdim.github.io/esp32c3_super_mini_robot-bit-rxy/) | Launcher landing page |
 
 ## 🚀 Quick start
 
 ```bash
-cd 01_software/01_app
-./launch.sh                    # interactive menu (option 0 = full setup)
-./launch.sh flash              # one-shot: compile + upload + monitor
+git clone https://github.com/abourdim/esp32c3_super_mini_robot-bit-rxy.git
+cd esp32c3_super_mini_robot-bit-rxy/01_software/01_app
+./launch.sh flash              # first flash: compile + upload over USB + monitor
 ```
 
-Everything else is documented inside the launcher menu and in the live site's [Start Here](https://abourdim.github.io/esp32c3_super_mini_robot/start-here.html) guide.
+Then open **[abourdim.github.io/bit-rxy](https://abourdim.github.io/bit-rxy/)**, tap **Connect**, and pick `diy_app_b3` (or a `uBit`-prefixed name, depending on firmware revision) from the device chooser. The app auto-loads the robot's layout — joystick, D-Pad, horn, gauges, battery, sound — and switches to Play mode.
 
-## 🎨 Themes
+## 📡 WiFi OTA updates
 
-The web tools ship with **9 themes in 4 audience-mood groups**:
+After the first USB flash, every update after that can go over WiFi instead. Hold the debug button (GPIO0, same one used as an in-game action button):
 
-- 🔬 **Science** — `lab-light` · `lab-dark`
-- 💻 **Hacker** — `terminal` · `solarized`
-- 🤖 **Pro** — `robot` (default)
-- 🦸 **Kids action** — `bot-pop` · `kapow` · `blastoff` · `dino`
+| Hold duration | Result |
+|---|---|
+| ~3 seconds | Enters OTA mode, reconnects to the last WiFi network it joined |
+| ~8 seconds (keep holding) | Forgets the saved network and opens a **`WDIY-Robot-Setup`** captive portal to pick a new one |
 
-Switch in **Settings (⚙️)** in any tool. Plus 3 languages (EN/FR/AR with RTL).
+No SSID/password compiled in — [WiFiManager](https://github.com/tzapu/WiFiManager) handles storage and the setup portal. Once the OLED shows `OTA ready` and an IP:
 
-## 🐛 Known bugs
+```bash
+cd 01_software/01_app
+./ota_flash.sh <robot-ip>                       # build from source, then flash
+./ota_flash.sh <robot-ip> path/to/firmware.bin   # flash an exact pre-built .bin instead
+```
 
-See [`audit.html`](https://abourdim.github.io/esp32c3_super_mini_robot/audit.html) for the live tracker. Headline incidents documented:
-- **BUG-001** — RMT ISR recursion crash on ESP32-C3 (✅ fixed by pinning to ESP-IDF 5.1)
-- **BUG-002** — Ctrl+C in MSYS2 monitor (🔍 open)
-- **BUG-003** — Unpinned platform → non-reproducible builds (✅ fixed)
-- **BUG-004** — RemoteXY "No PRO license" (🔍 open — UI exceeds free 5-var quota)
-- **BUG-005** — Native USB CDC reset race during esptool upload (🔍 open)
+Full walkthrough (captive portal screenshots, troubleshooting): [wiki article, OTA section](https://abourdim.github.io/wiki/wdiy-robot-en.html#ota).
+
+## 📁 Structure
+
+```
+esp32c3_super_mini_robot-bit-rxy/
+├── 01_software/
+│   ├── 01_app/                    ⚙ main robot firmware (ESP32-C3 Arduino/PlatformIO)
+│   │   ├── 01_src/                source files (one .h/.cpp pair per system)
+│   │   │   ├── 03_bit-rxy.cpp/.h  BLE control layer — speaks bit-rxy's protocol
+│   │   │   ├── 04_tasks.cpp/.h    robot logic (joystick → servos, sensors → gauges)
+│   │   │   └── 17_ota.cpp/.h      WiFi OTA (WiFiManager + ArduinoOTA)
+│   │   ├── 02_web/                browser tools (canonical Pages source, inherited)
+│   │   ├── platformio.ini         build orders — main env + esp32-c3-devkitm-1-ota env
+│   │   ├── launch.sh              interactive launcher menu (USB flash/monitor)
+│   │   ├── layout_cfg.sh          decode/encode the bit-rxy layout JSON ↔ base64
+│   │   └── ota_flash.sh           push firmware over WiFi OTA
+│   ├── 02_calibration/            calibration sketch
+│   ├── 03_demo/                   demo project
+│   └── 4_wled/                    vendored WLED source (unrelated sub-project)
+├── 02_hardware/                   PCB design (KiCad, v1–v3)
+└── 03_3d/                         3D-print files
+```
+
+## 🐛 Known issues
+
+See [`audit.html`](https://abourdim.github.io/esp32c3_super_mini_robot-bit-rxy/audit.html) for the live tracker (inherited dashboard, predates the bit-rxy conversion — treat entries about RemoteXY as historical). Still-relevant platform-level issues:
+- **RMT ISR recursion crash on ESP32-C3** — fixed by pinning to `espressif32 @ 6.7.0` (ESP-IDF 5.1) in `platformio.ini`.
+- **Native USB-CDC upload quirks** — mid-upload baud switch and stub hand-off both crash the C3's native USB endpoint; fixed via `upload_speed = 115200` + `upload_flags = --no-stub`.
+- The joystick-flood BLE bug (`rc=6`/`BLE_HS_ENOMEM`) that shaped the bit-rxy conversion is documented in full in the [wiki article's post-mortem section](https://abourdim.github.io/wiki/wdiy-robot-en.html#postmortem).
 
 ## 📜 License
 
