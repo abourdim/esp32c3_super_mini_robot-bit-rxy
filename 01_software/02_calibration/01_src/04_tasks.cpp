@@ -42,9 +42,11 @@ void tasks_calibration(void) {
     rightPulse = 90;
   }
 
-  g_speed_s1 = leftPulse;
-  g_speed_s2 = rightPulse;
-
+  // Don't pre-assign g_speed_s1/s2 here -- moveServos() itself compares its
+  // arguments against those same globals to decide whether the value
+  // actually changed, and only then writes the servo + updates them. Setting
+  // them first would make moveServos() always see "unchanged" and skip the
+  // actual PWM write.
   moveServos(leftPulse, rightPulse);
 }
 
