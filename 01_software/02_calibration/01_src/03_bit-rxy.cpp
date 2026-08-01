@@ -31,11 +31,11 @@
 //   "schemaVersion": 1,
 //   "title": "WDIY Calib",
 //   "widgets": [
-//     {"id":"slider_left","t":"slider","x":20,"y":20,"w":100,"h":220,"label":"Left","min":0,"max":180,"step":1,"model":"track"},
-//     {"id":"slider_right","t":"slider","x":140,"y":20,"w":100,"h":220,"label":"Right","min":0,"max":180,"step":1,"model":"track"},
-//     {"id":"edit_left","t":"editfield","x":260,"y":20,"w":150,"h":70,"label":"Left #"},
-//     {"id":"edit_right","t":"editfield","x":260,"y":110,"w":150,"h":70,"label":"Right #"},
-//     {"id":"btn_center","t":"button","x":260,"y":200,"w":150,"h":80,"label":"Center","model":"neo"}
+//     {"id":"slider_left","t":"slider","x":20,"y":20,"w":90,"h":200,"label":"Left","min":0,"max":180,"step":1,"model":"track"},
+//     {"id":"edit_left","t":"editfield","x":20,"y":230,"w":90,"h":60,"label":"Left #"},
+//     {"id":"slider_right","t":"slider","x":290,"y":20,"w":90,"h":200,"label":"Right","min":0,"max":180,"step":1,"model":"track"},
+//     {"id":"edit_right","t":"editfield","x":290,"y":230,"w":90,"h":60,"label":"Right #"},
+//     {"id":"btn_center","t":"button","x":140,"y":60,"w":120,"h":120,"label":"Center","model":"neo"}
 //   ]
 // }
 //
@@ -45,20 +45,22 @@
 //     drag the slider for coarse adjustment, or type an exact number into
 //     the matching Edit Field for fine adjustment; whichever was touched
 //     most recently wins, same "shared state" pattern as the main app's
-//     joystick/D-Pad.
+//     joystick/D-Pad. Each Edit Field sits directly under its slider
+//     (same x) so the pairing is visually obvious; the Center button sits
+//     between the two columns, both horizontally and vertically centered.
 //   btn_center                -> resets both back to 90 (stop)
 static const char* LAYOUT_CFG_BASE64 =
   "eyJzY2hlbWFWZXJzaW9uIjoxLCJ0aXRsZSI6IldESVkgQ2FsaWIiLCJ3aWRnZXRzIjpbeyJp"
-  "ZCI6InNsaWRlcl9sZWZ0IiwidCI6InNsaWRlciIsIngiOjIwLCJ5IjoyMCwidyI6MTAwLCJo"
-  "IjoyMjAsImxhYmVsIjoiTGVmdCIsIm1pbiI6MCwibWF4IjoxODAsInN0ZXAiOjEsIm1vZGVs"
-  "IjoidHJhY2sifSx7ImlkIjoic2xpZGVyX3JpZ2h0IiwidCI6InNsaWRlciIsIngiOjE0MCwi"
-  "eSI6MjAsInciOjEwMCwiaCI6MjIwLCJsYWJlbCI6IlJpZ2h0IiwibWluIjowLCJtYXgiOjE4"
-  "MCwic3RlcCI6MSwibW9kZWwiOiJ0cmFjayJ9LHsiaWQiOiJlZGl0X2xlZnQiLCJ0IjoiZWRp"
-  "dGZpZWxkIiwieCI6MjYwLCJ5IjoyMCwidyI6MTUwLCJoIjo3MCwibGFiZWwiOiJMZWZ0ICMi"
-  "fSx7ImlkIjoiZWRpdF9yaWdodCIsInQiOiJlZGl0ZmllbGQiLCJ4IjoyNjAsInkiOjExMCwi"
-  "dyI6MTUwLCJoIjo3MCwibGFiZWwiOiJSaWdodCAjIn0seyJpZCI6ImJ0bl9jZW50ZXIiLCJ0"
-  "IjoiYnV0dG9uIiwieCI6MjYwLCJ5IjoyMDAsInciOjE1MCwiaCI6ODAsImxhYmVsIjoiQ2Vu"
-  "dGVyIiwibW9kZWwiOiJuZW8ifV19";
+  "ZCI6InNsaWRlcl9sZWZ0IiwidCI6InNsaWRlciIsIngiOjIwLCJ5IjoyMCwidyI6OTAsImgi"
+  "OjIwMCwibGFiZWwiOiJMZWZ0IiwibWluIjowLCJtYXgiOjE4MCwic3RlcCI6MSwibW9kZWwi"
+  "OiJ0cmFjayJ9LHsiaWQiOiJlZGl0X2xlZnQiLCJ0IjoiZWRpdGZpZWxkIiwieCI6MjAsInki"
+  "OjIzMCwidyI6OTAsImgiOjYwLCJsYWJlbCI6IkxlZnQgIyJ9LHsiaWQiOiJzbGlkZXJfcmln"
+  "aHQiLCJ0Ijoic2xpZGVyIiwieCI6MjkwLCJ5IjoyMCwidyI6OTAsImgiOjIwMCwibGFiZWwi"
+  "OiJSaWdodCIsIm1pbiI6MCwibWF4IjoxODAsInN0ZXAiOjEsIm1vZGVsIjoidHJhY2sifSx7"
+  "ImlkIjoiZWRpdF9yaWdodCIsInQiOiJlZGl0ZmllbGQiLCJ4IjoyOTAsInkiOjIzMCwidyI6"
+  "OTAsImgiOjYwLCJsYWJlbCI6IlJpZ2h0ICMifSx7ImlkIjoiYnRuX2NlbnRlciIsInQiOiJi"
+  "dXR0b24iLCJ4IjoxNDAsInkiOjYwLCJ3IjoxMjAsImgiOjEyMCwibGFiZWwiOiJDZW50ZXIi"
+  "LCJtb2RlbCI6Im5lbyJ9XX0=";
 
 // ===========================================================================
 // State
