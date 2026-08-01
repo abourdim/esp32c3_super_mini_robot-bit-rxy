@@ -2,7 +2,7 @@
 
 ESP32-C3 differential-drive robot, controlled over Bluetooth Low Energy by the free, unmodified **[bit-rxy](https://abourdim.github.io/bit-rxy/)** web app — joystick, D-Pad, horn, live speed/distance/battery gauges, and sound feedback, no paid app required. Firmware also supports **WiFi OTA updates** after the first USB flash.
 
-This is a fork of [`esp32c3_super_mini_robot`](https://github.com/abourdim/esp32c3_super_mini_robot) (the original, still-untouched RemoteXY version) with the control layer replaced end to end. Everything else — servos, buzzer, NeoPixels, OLED, ultrasonic sensor, battery monitor — is unchanged. This repo is the sole working directory for all further robot firmware work.
+This is a fork of [`esp32c3_super_mini_robot_remotexy`](https://github.com/abourdim/esp32c3_super_mini_robot_remotexy) (renamed from `esp32c3_super_mini_robot`; the original, still-untouched RemoteXY version) with the control layer replaced end to end. Everything else — servos, buzzer, NeoPixels, OLED, ultrasonic sensor, battery monitor — is unchanged. This repo is the sole working directory for all further robot firmware work.
 
 📖 **Full write-up**: [wiki article](https://abourdim.github.io/wiki/wdiy-robot-en.html) — walkthrough, protocol internals, the joystick-flood post-mortem, and OTA setup, in more depth than this README.
 

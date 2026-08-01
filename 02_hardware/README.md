@@ -13,7 +13,7 @@ KiCad source, PCB renders, BOMs, and gerbers for the Robot-01 board.
 ## Live browser
 
 The current version is also rendered as a layered SVG viewer on the website:
-**[abourdim.github.io/esp32c3_super_mini_robot/hardware.html](https://abourdim.github.io/esp32c3_super_mini_robot/hardware.html)** — toggle layers, zoom, link to source.
+**[abourdim.github.io/esp32c3_super_mini_robot-bit-rxy/hardware.html](https://abourdim.github.io/esp32c3_super_mini_robot-bit-rxy/hardware.html)** — toggle layers, zoom, link to source.
 
 ## v3 contents
 
