@@ -43,6 +43,10 @@ void setup() {
 
   display.clearDisplay();
   display.setTextColor(SSD1306_WHITE);
+  // The SSD1306 doesn't clear its own GDDRAM on reset -- without this, the
+  // previous sketch's last frame (or the driver's power-on garbage) stays
+  // visible on the physical screen until the first oled_update() call.
+  display.display();
 
   leds_init();
   oled_init();

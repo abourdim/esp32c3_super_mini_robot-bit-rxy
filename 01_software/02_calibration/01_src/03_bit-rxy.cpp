@@ -81,10 +81,26 @@ static volatile bool         s_getCfgRequested = false;
 static int16_t s_pulse_left  = 90;
 static int16_t s_pulse_right = 90;
 
+// Set whenever a side's pulse changes from ANY source (its slider, its edit
+// field, or the Center button) — consumed from remotexy_handler() (ordinary
+// loop() task) to echo the new value back to BOTH of that side's widgets,
+// so the slider and edit field always show the same number. Deliberately
+// not sent directly from handleWidget() — that runs on NimBLE's own host
+// task via onWrite(), and a synchronous notify() from there is the exact
+// rc=6/BLE_HS_ENOMEM anti-pattern the whole bit-rxy conversion was built
+// around avoiding (see the main app's 03_bit-rxy.cpp for the full story).
+static volatile bool s_dirty_left  = false;
+static volatile bool s_dirty_right = false;
+
 static void handleLine(const String& line);
 static void handleWidget(const String& id, const String& val);
 static bool sendLine(const String& line);
 static void sendCfg();
+
+static inline void sendValue(const String& id, const String& val) {
+  if (s_sendingCfg) return;  // don't interleave widget updates with a CFG burst
+  sendLine("UPD " + id + " " + val);
+}
 
 // ===========================================================================
 // BLE callbacks
@@ -185,10 +201,16 @@ static void handleLine(const String& line) {
 static void handleWidget(const String& id, const String& val) {
   // slider_* and edit_* both write the same pulse state — see the layout
   // comment above. Edit Field lets you type an exact value the slider's
-  // drag resolution can't reliably hit.
-  if (id == "slider_left"  || id == "edit_left")  { s_pulse_left  = (int16_t)constrain(val.toInt(), 0, 180); return; }
-  if (id == "slider_right" || id == "edit_right") { s_pulse_right = (int16_t)constrain(val.toInt(), 0, 180); return; }
-  if (id == "btn_center" && val == "1") { s_pulse_left = 90; s_pulse_right = 90; return; }
+  // drag resolution can't reliably hit. Either source dirties that side so
+  // remotexy_handler() echoes the value back to BOTH widgets, keeping the
+  // slider and edit field in sync no matter which one you touched.
+  if (id == "slider_left"  || id == "edit_left")  { s_pulse_left  = (int16_t)constrain(val.toInt(), 0, 180); s_dirty_left  = true; return; }
+  if (id == "slider_right" || id == "edit_right") { s_pulse_right = (int16_t)constrain(val.toInt(), 0, 180); s_dirty_right = true; return; }
+  if (id == "btn_center" && val == "1") {
+    s_pulse_left = 90; s_pulse_right = 90;
+    s_dirty_left = true; s_dirty_right = true;
+    return;
+  }
 }
 
 // ===========================================================================
@@ -239,6 +261,16 @@ void remotexy_handler(void) {
   if (s_getCfgRequested) {
     s_getCfgRequested = false;
     sendCfg();
+  }
+  if (s_dirty_left) {
+    s_dirty_left = false;
+    sendValue("slider_left", String(s_pulse_left));
+    sendValue("edit_left",   String(s_pulse_left));
+  }
+  if (s_dirty_right) {
+    s_dirty_right = false;
+    sendValue("slider_right", String(s_pulse_right));
+    sendValue("edit_right",   String(s_pulse_right));
   }
 }
 
