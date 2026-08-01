@@ -10,6 +10,8 @@ This is a fork of [`esp32c3_super_mini_robot`](https://github.com/abourdim/esp32
 
 **[abourdim.github.io/esp32c3_super_mini_robot-bit-rxy](https://abourdim.github.io/esp32c3_super_mini_robot-bit-rxy/)** — auto-deployed from `01_software/01_app/02_web/` on every push to `main`.
 
+> **If the live site 404s on a page that clearly exists in `02_web/`**, even though `pages.yml` reports success: check the repo's Pages source setting (`gh api repos/abourdim/esp32c3_super_mini_robot-bit-rxy/pages --jq '.build_type'`). It must be `workflow` (GitHub Actions), not `legacy` (deploy from a branch) — `pages.yml` uses the modern `actions/deploy-pages` method, which only takes effect if Pages is configured to receive it. If it's wrong: `gh api -X PUT repos/abourdim/esp32c3_super_mini_robot-bit-rxy/pages -f build_type=workflow`, then re-run the workflow.
+
 ### 📚 Guides — by audience
 
 | Guide | For | What it covers |
