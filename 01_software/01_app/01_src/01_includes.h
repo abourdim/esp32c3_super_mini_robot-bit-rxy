@@ -29,6 +29,7 @@
 #include "14_leds.h"
 #include "15_neopixels_demo.h"
 #include "16_neopixels_waving_french_flag.h"
+#include "17_ota.h"
 
 uint8_t remotexy_get_connect_flag( );
 

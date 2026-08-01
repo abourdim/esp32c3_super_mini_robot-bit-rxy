@@ -63,6 +63,12 @@ void setup() {
   
   button_init();
 
+  // Hold the debug button for CONFIG_OTA_HOLD_MS right here (after boot,
+  // never during reset — GPIO0 is also the BOOT strapping pin) to enter
+  // WiFi OTA mode instead of the normal BLE-driven robot. Blocks forever
+  // if entered; only returns if the button wasn't held.
+  ota_maybe_enter();
+
     // Add battery pin setup
   pinMode(CONFIG_PIN_BATTERY_LEVEL, INPUT);  
    
