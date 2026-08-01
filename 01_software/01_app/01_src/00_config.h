@@ -13,15 +13,14 @@
 #define CONFIG_PIN_BUTTON 0
 
 // --------------------------------------
-// WiFi OTA — off by default (no WiFi during normal BLE-driven play).
-// Hold the debug button for CONFIG_OTA_HOLD_MS right after boot to enter
-// OTA mode instead of starting the robot. Never checked *during* reset —
-// GPIO0 is also the chip's BOOT strapping pin, so sampling it that early
-// would fight the bootloader instead of triggering this.
-#define CONFIG_WIFI_OTA_SSID     "CHANGE_ME"
-#define CONFIG_WIFI_OTA_PASSWORD "CHANGE_ME"
+// WiFi OTA — off by default (no WiFi during normal BLE-driven play). Hold
+// the debug button for CONFIG_OTA_HOLD_MS at any point during normal
+// operation to enter OTA mode instead. CONFIG_WIFI_OTA_SSID/PASSWORD live
+// in secrets.h (gitignored) — copy secrets.h.example to secrets.h and fill
+// in your real network before using OTA.
+#include "secrets.h"
 #define CONFIG_OTA_HOSTNAME      "wdiy-robot-b3"
-#define CONFIG_OTA_HOLD_MS       2000
+#define CONFIG_OTA_HOLD_MS       3000
 
 // --------------------------------------
 // buzzer
