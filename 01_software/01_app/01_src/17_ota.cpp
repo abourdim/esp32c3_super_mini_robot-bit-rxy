@@ -12,9 +12,31 @@
 // avoids that entirely). Once entered, this never returns to loop(): the
 // robot either gets reflashed or times out and reboots back into normal
 // BLE mode.
+//
+// Feedback is on both the NeoPixels (color/blink, readable from across a
+// room) and the OLED (exact text — IP address, percent complete — that a
+// color alone can't convey).
 // ===========================================================================
 
+extern Adafruit_SSD1306 display;
+
 static const uint32_t WIFI_CONNECT_TIMEOUT_MS = 20000;
+
+// Two-line status screen, big enough to read at a glance. Kept separate
+// from oled_update()'s normal driving readout — OTA mode never returns to
+// loop(), so the two never run concurrently.
+static void otaShowStatus(const String& line1, const String& line2 = "") {
+  display.clearDisplay();
+  display.setTextSize(2);
+  display.setCursor(0, 0);
+  display.print(line1);
+  if (line2.length()) {
+    display.setTextSize(1);
+    display.setCursor(0, 24);
+    display.print(line2);
+  }
+  display.display();
+}
 
 // Tracks an in-progress hold across successive loop() calls. Returns true
 // exactly once, the instant the hold crosses CONFIG_OTA_HOLD_MS, so the
@@ -49,6 +71,7 @@ static void otaEnterAndBlock() {
   #endif
 
   neopixels_all_blink(CRGB::Blue, 2, 100);
+  otaShowStatus("OTA mode", "Connecting WiFi...");
 
   WiFi.mode(WIFI_STA);
   WiFi.begin(CONFIG_WIFI_OTA_SSID, CONFIG_WIFI_OTA_PASSWORD);
@@ -68,6 +91,7 @@ static void otaEnterAndBlock() {
     Serial.println("\n[OTA] WiFi connect timed out — rebooting into normal mode");
     #endif
     neopixels_all_blink(CRGB::Red, 3, 150);
+    otaShowStatus("WiFi failed", "Rebooting...");
     ESP.restart();
   }
 
@@ -75,6 +99,7 @@ static void otaEnterAndBlock() {
   Serial.printf("\n[OTA] WiFi connected, IP: %s\n", WiFi.localIP().toString().c_str());
   #endif
   neopixels_all_blink(CRGB::Green, 2, 100);
+  otaShowStatus("OTA ready", WiFi.localIP().toString());
 
   ArduinoOTA.setHostname(CONFIG_OTA_HOSTNAME);
 
@@ -83,12 +108,14 @@ static void otaEnterAndBlock() {
     Serial.println("[OTA] Update starting");
     #endif
     neopixels_all_clear(CRGB::Black);
+    otaShowStatus("Uploading...", "0%");
   });
   ArduinoOTA.onEnd([]() {
     #ifdef DEF_DERIAL_DEBUG
     Serial.println("\n[OTA] Update complete — rebooting");
     #endif
     neopixels_all_blink(CRGB::Green, 4, 80);
+    otaShowStatus("Done!", "Rebooting...");
   });
   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
     // Light one more pixel as progress advances, wrapping if there are
@@ -97,12 +124,23 @@ static void otaEnterAndBlock() {
     uint8_t idx = (progress * CONFIG_NEOPIXELS_NB_LEDS / total) % CONFIG_NEOPIXELS_NB_LEDS;
     neopixels_pulse(idx, CRGB::White);
     FastLED.show();
+
+    // Only redraw the OLED when the whole percent changes — this fires many
+    // times a second, and the I2C display write is slow enough to matter
+    // if done on every single callback.
+    static int8_t s_lastPct = -1;
+    int8_t pct = (int8_t)((progress * 100UL) / total);
+    if (pct != s_lastPct) {
+      s_lastPct = pct;
+      otaShowStatus("Uploading...", String(pct) + "%");
+    }
   });
   ArduinoOTA.onError([](ota_error_t error) {
     #ifdef DEF_DERIAL_DEBUG
     Serial.printf("[OTA] Error[%u]\n", error);
     #endif
     neopixels_all_blink(CRGB::Red, 5, 100);
+    otaShowStatus("Error!", "code " + String((int)error));
   });
 
   ArduinoOTA.begin();
