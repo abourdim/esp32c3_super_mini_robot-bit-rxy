@@ -15,12 +15,14 @@
 // --------------------------------------
 // WiFi OTA — off by default (no WiFi during normal BLE-driven play). Hold
 // the debug button for CONFIG_OTA_HOLD_MS at any point during normal
-// operation to enter OTA mode instead. CONFIG_WIFI_OTA_SSID/PASSWORD live
-// in secrets.h (gitignored) — copy secrets.h.example to secrets.h and fill
-// in your real network before using OTA.
-#include "secrets.h"
-#define CONFIG_OTA_HOSTNAME      "wdiy-robot-b3"
-#define CONFIG_OTA_HOLD_MS       3000
+// operation to enter OTA mode instead. No SSID/password hardcoded here:
+// WiFiManager remembers the last network it joined (its own NVS storage),
+// and opens a setup access point for you to enter new credentials from a
+// phone whenever it can't reconnect — see 17_ota.cpp.
+#define CONFIG_OTA_HOSTNAME          "wdiy-robot-b3"
+#define CONFIG_OTA_HOLD_MS           3000
+#define CONFIG_OTA_SETUP_AP_NAME     "WDIY-Robot-Setup"
+#define CONFIG_OTA_PORTAL_TIMEOUT_S  180
 
 // --------------------------------------
 // buzzer

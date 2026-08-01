@@ -2,6 +2,7 @@
 
 #include <WiFi.h>
 #include <ArduinoOTA.h>
+#include <WiFiManager.h>
 
 // ===========================================================================
 // WiFi OTA — deliberately kept out of the robot's normal BLE-only operation.
@@ -13,14 +14,19 @@
 // robot either gets reflashed or times out and reboots back into normal
 // BLE mode.
 //
+// No SSID/password compiled in. WiFiManager remembers the last network it
+// joined (its own NVS storage, survives reflashes) and tries that first;
+// if it can't connect, it opens its own "WDIY-Robot-Setup" access point —
+// join it from a phone, a captive-portal page pops up to pick your real
+// network and enter its password, which WiFiManager then saves for next
+// time. Changing networks later never needs a recompile or USB reflash.
+//
 // Feedback is on both the NeoPixels (color/blink, readable from across a
-// room) and the OLED (exact text — IP address, percent complete — that a
-// color alone can't convey).
+// room) and the OLED (exact text — setup AP name, IP address, percent
+// complete — that a color alone can't convey).
 // ===========================================================================
 
 extern Adafruit_SSD1306 display;
-
-static const uint32_t WIFI_CONNECT_TIMEOUT_MS = 20000;
 
 // Two-line status screen, big enough to read at a glance. Kept separate
 // from oled_update()'s normal driving readout — OTA mode never returns to
@@ -73,30 +79,34 @@ static void otaEnterAndBlock() {
   neopixels_all_blink(CRGB::Blue, 2, 100);
   otaShowStatus("OTA mode", "Connecting WiFi...");
 
-  WiFi.mode(WIFI_STA);
-  WiFi.begin(CONFIG_WIFI_OTA_SSID, CONFIG_WIFI_OTA_PASSWORD);
+  WiFiManager wm;
+  wm.setConfigPortalTimeout(CONFIG_OTA_PORTAL_TIMEOUT_S);
 
-  uint32_t start = millis();
-  while (WiFi.status() != WL_CONNECTED && (millis() - start) < WIFI_CONNECT_TIMEOUT_MS) {
-    neopixels_pulse(0, CRGB::Blue);
-    FastLED.show();
-    delay(200);
+  // Fires only if there's no saved network or it can't be reached — i.e.
+  // the setup portal is about to open. Told apart from "just connecting to
+  // the usual network" so the OLED/NeoPixels can say which one is happening.
+  wm.setAPCallback([](WiFiManager* mgr) {
     #ifdef DEF_DERIAL_DEBUG
-    Serial.print(".");
+    Serial.printf("[OTA] No saved WiFi — setup AP '%s' at %s\n",
+                   CONFIG_OTA_SETUP_AP_NAME, WiFi.softAPIP().toString().c_str());
     #endif
-  }
+    neopixels_all_blink(CRGB::Purple, 3, 150);
+    otaShowStatus("Join WiFi:", CONFIG_OTA_SETUP_AP_NAME);
+  });
 
-  if (WiFi.status() != WL_CONNECTED) {
+  bool connected = wm.autoConnect(CONFIG_OTA_SETUP_AP_NAME);
+
+  if (!connected) {
     #ifdef DEF_DERIAL_DEBUG
-    Serial.println("\n[OTA] WiFi connect timed out — rebooting into normal mode");
+    Serial.println("[OTA] Setup portal timed out — rebooting into normal mode");
     #endif
     neopixels_all_blink(CRGB::Red, 3, 150);
-    otaShowStatus("WiFi failed", "Rebooting...");
+    otaShowStatus("Setup timed out", "Rebooting...");
     ESP.restart();
   }
 
   #ifdef DEF_DERIAL_DEBUG
-  Serial.printf("\n[OTA] WiFi connected, IP: %s\n", WiFi.localIP().toString().c_str());
+  Serial.printf("[OTA] WiFi connected, IP: %s\n", WiFi.localIP().toString().c_str());
   #endif
   neopixels_all_blink(CRGB::Green, 2, 100);
   otaShowStatus("OTA ready", WiFi.localIP().toString());
