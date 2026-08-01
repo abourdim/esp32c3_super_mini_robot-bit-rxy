@@ -19,7 +19,10 @@
 // if it can't connect, it opens its own "WDIY-Robot-Setup" access point —
 // join it from a phone, a captive-portal page pops up to pick your real
 // network and enter its password, which WiFiManager then saves for next
-// time. Changing networks later never needs a recompile or USB reflash.
+// time. Changing networks later never needs a recompile or USB reflash —
+// hold the button past CONFIG_OTA_FORGET_HOLD_MS (8s total) instead of
+// just CONFIG_OTA_HOLD_MS (3s) to forget the saved network and force the
+// setup portal open even though a working one is already saved.
 //
 // Feedback is on both the NeoPixels (color/blink, readable from across a
 // room) and the OLED (exact text — setup AP name, IP address, percent
@@ -71,16 +74,40 @@ static bool buttonHeldForOtaEntry() {
   return false;
 }
 
+// Called right as OTA mode is entered (button has already been held
+// CONFIG_OTA_HOLD_MS at this point). Keeps polling the same hold for the
+// remaining window up to CONFIG_OTA_FORGET_HOLD_MS; release early to skip.
+static bool buttonHeldForForget() {
+  uint32_t remaining = CONFIG_OTA_FORGET_HOLD_MS - CONFIG_OTA_HOLD_MS;
+  uint32_t start = millis();
+  while (millis() - start < remaining) {
+    if (!button_pressed()) return false;
+    delay(20);
+  }
+  return true;
+}
+
 static void otaEnterAndBlock() {
   #ifdef DEF_DERIAL_DEBUG
   Serial.println("[OTA] Button held — entering OTA mode");
   #endif
 
   neopixels_all_blink(CRGB::Blue, 2, 100);
-  otaShowStatus("OTA mode", "Connecting WiFi...");
+  otaShowStatus("OTA mode", "Hold to forget WiFi...");
 
   WiFiManager wm;
   wm.setConfigPortalTimeout(CONFIG_OTA_PORTAL_TIMEOUT_S);
+
+  if (buttonHeldForForget()) {
+    #ifdef DEF_DERIAL_DEBUG
+    Serial.println("[OTA] Button held through forget window — clearing saved WiFi");
+    #endif
+    wm.resetSettings();
+    neopixels_all_blink(CRGB::White, 2, 150);
+    otaShowStatus("WiFi forgotten", "Opening setup...");
+  } else {
+    otaShowStatus("OTA mode", "Connecting WiFi...");
+  }
 
   // Fires only if there's no saved network or it can't be reached — i.e.
   // the setup portal is about to open. Told apart from "just connecting to

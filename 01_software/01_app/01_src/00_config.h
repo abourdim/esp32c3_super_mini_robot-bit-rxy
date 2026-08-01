@@ -23,6 +23,10 @@
 #define CONFIG_OTA_HOLD_MS           3000
 #define CONFIG_OTA_SETUP_AP_NAME     "WDIY-Robot-Setup"
 #define CONFIG_OTA_PORTAL_TIMEOUT_S  180
+// Keep holding past CONFIG_OTA_HOLD_MS, all the way to this total, to
+// forget the saved WiFi network and force the setup portal open — the
+// normal path just reconnects to whatever's already saved.
+#define CONFIG_OTA_FORGET_HOLD_MS    8000
 
 // --------------------------------------
 // buzzer
