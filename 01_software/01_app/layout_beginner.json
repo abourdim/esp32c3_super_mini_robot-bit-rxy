@@ -1,0 +1,169 @@
+{
+ "schemaVersion": 1,
+ "title": "WDIY Robot b3",
+ "canvas": {
+  "w": 818,
+  "h": 930
+ },
+ "widgets": [
+  {
+   "id": "grp_drive",
+   "t": "group",
+   "label": "DRIVE",
+   "x": 56,
+   "y": 60,
+   "w": 508,
+   "h": 374,
+   "color": "#00d4ff",
+   "children": [
+    "dpad_drive",
+    "joy_drive",
+    "btn_horn"
+   ]
+  },
+  {
+   "id": "grp_sense",
+   "t": "group",
+   "label": "SENSING",
+   "x": 56,
+   "y": 500,
+   "w": 458,
+   "h": 224,
+   "color": "#ffb020",
+   "children": [
+    "gauge_speed",
+    "gauge_distance",
+    "sound_alert"
+   ]
+  },
+  {
+   "id": "grp_sys",
+   "t": "group",
+   "label": "SYSTEM",
+   "x": 554,
+   "y": 530,
+   "w": 208,
+   "h": 344,
+   "color": "#3ddc97",
+   "children": [
+    "battery_level",
+    "level",
+    "logo"
+   ]
+  },
+  {
+   "id": "sep_band",
+   "t": "separator",
+   "x": 80,
+   "y": 468,
+   "w": 500,
+   "h": 8
+  },
+  {
+   "id": "dpad_drive",
+   "t": "dpad",
+   "x": 80,
+   "y": 100,
+   "w": 260,
+   "h": 260,
+   "label": "Drive",
+   "model": "classic",
+   "groupId": "grp_drive"
+  },
+  {
+   "id": "joy_drive",
+   "t": "joystick",
+   "x": 380,
+   "y": 100,
+   "w": 160,
+   "h": 160,
+   "label": "Drive",
+   "model": "classic",
+   "groupId": "grp_drive"
+  },
+  {
+   "id": "btn_horn",
+   "t": "button",
+   "x": 380,
+   "y": 290,
+   "w": 120,
+   "h": 120,
+   "label": "Horn",
+   "model": "neo",
+   "groupId": "grp_drive"
+  },
+  {
+   "id": "gauge_speed",
+   "t": "gauge",
+   "x": 80,
+   "y": 540,
+   "w": 140,
+   "h": 160,
+   "label": "Speed",
+   "min": 0,
+   "max": 100,
+   "units": "%",
+   "decimals": 0,
+   "model": "classic",
+   "groupId": "grp_sense"
+  },
+  {
+   "id": "gauge_distance",
+   "t": "gauge",
+   "x": 240,
+   "y": 540,
+   "w": 140,
+   "h": 160,
+   "label": "Distance",
+   "min": 0,
+   "max": 200,
+   "units": "cm",
+   "decimals": 0,
+   "model": "classic",
+   "groupId": "grp_sense"
+  },
+  {
+   "id": "sound_alert",
+   "t": "sound",
+   "x": 400,
+   "y": 575,
+   "w": 90,
+   "h": 90,
+   "label": "Alert",
+   "groupId": "grp_sense"
+  },
+  {
+   "id": "battery_level",
+   "t": "battery",
+   "x": 578,
+   "y": 570,
+   "w": 80,
+   "h": 100,
+   "label": "Battery",
+   "model": "vertical",
+   "groupId": "grp_sys"
+  },
+  {
+   "id": "level",
+   "t": "select",
+   "x": 578,
+   "y": 700,
+   "w": 160,
+   "h": 70,
+   "label": "Level",
+   "options": "Beginner,Expert",
+   "groupId": "grp_sys"
+  },
+  {
+   "id": "logo",
+   "t": "image",
+   "x": 578,
+   "y": 790,
+   "w": 160,
+   "h": 60,
+   "label": "Workshop-DIY",
+   "imageSrc": "assets/workshop-diy-logo.svg",
+   "groupId": "grp_sys"
+  }
+ ]
+}

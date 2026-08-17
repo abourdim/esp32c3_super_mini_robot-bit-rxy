@@ -110,13 +110,34 @@ void loop() {
     events_reset_timeout_flag();
   }
 
-  //neopixels_star();
-
-  neopixels_waving_french_flag();
-
-  //neopixels_KnightRiderRedEyewithTail();
-  //neopixels_KnightRiderRedEyewithTail2();
-  //neopixels_duel_eye();
-
-  //neopixels_animate();
+  // NeoPixel strip — on/off, effect, colour and brightness all come from the
+  // LIGHTS zone of the layout. This replaced an unconditional call to
+  // neopixels_waving_french_flag(), which is still the default effect so the
+  // out-of-the-box behaviour is unchanged until the user picks another.
+  FastLED.setBrightness(remotexy_get_np_brightness());
+  if (!remotexy_get_np_on()) {
+    neopixels_all_clear(CRGB::Black);
+  } else {
+    switch (remotexy_get_np_effect()) {
+      case NP_EFFECT_SOLID:
+        neopixels_all_clear(CRGB(remotexy_get_np_color()));
+        break;
+      case NP_EFFECT_RAINBOW:
+        // neopixels_rainbow() advances a shared static hue and writes one
+        // pixel, so walking the strip paints a gradient rather than a
+        // single colour. It does not show() itself.
+        for (uint8_t i = 0; i < CONFIG_NEOPIXELS_NB_LEDS; ++i) neopixels_rainbow(i);
+        FastLED.show();
+        break;
+      case NP_EFFECT_KNIGHT:
+        neopixels_KnightRiderRedEyewithTail();
+        break;
+      case NP_EFFECT_DUEL:
+        neopixels_duel_eye();
+        break;
+      default:
+        neopixels_waving_french_flag();
+        break;
+    }
+  }
 }

@@ -1,0 +1,480 @@
+{
+ "schemaVersion": 2,
+ "title": "WDIY Robot b3",
+ "widgets": [
+  {
+   "id": "grp_drive",
+   "t": "group",
+   "label": "DRIVE",
+   "x": 53,
+   "y": 15,
+   "w": 691,
+   "h": 551,
+   "color": "#00d4ff",
+   "children": [
+    "dpad_drive",
+    "joy_drive",
+    "spd",
+    "btn_stop",
+    "gauge_speed"
+   ]
+  },
+  {
+   "id": "grp_dist",
+   "t": "group",
+   "label": "DISTANCE",
+   "x": 775,
+   "y": 13,
+   "w": 426,
+   "h": 551,
+   "color": "#ffb020",
+   "children": [
+    "gauge_distance",
+    "alert",
+    "graph_dist"
+   ]
+  },
+  {
+   "id": "grp_light",
+   "t": "group",
+   "label": "LIGHTS",
+   "x": 50,
+   "y": 582,
+   "w": 689,
+   "h": 377,
+   "color": "#7c5cff",
+   "children": [
+    "toggle_led_r",
+    "toggle_led_g",
+    "toggle_np",
+    "np_effect",
+    "np_r",
+    "np_g",
+    "np_b",
+    "np_bright"
+   ]
+  },
+  {
+   "id": "grp_sound",
+   "t": "group",
+   "label": "SOUND",
+   "x": 765,
+   "y": 586,
+   "w": 433,
+   "h": 180,
+   "color": "#ff5c8a",
+   "children": [
+    "btn_horn",
+    "btn_buzz",
+    "sound_alert"
+   ]
+  },
+  {
+   "id": "grp_sys",
+   "t": "group",
+   "label": "SYSTEM",
+   "x": 46,
+   "y": 999,
+   "w": 1072,
+   "h": 253,
+   "color": "#3ddc97",
+   "children": [
+    "battery_level",
+    "lbl_ver",
+    "lbl_uptime",
+    "lbl_vbat",
+    "upd",
+    "level",
+    "led_button",
+    "gauge_rssi",
+    "logo"
+   ]
+  },
+  {
+   "id": "grp_display",
+   "t": "group",
+   "label": "DISPLAY",
+   "x": 76,
+   "y": 1282,
+   "w": 618,
+   "h": 144,
+   "color": "#00e5ff",
+   "children": [
+    "oled_text",
+    "lbl_oled"
+   ]
+  },
+  {
+   "id": "sep_cols",
+   "t": "separator",
+   "x": 748,
+   "y": 49,
+   "w": 8,
+   "h": 493
+  },
+  {
+   "id": "sep_b1",
+   "t": "separator",
+   "x": 773,
+   "y": 574,
+   "w": 412,
+   "h": 12
+  },
+  {
+   "id": "sep_b2",
+   "t": "separator",
+   "x": 55,
+   "y": 972,
+   "w": 1044,
+   "h": 8
+  },
+  {
+   "id": "dpad_drive",
+   "t": "dpad",
+   "x": 77,
+   "y": 73,
+   "w": 371,
+   "h": 474,
+   "label": "Drive",
+   "model": "classic",
+   "groupId": "grp_drive"
+  },
+  {
+   "id": "joy_drive",
+   "t": "joystick",
+   "x": 453,
+   "y": 76,
+   "w": 174,
+   "h": 175,
+   "label": "Drive",
+   "groupId": "grp_drive"
+  },
+  {
+   "id": "spd",
+   "t": "slider",
+   "x": 636,
+   "y": 65,
+   "w": 90,
+   "h": 200,
+   "label": "Speed",
+   "max": 100,
+   "value": 100,
+   "groupId": "grp_drive"
+  },
+  {
+   "id": "btn_stop",
+   "t": "button",
+   "x": 455,
+   "y": 350,
+   "w": 120,
+   "h": 120,
+   "label": "STOP",
+   "model": "flat",
+   "groupId": "grp_drive"
+  },
+  {
+   "id": "gauge_speed",
+   "t": "gauge",
+   "x": 577,
+   "y": 325,
+   "w": 149,
+   "h": 171,
+   "label": "Speed",
+   "min": 0,
+   "max": 100,
+   "units": "%",
+   "decimals": 0,
+   "model": "classic",
+   "groupId": "grp_drive"
+  },
+  {
+   "id": "gauge_distance",
+   "t": "gauge",
+   "x": 806,
+   "y": 63,
+   "w": 140,
+   "h": 163,
+   "label": "Distance",
+   "min": 0,
+   "max": 200,
+   "units": "cm",
+   "decimals": 0,
+   "model": "classic",
+   "groupId": "grp_dist"
+  },
+  {
+   "id": "alert",
+   "t": "notification",
+   "x": 1027,
+   "y": 100,
+   "w": 90,
+   "h": 90,
+   "label": "Obstacle",
+   "groupId": "grp_dist"
+  },
+  {
+   "id": "graph_dist",
+   "t": "graph",
+   "x": 801,
+   "y": 226,
+   "w": 387,
+   "h": 313,
+   "label": "Distance cm",
+   "max": 200,
+   "groupId": "grp_dist"
+  },
+  {
+   "id": "toggle_led_r",
+   "t": "toggle",
+   "x": 74,
+   "y": 632,
+   "w": 100,
+   "h": 100,
+   "label": "Red LED",
+   "model": "pill",
+   "groupId": "grp_light"
+  },
+  {
+   "id": "toggle_led_g",
+   "t": "toggle",
+   "x": 194,
+   "y": 632,
+   "w": 100,
+   "h": 100,
+   "label": "Green LED",
+   "model": "pill",
+   "groupId": "grp_light"
+  },
+  {
+   "id": "toggle_np",
+   "t": "toggle",
+   "x": 314,
+   "y": 632,
+   "w": 100,
+   "h": 100,
+   "label": "Strip",
+   "model": "pill",
+   "groupId": "grp_light"
+  },
+  {
+   "id": "np_effect",
+   "t": "select",
+   "x": 434,
+   "y": 647,
+   "w": 160,
+   "h": 70,
+   "label": "Strip effect",
+   "options": "Solid,Rainbow,Knight Rider,Duel eye,French flag",
+   "groupId": "grp_light"
+  },
+  {
+   "id": "np_r",
+   "t": "slider",
+   "x": 93,
+   "y": 756,
+   "w": 70,
+   "h": 180,
+   "label": "R",
+   "max": 255,
+   "value": 255,
+   "groupId": "grp_light"
+  },
+  {
+   "id": "np_g",
+   "t": "slider",
+   "x": 189,
+   "y": 759,
+   "w": 70,
+   "h": 180,
+   "label": "G",
+   "max": 255,
+   "value": 0,
+   "groupId": "grp_light"
+  },
+  {
+   "id": "np_b",
+   "t": "slider",
+   "x": 274,
+   "y": 761,
+   "w": 70,
+   "h": 180,
+   "label": "B",
+   "max": 255,
+   "value": 0,
+   "groupId": "grp_light"
+  },
+  {
+   "id": "np_bright",
+   "t": "slider",
+   "x": 467,
+   "y": 753,
+   "w": 90,
+   "h": 180,
+   "label": "Brightness",
+   "max": 255,
+   "step": 5,
+   "value": 15,
+   "groupId": "grp_light"
+  },
+  {
+   "id": "btn_horn",
+   "t": "button",
+   "x": 783,
+   "y": 639,
+   "w": 100,
+   "h": 100,
+   "label": "Horn",
+   "groupId": "grp_sound"
+  },
+  {
+   "id": "btn_buzz",
+   "t": "button",
+   "x": 926,
+   "y": 636,
+   "w": 100,
+   "h": 100,
+   "label": "Buzz",
+   "groupId": "grp_sound"
+  },
+  {
+   "id": "sound_alert",
+   "t": "sound",
+   "x": 1083,
+   "y": 640,
+   "w": 90,
+   "h": 90,
+   "label": "Alert",
+   "groupId": "grp_sound"
+  },
+  {
+   "id": "battery_level",
+   "t": "battery",
+   "x": 602,
+   "y": 1107,
+   "w": 80,
+   "h": 100,
+   "label": "Battery",
+   "model": "vertical",
+   "groupId": "grp_sys"
+  },
+  {
+   "id": "lbl_ver",
+   "t": "label",
+   "x": 61,
+   "y": 1049,
+   "w": 200,
+   "h": 50,
+   "label": "Firmware",
+   "model": "card",
+   "groupId": "grp_sys"
+  },
+  {
+   "id": "lbl_uptime",
+   "t": "label",
+   "x": 271,
+   "y": 1051,
+   "w": 200,
+   "h": 50,
+   "label": "Uptime",
+   "model": "card",
+   "groupId": "grp_sys"
+  },
+  {
+   "id": "lbl_vbat",
+   "t": "label",
+   "x": 488,
+   "y": 1051,
+   "w": 200,
+   "h": 50,
+   "label": "Battery V",
+   "model": "card",
+   "groupId": "grp_sys"
+  },
+  {
+   "id": "upd",
+   "t": "select",
+   "x": 84,
+   "y": 1127,
+   "w": 160,
+   "h": 70,
+   "label": "Telemetry",
+   "options": "Off,Basic,All",
+   "groupId": "grp_sys"
+  },
+  {
+   "id": "level",
+   "t": "select",
+   "x": 284,
+   "y": 1129,
+   "w": 160,
+   "h": 70,
+   "label": "Level",
+   "options": "Beginner,Expert",
+   "groupId": "grp_sys"
+  },
+  {
+   "id": "led_button",
+   "t": "led",
+   "x": 485,
+   "y": 1119,
+   "w": 80,
+   "h": 80,
+   "label": "Button",
+   "model": "dot",
+   "colorOn": "#00ff88",
+   "groupId": "grp_sys"
+  },
+  {
+   "id": "gauge_rssi",
+   "t": "gauge",
+   "x": 704,
+   "y": 1058,
+   "w": 189,
+   "h": 190,
+   "label": "Signal",
+   "min": -100,
+   "max": -30,
+   "units": "dBm",
+   "decimals": 0,
+   "model": "classic",
+   "groupId": "grp_sys"
+  },
+  {
+   "id": "logo",
+   "t": "image",
+   "x": 910,
+   "y": 1052,
+   "w": 192,
+   "h": 164,
+   "label": "Workshop-DIY",
+   "imageSrc": "assets/workshop-diy-logo.svg",
+   "groupId": "grp_sys"
+  },
+  {
+   "id": "oled_text",
+   "t": "editfield",
+   "x": 100,
+   "y": 1332,
+   "w": 260,
+   "h": 70,
+   "label": "OLED text",
+   "placeholder": "Type for the robot screen...",
+   "groupId": "grp_display"
+  },
+  {
+   "id": "lbl_oled",
+   "t": "label",
+   "x": 390,
+   "y": 1337,
+   "w": 280,
+   "h": 60,
+   "label": "OLED shows",
+   "model": "card",
+   "groupId": "grp_display"
+  }
+ ],
+ "canvas": {
+  "w": 1247,
+  "h": 1472
+ }
+}

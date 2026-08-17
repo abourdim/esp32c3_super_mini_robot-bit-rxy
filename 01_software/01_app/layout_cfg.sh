@@ -22,25 +22,32 @@ DEFAULT_CPP="$SCRIPT_DIR/01_src/03_bit-rxy.cpp"
 
 usage() {
   echo "Usage:"
-  echo "  $0 decode [path/to/03_bit-rxy.cpp]   (default: $DEFAULT_CPP)"
+  echo "  $0 decode [VAR] [path/to/03_bit-rxy.cpp]"
+  echo "      VAR defaults to LAYOUT_CFG_EXPERT_BASE64;"
+  echo "      use LAYOUT_CFG_BEGINNER_BASE64 for the simple layout."
+  echo "      cpp defaults to $DEFAULT_CPP"
   echo "  $0 encode <path/to/layout.json>"
   exit 1
 }
 
 decode() {
-  local cpp_file="${1:-$DEFAULT_CPP}"
+  # Two layouts are compiled in now (beginner + expert), so the variable name
+  # is an argument. Defaults to the expert one, which is the one being edited
+  # most of the time.
+  local var="${1:-LAYOUT_CFG_EXPERT_BASE64}"
+  local cpp_file="${2:-$DEFAULT_CPP}"
   [ -f "$cpp_file" ] || { echo "error: file not found: $cpp_file" >&2; exit 1; }
 
-  # Pull every quoted string literal between 'LAYOUT_CFG_BASE64 =' and the
-  # terminating ';', strip the quotes, and concatenate them back together.
+  # Pull every quoted string literal between '<var> =' and the terminating
+  # ';', strip the quotes, and concatenate them back together.
   local b64
-  b64=$(awk '/^static const char\* LAYOUT_CFG_BASE64/{flag=1} flag{print} flag && /;[[:space:]]*$/{exit}' "$cpp_file" \
+  b64=$(awk -v v="$var" '$0 ~ "^static const char\\* " v {flag=1} flag{print} flag && /;[[:space:]]*$/{exit}' "$cpp_file" \
     | grep -o '"[^"]*"' \
     | sed 's/^"//; s/"$//' \
     | tr -d '\n')
 
   if [ -z "$b64" ]; then
-    echo "error: could not find LAYOUT_CFG_BASE64 in $cpp_file" >&2
+    echo "error: could not find $var in $cpp_file" >&2
     exit 1
   fi
 

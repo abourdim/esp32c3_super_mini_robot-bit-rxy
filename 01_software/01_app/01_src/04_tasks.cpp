@@ -109,6 +109,15 @@ void tasks_joysticks(void) {
   leftSpeed = constrain(leftSpeed, -100, 100);
   rightSpeed = constrain(rightSpeed, -100, 100);
 
+  // Speed slider (DRIVE zone) scales the mix rather than clipping it, so
+  // steering geometry is preserved at every ceiling — a hard clamp would
+  // straighten out turns as the cap came down.
+  const uint8_t cap = remotexy_get_speed_cap();
+  if (cap < 100) {
+    leftSpeed  = (leftSpeed  * cap) / 100;
+    rightSpeed = (rightSpeed * cap) / 100;
+  }
+
   if (! remotexy_get_connect_flag()) {  // Only if connected
     rightSpeed = 0;
     leftSpeed = 0;
@@ -157,6 +166,18 @@ void tasks_remotexy(void) {
   remotexy_set_onlineGraph_01_distance(g_ultrasonic_distance_cm);
   remotexy_set_onlineGraph_02_speed(g_joystick_speed_pct);
   remotexy_set_onlineGraph_03_battery(g_battery_percentage);
+
+  // Widgets added with the zoned layout. Each one self-gates on the Telemetry
+  // level, so this list stays flat rather than nesting the whole block.
+  remotexy_send_graph_distance(g_ultrasonic_distance_cm);
+  remotexy_send_obstacle_alert(g_ultrasonic_distance_cm);
+  remotexy_send_system_labels();
+  remotexy_send_button_state();
+  remotexy_send_link_rssi();
+  remotexy_send_control_echo();
+  remotexy_send_oled_mirror();
+  // Must stay last: ends the forced full refresh that follows a CFG transfer.
+  remotexy_telemetry_end();
 }
 
 
