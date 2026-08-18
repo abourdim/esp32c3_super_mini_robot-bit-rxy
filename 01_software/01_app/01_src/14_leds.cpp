@@ -67,3 +67,22 @@ void leds_update(void) {
   }
 
 }
+
+// ===========================================================================
+// Logical LED state for the panel's indicators.
+//
+// Deliberately NOT the instantaneous pin level. In status mode both LEDs blink
+// once per leds_update(), so publishing the raw pin would flip the indicator
+// on every telemetry cycle and defeat the send-on-change gate entirely. What
+// the indicator should answer is "which LED is active", not "which half of the
+// blink are we in".
+// ===========================================================================
+uint8_t leds_state_r(void) {
+  if (remotexy_get_led_manual()) return remotexy_get_led_r();
+  return remotexy_get_connect_flag() ? 0 : 1;   // red marks "not connected"
+}
+
+uint8_t leds_state_g(void) {
+  if (remotexy_get_led_manual()) return remotexy_get_led_g();
+  return remotexy_get_connect_flag() ? 1 : 0;   // green marks "connected"
+}

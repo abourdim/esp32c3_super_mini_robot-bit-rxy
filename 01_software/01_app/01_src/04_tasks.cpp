@@ -176,6 +176,7 @@ void tasks_remotexy(void) {
   remotexy_send_link_rssi();
   remotexy_send_control_echo();
   remotexy_send_oled_mirror();
+  remotexy_send_led_state();
   // Must stay last: ends the forced full refresh that follows a CFG transfer.
   remotexy_telemetry_end();
 }

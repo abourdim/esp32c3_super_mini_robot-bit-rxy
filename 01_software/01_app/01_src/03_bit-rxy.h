@@ -72,6 +72,7 @@ extern void remotexy_send_obstacle_alert(float cm);
 extern void remotexy_send_system_labels(void);
 extern void remotexy_send_button_state(void);
 extern void remotexy_send_link_rssi(void);
+extern void remotexy_send_led_state(void);
 // Echoes the Telemetry and Level selectors so they show their real position
 // rather than their first option. Not gated on the telemetry level.
 extern void remotexy_send_control_echo(void);
