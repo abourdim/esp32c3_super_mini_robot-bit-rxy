@@ -1,6 +1,6 @@
 {
   "name": "WDIY Robot (bit-rxy)",
-  "version": "1.0.0",
+  "version": "B3-v1+4bfaa500f5e0",
   "new_install_prompt_erase": true,
   "builds": [
     {
