@@ -1,0 +1,68 @@
+{
+ "schemaVersion": 1,
+ "title": "b3 - Display test",
+ "canvas": {
+  "w": 790,
+  "h": 446
+ },
+ "widgets": [
+  {
+   "id": "grp_test",
+   "t": "group",
+   "label": "DISPLAY",
+   "color": "#00e5ff",
+   "x": 56,
+   "y": 42,
+   "w": 678,
+   "h": 272,
+   "children": [
+    "oled_text",
+    "lbl_oled",
+    "level"
+   ]
+  },
+  {
+   "id": "oled_text",
+   "t": "editfield",
+   "x": 80,
+   "y": 100,
+   "w": 300,
+   "h": 80,
+   "label": "Write here",
+   "placeholder": "Type your name...",
+   "groupId": "grp_test"
+  },
+  {
+   "id": "lbl_oled",
+   "t": "label",
+   "x": 410,
+   "y": 105,
+   "w": 300,
+   "h": 70,
+   "label": "Screen shows",
+   "model": "card",
+   "groupId": "grp_test"
+  },
+  {
+   "id": "level",
+   "t": "select",
+   "x": 80,
+   "y": 220,
+   "w": 200,
+   "h": 70,
+   "label": "Test",
+   "options": "Beginner,Expert,Motors,Distance,Lights,Sound,Display,Power",
+   "groupId": "grp_test"
+  },
+  {
+   "id": "lbl_hint",
+   "t": "label",
+   "x": 80,
+   "y": 330,
+   "w": 630,
+   "h": 60,
+   "label": "Type, then look at the robot's little screen.",
+   "model": "card"
+  }
+ ]
+}

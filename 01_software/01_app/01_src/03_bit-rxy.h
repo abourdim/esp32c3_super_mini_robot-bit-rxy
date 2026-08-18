@@ -57,7 +57,21 @@ extern uint8_t remotexy_get_upd_level(void);
 
 // SYSTEM — which of the two compiled-in layouts the robot serves. Chosen from
 // the Level select, persisted in NVS, defaulting to Beginner on a fresh chip.
-enum { LAYOUT_BEGINNER = 0, LAYOUT_EXPERT };
+// Panels the robot can serve. Beginner/Expert are the two everyday layouts;
+// the rest are single-subsystem test panels for classroom bring-up, so a child
+// moves between exercises with a dropdown instead of an adult reflashing.
+// Order must match LEVEL_OPTIONS and the layout table in 03_bit-rxy.cpp.
+enum {
+  LAYOUT_BEGINNER = 0,
+  LAYOUT_EXPERT,
+  LAYOUT_TEST_MOTORS,
+  LAYOUT_TEST_DISTANCE,
+  LAYOUT_TEST_LIGHTS,
+  LAYOUT_TEST_SOUND,
+  LAYOUT_TEST_DISPLAY,
+  LAYOUT_TEST_POWER,
+  LAYOUT_COUNT
+};
 extern uint8_t remotexy_get_layout_level(void);
 
 // LIGHTS — the two board LEDs. leds_update() owns them until the app takes

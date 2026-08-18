@@ -152,9 +152,44 @@ cd esp32c3_super_mini_robot-bit-rxy/01_software/01_app
 │   │   ├── <span class="hl">layout_cfg.sh</span>          decode/encode the bit-rxy layout JSON ↔ base64
 │   │   └── <span class="hl">ota_flash.sh</span>           push firmware over WiFi OTA
 │   ├── 02_calibration/            calibration sketch
+│   ├── 06_tests/                  standalone bring-up sketches (no BLE, no app)
 │   └── 4_wled/                    vendored WLED source (unrelated sub-project)
 ├── 02_hardware/                   PCB design (KiCad, v1–v3)
 └── 03_3d/                         3D-print files</div>
+    </section>
+
+    <section>
+        <h2>🎛 Panels</h2>
+        <p>The robot owns its layout: the app is a generic renderer and draws whatever CFG arrives on connect. Eight panels are compiled in, chosen from the <strong>Level</strong> selector, which persists in NVS and re-sends the layout live &mdash; the panel redraws without a reconnect and without reflashing.</p>
+        <ul>
+            <li><strong>Beginner</strong> &mdash; drive, two gauges, battery (9 controls)</li>
+            <li><strong>Expert</strong> &mdash; drive, distance + graph, lights, sound, system (30 controls)</li>
+            <li><strong>Motors / Distance / Lights / Sound / Display / Power</strong> &mdash; one subsystem each, for classroom bring-up</li>
+        </ul>
+        <p>The test panels exist so a child moves between exercises with a dropdown instead of an adult reflashing between them. Each carries the Level selector itself &mdash; a panel without it would strand the robot until someone reflashed.</p>
+        <p>Two tests stay deliberately <em>outside</em> this system, in <code>01_software/06_tests/</code>: <code>test_leds</code> and <code>test_ble</code> have no radio and no layout at all. An app-driven test cannot distinguish a dead subsystem from a failed connection; those two answer <em>is it powered</em> and <em>does the radio work</em> first, so everything downstream can assume both.</p>
+        <p>Telemetry is sent <strong>on change</strong>, with per-value deadbands, and gated on which panel is active &mdash; publishing to widget ids the current layout does not contain is a notification into nothing, on a radio this firmware works hard to keep out of <code>rc=6</code>.</p>
+    </section>
+
+    <section>
+        <h2>🔌 Two apps, two dialects</h2>
+        <p>This robot is driven by both stock <a href="https://abourdim.github.io/bit-rxy/">bit-rxy</a> and the richer keystudio app, and they disagree about the D-pad and the joystick. Both encodings of each are accepted, with bit-rxy's handled exactly as before:</p>
+        <div class="tree">D-pad     SET &lt;id&gt; &lt;up|down|left|right&gt; &lt;0|1&gt;   bit-rxy
+          &lt;a..p&gt;                                keystudio, 1-byte state mask
+          M &lt;0..15&gt;                             text form of that mask
+joystick  SET &lt;id&gt; &lt;angle&gt; &lt;distance&gt;           bit-rxy
+          SET &lt;id&gt; &lt;x&gt; &lt;y&gt;                      keystudio</div>
+        <p>The joystick pair is genuinely ambiguous inside the 0..100 quadrant, so it is resolved strongest-evidence-first &mdash; see <code>handleJoystick()</code>.</p>
+        <p><code>sendCfg()</code> sizes its chunks to the negotiated MTU rather than the rxy MakeCode template's fixed 18, and announces the count as <code>CFGBEGIN &lt;n&gt;</code> so a client can show a real progress bar. At 18 the expert layout would be ~19s per connect.</p>
+    </section>
+
+    <section>
+        <h2>🎨 Editing a layout</h2>
+        <p>Arrange the panel in the app, export the Layout JSON, then:</p>
+        <div class="tree">cd 01_software/01_app
+python3 install_export.py ~/Downloads/wdiy-robot-b3-layout-*.json
+pio run -t upload</div>
+        <p>It repairs what the export gets wrong (group headers colliding with the first widget inside, a couple of pixels of overlap from a stray drag), drops the ~90 fields the app re-creates on load, validates, and splices the result into the firmware. It refuses to install on any validation failure rather than producing a broken panel.</p>
     </section>
 
     <section>

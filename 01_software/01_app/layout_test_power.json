@@ -1,0 +1,95 @@
+{
+ "schemaVersion": 1,
+ "title": "b3 - Power test",
+ "canvas": {
+  "w": 680,
+  "h": 656
+ },
+ "widgets": [
+  {
+   "id": "grp_test",
+   "t": "group",
+   "label": "POWER",
+   "color": "#3ddc97",
+   "x": 56,
+   "y": 42,
+   "w": 568,
+   "h": 482,
+   "children": [
+    "battery_level",
+    "lbl_vbat",
+    "gauge_rssi",
+    "btn_buzz",
+    "level"
+   ]
+  },
+  {
+   "id": "battery_level",
+   "t": "battery",
+   "x": 80,
+   "y": 100,
+   "w": 90,
+   "h": 120,
+   "label": "Battery",
+   "model": "vertical",
+   "groupId": "grp_test"
+  },
+  {
+   "id": "lbl_vbat",
+   "t": "label",
+   "x": 200,
+   "y": 120,
+   "w": 220,
+   "h": 60,
+   "label": "Volts",
+   "model": "card",
+   "groupId": "grp_test"
+  },
+  {
+   "id": "gauge_rssi",
+   "t": "gauge",
+   "x": 450,
+   "y": 100,
+   "w": 150,
+   "h": 190,
+   "label": "Signal",
+   "min": -100,
+   "max": -30,
+   "units": "dBm",
+   "decimals": 0,
+   "groupId": "grp_test"
+  },
+  {
+   "id": "btn_buzz",
+   "t": "button",
+   "x": 80,
+   "y": 270,
+   "w": 120,
+   "h": 120,
+   "label": "Buzz",
+   "model": "neo",
+   "groupId": "grp_test"
+  },
+  {
+   "id": "level",
+   "t": "select",
+   "x": 80,
+   "y": 430,
+   "w": 200,
+   "h": 70,
+   "label": "Test",
+   "options": "Beginner,Expert,Motors,Distance,Lights,Sound,Display,Power",
+   "groupId": "grp_test"
+  },
+  {
+   "id": "lbl_hint",
+   "t": "label",
+   "x": 80,
+   "y": 540,
+   "w": 520,
+   "h": 60,
+   "label": "Buzz uses the same pin as the battery sensor -- watch the volts.",
+   "model": "card"
+  }
+ ]
+}

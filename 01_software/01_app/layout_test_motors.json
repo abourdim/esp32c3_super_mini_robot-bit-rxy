@@ -1,0 +1,95 @@
+{
+ "schemaVersion": 1,
+ "title": "b3 - Motors test",
+ "canvas": {
+  "w": 800,
+  "h": 716
+ },
+ "widgets": [
+  {
+   "id": "grp_test",
+   "t": "group",
+   "label": "MOTORS",
+   "color": "#00d4ff",
+   "x": 56,
+   "y": 42,
+   "w": 688,
+   "h": 542,
+   "children": [
+    "dpad_drive",
+    "spd",
+    "btn_stop",
+    "gauge_speed",
+    "level"
+   ]
+  },
+  {
+   "id": "dpad_drive",
+   "t": "dpad",
+   "x": 80,
+   "y": 100,
+   "w": 300,
+   "h": 300,
+   "label": "Drive",
+   "model": "classic",
+   "groupId": "grp_test"
+  },
+  {
+   "id": "spd",
+   "t": "slider",
+   "x": 420,
+   "y": 100,
+   "w": 90,
+   "h": 200,
+   "label": "Speed",
+   "max": 100,
+   "value": 100,
+   "groupId": "grp_test"
+  },
+  {
+   "id": "btn_stop",
+   "t": "button",
+   "x": 420,
+   "y": 330,
+   "w": 120,
+   "h": 120,
+   "label": "STOP",
+   "model": "flat",
+   "groupId": "grp_test"
+  },
+  {
+   "id": "gauge_speed",
+   "t": "gauge",
+   "x": 570,
+   "y": 100,
+   "w": 150,
+   "h": 190,
+   "label": "Speed",
+   "max": 100,
+   "units": "%",
+   "decimals": 0,
+   "groupId": "grp_test"
+  },
+  {
+   "id": "level",
+   "t": "select",
+   "x": 80,
+   "y": 490,
+   "w": 200,
+   "h": 70,
+   "label": "Test",
+   "options": "Beginner,Expert,Motors,Distance,Lights,Sound,Display,Power",
+   "groupId": "grp_test"
+  },
+  {
+   "id": "lbl_hint",
+   "t": "label",
+   "x": 80,
+   "y": 600,
+   "w": 640,
+   "h": 60,
+   "label": "Press an arrow. The wheels should turn that way.",
+   "model": "card"
+  }
+ ]
+}

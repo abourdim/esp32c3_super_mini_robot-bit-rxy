@@ -1,0 +1,81 @@
+{
+ "schemaVersion": 1,
+ "title": "b3 - Distance test",
+ "canvas": {
+  "w": 540,
+  "h": 786
+ },
+ "widgets": [
+  {
+   "id": "grp_test",
+   "t": "group",
+   "label": "DISTANCE",
+   "color": "#ffb020",
+   "x": 56,
+   "y": 42,
+   "w": 428,
+   "h": 612,
+   "children": [
+    "gauge_distance",
+    "alert",
+    "graph_dist",
+    "level"
+   ]
+  },
+  {
+   "id": "gauge_distance",
+   "t": "gauge",
+   "x": 80,
+   "y": 100,
+   "w": 150,
+   "h": 190,
+   "label": "Distance",
+   "max": 200,
+   "units": "cm",
+   "decimals": 0,
+   "groupId": "grp_test"
+  },
+  {
+   "id": "alert",
+   "t": "notification",
+   "x": 260,
+   "y": 110,
+   "w": 110,
+   "h": 110,
+   "label": "Obstacle",
+   "groupId": "grp_test"
+  },
+  {
+   "id": "graph_dist",
+   "t": "graph",
+   "x": 80,
+   "y": 320,
+   "w": 380,
+   "h": 200,
+   "label": "Distance cm",
+   "max": 200,
+   "groupId": "grp_test"
+  },
+  {
+   "id": "level",
+   "t": "select",
+   "x": 80,
+   "y": 560,
+   "w": 200,
+   "h": 70,
+   "label": "Test",
+   "options": "Beginner,Expert,Motors,Distance,Lights,Sound,Display,Power",
+   "groupId": "grp_test"
+  },
+  {
+   "id": "lbl_hint",
+   "t": "label",
+   "x": 80,
+   "y": 670,
+   "w": 380,
+   "h": 60,
+   "label": "Move your hand in front of the sensor.",
+   "model": "card"
+  }
+ ]
+}

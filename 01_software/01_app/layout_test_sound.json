@@ -1,0 +1,79 @@
+{
+ "schemaVersion": 1,
+ "title": "b3 - Sound test",
+ "canvas": {
+  "w": 570,
+  "h": 486
+ },
+ "widgets": [
+  {
+   "id": "grp_test",
+   "t": "group",
+   "label": "SOUND",
+   "color": "#ff5c8a",
+   "x": 56,
+   "y": 42,
+   "w": 458,
+   "h": 312,
+   "children": [
+    "btn_horn",
+    "btn_buzz",
+    "sound_alert",
+    "level"
+   ]
+  },
+  {
+   "id": "btn_horn",
+   "t": "button",
+   "x": 80,
+   "y": 100,
+   "w": 120,
+   "h": 120,
+   "label": "Horn",
+   "model": "neo",
+   "groupId": "grp_test"
+  },
+  {
+   "id": "btn_buzz",
+   "t": "button",
+   "x": 230,
+   "y": 100,
+   "w": 120,
+   "h": 120,
+   "label": "Buzz",
+   "model": "neo",
+   "groupId": "grp_test"
+  },
+  {
+   "id": "sound_alert",
+   "t": "sound",
+   "x": 380,
+   "y": 105,
+   "w": 110,
+   "h": 110,
+   "label": "Alert",
+   "groupId": "grp_test"
+  },
+  {
+   "id": "level",
+   "t": "select",
+   "x": 80,
+   "y": 260,
+   "w": 200,
+   "h": 70,
+   "label": "Test",
+   "options": "Beginner,Expert,Motors,Distance,Lights,Sound,Display,Power",
+   "groupId": "grp_test"
+  },
+  {
+   "id": "lbl_hint",
+   "t": "label",
+   "x": 80,
+   "y": 370,
+   "w": 410,
+   "h": 60,
+   "label": "Each button makes a different sound.",
+   "model": "card"
+  }
+ ]
+}

@@ -78,14 +78,84 @@ esp32c3_super_mini_robot-bit-rxy/
 │   │   ├── 02_web/                browser tools (canonical Pages source, inherited)
 │   │   ├── platformio.ini         build orders — main env + esp32-c3-devkitm-1-ota env
 │   │   ├── launch.sh              interactive launcher menu (USB flash/monitor)
-│   │   ├── layout_cfg.sh          decode/encode the bit-rxy layout JSON ↔ base64
+│   │   ├── layout_*.json          the 8 panels the robot serves (source of truth)
+│   │   ├── layout_cfg.sh          decode/encode a layout JSON ↔ base64
+│   │   ├── install_export.py      repair + slim an Arrange export, splice it in
+│   │   ├── gen_test_layouts.py    regenerate the six test-mode panels
 │   │   └── ota_flash.sh           push firmware over WiFi OTA
 │   ├── 02_calibration/            calibration sketch
 │   ├── 03_demo/                   demo project
+│   ├── 06_tests/                  standalone bring-up sketches (no BLE, no app)
 │   └── 4_wled/                    vendored WLED source (unrelated sub-project)
 ├── 02_hardware/                   PCB design (KiCad, v1–v3)
 └── 03_3d/                         3D-print files
 ```
+
+## 🎛 Panels
+
+The robot owns its layout: the app is a generic renderer and draws whatever CFG
+arrives on connect. Eight panels are compiled in, chosen from the **Level**
+selector, which persists in NVS and re-sends the layout live — the panel
+redraws without a reconnect and without reflashing.
+
+| mode | what it is |
+|---|---|
+| **Beginner** | drive, two gauges, battery — 9 controls |
+| **Expert** | everything: drive, distance + graph, lights, sound, system — 30 controls |
+| Motors / Distance / Lights / Sound / Display / Power | one subsystem each, for classroom bring-up |
+
+The test panels exist so a child moves between exercises with a dropdown
+instead of an adult reflashing between them. Each carries the Level selector
+itself — a panel without it would strand the robot until someone reflashed.
+
+Two tests stay deliberately **outside** this system, in `01_software/06_tests/`:
+`test_leds` and `test_ble` have no radio and no layout at all. An app-driven
+test cannot distinguish a dead subsystem from a failed connection; those two
+answer *is it powered* and *does the radio work* first, so everything
+downstream can assume both.
+
+Telemetry is sent **on change**, with per-value deadbands, and gated on which
+panel is active — publishing to widget ids the current layout does not contain
+is a notification into nothing, on a radio this firmware works hard to keep out
+of `rc=6`.
+
+## 🔌 Two apps, two dialects
+
+This robot is driven by both stock [bit-rxy](https://abourdim.github.io/bit-rxy/)
+and the richer keystudio app, and they disagree about the D-pad and the
+joystick. Both encodings of each are accepted, with bit-rxy's handled exactly
+as before:
+
+```
+D-pad     SET <id> <up|down|left|right> <0|1>   bit-rxy
+          <a..p>                                keystudio, 1-byte state mask
+          M <0..15>                             text form of that mask
+joystick  SET <id> <angle> <distance>           bit-rxy
+          SET <id> <x> <y>                      keystudio
+```
+
+The joystick pair is genuinely ambiguous inside the 0..100 quadrant, so it is
+resolved strongest-evidence-first — see `handleJoystick()`.
+
+`sendCfg()` sizes its chunks to the negotiated MTU rather than the rxy MakeCode
+template's fixed 18, and announces the count as `CFGBEGIN <n>` so a client can
+show a real progress bar. At 18 the expert layout would be ~19s per connect.
+
+## 🎨 Editing a layout
+
+Arrange the panel in the app, export the Layout JSON, then:
+
+```bash
+cd 01_software/01_app
+python3 install_export.py ~/Downloads/wdiy-robot-b3-layout-*.json
+pio run -t upload
+```
+
+It repairs what the export gets wrong (group headers colliding with the first
+widget inside, a couple of pixels of overlap from a stray drag), drops the
+~90 fields the app re-creates on load, validates, and splices the result into
+the firmware. It refuses to install on any validation failure rather than
+producing a broken panel.
 
 ## 🐛 Known issues
 

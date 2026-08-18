@@ -165,10 +165,11 @@ static const char* LAYOUT_CFG_BEGINNER_BASE64 =
   "ZXJ5IiwieCI6NTc4LCJ5Ijo1NzAsInciOjgwLCJoIjoxMDAsImxhYmVsIjoiQmF0dGVyeSIs"
   "Im1vZGVsIjoidmVydGljYWwiLCJncm91cElkIjoiZ3JwX3N5cyJ9LHsiaWQiOiJsZXZlbCIs"
   "InQiOiJzZWxlY3QiLCJ4Ijo1NzgsInkiOjcwMCwidyI6MTYwLCJoIjo3MCwibGFiZWwiOiJM"
-  "ZXZlbCIsIm9wdGlvbnMiOiJCZWdpbm5lcixFeHBlcnQiLCJncm91cElkIjoiZ3JwX3N5cyJ9"
-  "LHsiaWQiOiJsb2dvIiwidCI6ImltYWdlIiwieCI6NTc4LCJ5Ijo3OTAsInciOjE2MCwiaCI6"
-  "NjAsImxhYmVsIjoiV29ya3Nob3AtRElZIiwiaW1hZ2VTcmMiOiJhc3NldHMvd29ya3Nob3At"
-  "ZGl5LWxvZ28uc3ZnIiwiZ3JvdXBJZCI6ImdycF9zeXMifV19";
+  "ZXZlbCIsIm9wdGlvbnMiOiJCZWdpbm5lcixFeHBlcnQsTW90b3JzLERpc3RhbmNlLExpZ2h0"
+  "cyxTb3VuZCxEaXNwbGF5LFBvd2VyIiwiZ3JvdXBJZCI6ImdycF9zeXMifSx7ImlkIjoibG9n"
+  "byIsInQiOiJpbWFnZSIsIngiOjU3OCwieSI6NzkwLCJ3IjoxNjAsImgiOjYwLCJsYWJlbCI6"
+  "IldvcmtzaG9wLURJWSIsImltYWdlU3JjIjoiYXNzZXRzL3dvcmtzaG9wLWRpeS1sb2dvLnN2"
+  "ZyIsImdyb3VwSWQiOiJncnBfc3lzIn1dfQ==";
 
 static const char* LAYOUT_CFG_EXPERT_BASE64 =
   "eyJzY2hlbWFWZXJzaW9uIjoyLCJ0aXRsZSI6IldESVkgUm9ib3QgYjMiLCJ3aWRnZXRzIjpb"
@@ -250,26 +251,163 @@ static const char* LAYOUT_CFG_EXPERT_BASE64 =
   "aCI6NzAsImxhYmVsIjoiVGVsZW1ldHJ5Iiwib3B0aW9ucyI6Ik9mZixCYXNpYyxBbGwiLCJn"
   "cm91cElkIjoiZ3JwX3N5cyJ9LHsiaWQiOiJsZXZlbCIsInQiOiJzZWxlY3QiLCJ4IjoyODQs"
   "InkiOjExMjksInciOjE2MCwiaCI6NzAsImxhYmVsIjoiTGV2ZWwiLCJvcHRpb25zIjoiQmVn"
-  "aW5uZXIsRXhwZXJ0IiwiZ3JvdXBJZCI6ImdycF9zeXMifSx7ImlkIjoibGVkX2J1dHRvbiIs"
-  "InQiOiJsZWQiLCJ4Ijo0ODUsInkiOjExMTksInciOjgwLCJoIjo4MCwibGFiZWwiOiJCdXR0"
-  "b24iLCJtb2RlbCI6ImRvdCIsImNvbG9yT24iOiIjMDBmZjg4IiwiZ3JvdXBJZCI6ImdycF9z"
-  "eXMifSx7ImlkIjoiZ2F1Z2VfcnNzaSIsInQiOiJnYXVnZSIsIngiOjcwNCwieSI6MTA1OCwi"
-  "dyI6MTg5LCJoIjoxOTAsImxhYmVsIjoiU2lnbmFsIiwibWluIjotMTAwLCJtYXgiOi0zMCwi"
-  "dW5pdHMiOiJkQm0iLCJkZWNpbWFscyI6MCwibW9kZWwiOiJjbGFzc2ljIiwiZ3JvdXBJZCI6"
-  "ImdycF9zeXMifSx7ImlkIjoibG9nbyIsInQiOiJpbWFnZSIsIngiOjkxMCwieSI6MTA1Miwi"
-  "dyI6MTkyLCJoIjoxNjQsImxhYmVsIjoiV29ya3Nob3AtRElZIiwiaW1hZ2VTcmMiOiJhc3Nl"
-  "dHMvd29ya3Nob3AtZGl5LWxvZ28uc3ZnIiwiZ3JvdXBJZCI6ImdycF9zeXMifSx7ImlkIjoi"
-  "b2xlZF90ZXh0IiwidCI6ImVkaXRmaWVsZCIsIngiOjEwMCwieSI6MTMzMiwidyI6MjYwLCJo"
-  "Ijo3MCwibGFiZWwiOiJPTEVEIHRleHQiLCJwbGFjZWhvbGRlciI6IlR5cGUgZm9yIHRoZSBy"
-  "b2JvdCBzY3JlZW4uLi4iLCJncm91cElkIjoiZ3JwX2Rpc3BsYXkifSx7ImlkIjoibGJsX29s"
-  "ZWQiLCJ0IjoibGFiZWwiLCJ4IjozOTAsInkiOjEzMzcsInciOjI4MCwiaCI6NjAsImxhYmVs"
-  "IjoiT0xFRCBzaG93cyIsIm1vZGVsIjoiY2FyZCIsImdyb3VwSWQiOiJncnBfZGlzcGxheSJ9"
-  "LHsiaWQiOiJsZWRfcl9zdGF0ZSIsInQiOiJsZWQiLCJ4Ijo5MywieSI6NzY5LCJ3Ijo4MCwi"
-  "aCI6ODAsImxhYmVsIjoiUmVkIHN0YXR1cyIsIm1vZGVsIjoiZG90IiwiY29sb3JPbiI6IiNm"
-  "ZjUyNTIiLCJncm91cElkIjoiZ3JwX2xpZ2h0In0seyJpZCI6ImxlZF9nX3N0YXRlIiwidCI6"
-  "ImxlZCIsIngiOjIwNSwieSI6NzY1LCJ3Ijo4MCwiaCI6ODAsImxhYmVsIjoiR3JlZW4gc3Rh"
-  "dHVzIiwibW9kZWwiOiJkb3QiLCJjb2xvck9uIjoiIzAwZmY4OCIsImdyb3VwSWQiOiJncnBf"
-  "bGlnaHQifV0sImNhbnZhcyI6eyJ3IjoxMjQ3LCJoIjoxNDcyfX0=";
+  "aW5uZXIsRXhwZXJ0LE1vdG9ycyxEaXN0YW5jZSxMaWdodHMsU291bmQsRGlzcGxheSxQb3dl"
+  "ciIsImdyb3VwSWQiOiJncnBfc3lzIn0seyJpZCI6ImxlZF9idXR0b24iLCJ0IjoibGVkIiwi"
+  "eCI6NDg1LCJ5IjoxMTE5LCJ3Ijo4MCwiaCI6ODAsImxhYmVsIjoiQnV0dG9uIiwibW9kZWwi"
+  "OiJkb3QiLCJjb2xvck9uIjoiIzAwZmY4OCIsImdyb3VwSWQiOiJncnBfc3lzIn0seyJpZCI6"
+  "ImdhdWdlX3Jzc2kiLCJ0IjoiZ2F1Z2UiLCJ4Ijo3MDQsInkiOjEwNTgsInciOjE4OSwiaCI6"
+  "MTkwLCJsYWJlbCI6IlNpZ25hbCIsIm1pbiI6LTEwMCwibWF4IjotMzAsInVuaXRzIjoiZEJt"
+  "IiwiZGVjaW1hbHMiOjAsIm1vZGVsIjoiY2xhc3NpYyIsImdyb3VwSWQiOiJncnBfc3lzIn0s"
+  "eyJpZCI6ImxvZ28iLCJ0IjoiaW1hZ2UiLCJ4Ijo5MTAsInkiOjEwNTIsInciOjE5MiwiaCI6"
+  "MTY0LCJsYWJlbCI6IldvcmtzaG9wLURJWSIsImltYWdlU3JjIjoiYXNzZXRzL3dvcmtzaG9w"
+  "LWRpeS1sb2dvLnN2ZyIsImdyb3VwSWQiOiJncnBfc3lzIn0seyJpZCI6Im9sZWRfdGV4dCIs"
+  "InQiOiJlZGl0ZmllbGQiLCJ4IjoxMDAsInkiOjEzMzIsInciOjI2MCwiaCI6NzAsImxhYmVs"
+  "IjoiT0xFRCB0ZXh0IiwicGxhY2Vob2xkZXIiOiJUeXBlIGZvciB0aGUgcm9ib3Qgc2NyZWVu"
+  "Li4uIiwiZ3JvdXBJZCI6ImdycF9kaXNwbGF5In0seyJpZCI6ImxibF9vbGVkIiwidCI6Imxh"
+  "YmVsIiwieCI6MzkwLCJ5IjoxMzM3LCJ3IjoyODAsImgiOjYwLCJsYWJlbCI6Ik9MRUQgc2hv"
+  "d3MiLCJtb2RlbCI6ImNhcmQiLCJncm91cElkIjoiZ3JwX2Rpc3BsYXkifSx7ImlkIjoibGVk"
+  "X3Jfc3RhdGUiLCJ0IjoibGVkIiwieCI6OTMsInkiOjc2OSwidyI6ODAsImgiOjgwLCJsYWJl"
+  "bCI6IlJlZCBzdGF0dXMiLCJtb2RlbCI6ImRvdCIsImNvbG9yT24iOiIjZmY1MjUyIiwiZ3Jv"
+  "dXBJZCI6ImdycF9saWdodCJ9LHsiaWQiOiJsZWRfZ19zdGF0ZSIsInQiOiJsZWQiLCJ4Ijoy"
+  "MDUsInkiOjc2NSwidyI6ODAsImgiOjgwLCJsYWJlbCI6IkdyZWVuIHN0YXR1cyIsIm1vZGVs"
+  "IjoiZG90IiwiY29sb3JPbiI6IiMwMGZmODgiLCJncm91cElkIjoiZ3JwX2xpZ2h0In1dLCJj"
+  "YW52YXMiOnsidyI6MTI0NywiaCI6MTQ3Mn19";
+
+static const char* LAYOUT_CFG_TEST_MOTORS_BASE64 =
+  "eyJzY2hlbWFWZXJzaW9uIjoxLCJ0aXRsZSI6ImIzIC0gTW90b3JzIHRlc3QiLCJjYW52YXMi"
+  "OnsidyI6ODAwLCJoIjo3MTZ9LCJ3aWRnZXRzIjpbeyJpZCI6ImdycF90ZXN0IiwidCI6Imdy"
+  "b3VwIiwibGFiZWwiOiJNT1RPUlMiLCJjb2xvciI6IiMwMGQ0ZmYiLCJ4Ijo1NiwieSI6NDIs"
+  "InciOjY4OCwiaCI6NTQyLCJjaGlsZHJlbiI6WyJkcGFkX2RyaXZlIiwic3BkIiwiYnRuX3N0"
+  "b3AiLCJnYXVnZV9zcGVlZCIsImxldmVsIl19LHsiaWQiOiJkcGFkX2RyaXZlIiwidCI6ImRw"
+  "YWQiLCJ4Ijo4MCwieSI6MTAwLCJ3IjozMDAsImgiOjMwMCwibGFiZWwiOiJEcml2ZSIsIm1v"
+  "ZGVsIjoiY2xhc3NpYyIsImdyb3VwSWQiOiJncnBfdGVzdCJ9LHsiaWQiOiJzcGQiLCJ0Ijoi"
+  "c2xpZGVyIiwieCI6NDIwLCJ5IjoxMDAsInciOjkwLCJoIjoyMDAsImxhYmVsIjoiU3BlZWQi"
+  "LCJtYXgiOjEwMCwidmFsdWUiOjEwMCwiZ3JvdXBJZCI6ImdycF90ZXN0In0seyJpZCI6ImJ0"
+  "bl9zdG9wIiwidCI6ImJ1dHRvbiIsIngiOjQyMCwieSI6MzMwLCJ3IjoxMjAsImgiOjEyMCwi"
+  "bGFiZWwiOiJTVE9QIiwibW9kZWwiOiJmbGF0IiwiZ3JvdXBJZCI6ImdycF90ZXN0In0seyJp"
+  "ZCI6ImdhdWdlX3NwZWVkIiwidCI6ImdhdWdlIiwieCI6NTcwLCJ5IjoxMDAsInciOjE1MCwi"
+  "aCI6MTkwLCJsYWJlbCI6IlNwZWVkIiwibWF4IjoxMDAsInVuaXRzIjoiJSIsImRlY2ltYWxz"
+  "IjowLCJncm91cElkIjoiZ3JwX3Rlc3QifSx7ImlkIjoibGV2ZWwiLCJ0Ijoic2VsZWN0Iiwi"
+  "eCI6ODAsInkiOjQ5MCwidyI6MjAwLCJoIjo3MCwibGFiZWwiOiJUZXN0Iiwib3B0aW9ucyI6"
+  "IkJlZ2lubmVyLEV4cGVydCxNb3RvcnMsRGlzdGFuY2UsTGlnaHRzLFNvdW5kLERpc3BsYXks"
+  "UG93ZXIiLCJncm91cElkIjoiZ3JwX3Rlc3QifSx7ImlkIjoibGJsX2hpbnQiLCJ0IjoibGFi"
+  "ZWwiLCJ4Ijo4MCwieSI6NjAwLCJ3Ijo2NDAsImgiOjYwLCJsYWJlbCI6IlByZXNzIGFuIGFy"
+  "cm93LiBUaGUgd2hlZWxzIHNob3VsZCB0dXJuIHRoYXQgd2F5LiIsIm1vZGVsIjoiY2FyZCJ9"
+  "XX0=";
+
+static const char* LAYOUT_CFG_TEST_DISTANCE_BASE64 =
+  "eyJzY2hlbWFWZXJzaW9uIjoxLCJ0aXRsZSI6ImIzIC0gRGlzdGFuY2UgdGVzdCIsImNhbnZh"
+  "cyI6eyJ3Ijo1NDAsImgiOjc4Nn0sIndpZGdldHMiOlt7ImlkIjoiZ3JwX3Rlc3QiLCJ0Ijoi"
+  "Z3JvdXAiLCJsYWJlbCI6IkRJU1RBTkNFIiwiY29sb3IiOiIjZmZiMDIwIiwieCI6NTYsInki"
+  "OjQyLCJ3Ijo0MjgsImgiOjYxMiwiY2hpbGRyZW4iOlsiZ2F1Z2VfZGlzdGFuY2UiLCJhbGVy"
+  "dCIsImdyYXBoX2Rpc3QiLCJsZXZlbCJdfSx7ImlkIjoiZ2F1Z2VfZGlzdGFuY2UiLCJ0Ijoi"
+  "Z2F1Z2UiLCJ4Ijo4MCwieSI6MTAwLCJ3IjoxNTAsImgiOjE5MCwibGFiZWwiOiJEaXN0YW5j"
+  "ZSIsIm1heCI6MjAwLCJ1bml0cyI6ImNtIiwiZGVjaW1hbHMiOjAsImdyb3VwSWQiOiJncnBf"
+  "dGVzdCJ9LHsiaWQiOiJhbGVydCIsInQiOiJub3RpZmljYXRpb24iLCJ4IjoyNjAsInkiOjEx"
+  "MCwidyI6MTEwLCJoIjoxMTAsImxhYmVsIjoiT2JzdGFjbGUiLCJncm91cElkIjoiZ3JwX3Rl"
+  "c3QifSx7ImlkIjoiZ3JhcGhfZGlzdCIsInQiOiJncmFwaCIsIngiOjgwLCJ5IjozMjAsInci"
+  "OjM4MCwiaCI6MjAwLCJsYWJlbCI6IkRpc3RhbmNlIGNtIiwibWF4IjoyMDAsImdyb3VwSWQi"
+  "OiJncnBfdGVzdCJ9LHsiaWQiOiJsZXZlbCIsInQiOiJzZWxlY3QiLCJ4Ijo4MCwieSI6NTYw"
+  "LCJ3IjoyMDAsImgiOjcwLCJsYWJlbCI6IlRlc3QiLCJvcHRpb25zIjoiQmVnaW5uZXIsRXhw"
+  "ZXJ0LE1vdG9ycyxEaXN0YW5jZSxMaWdodHMsU291bmQsRGlzcGxheSxQb3dlciIsImdyb3Vw"
+  "SWQiOiJncnBfdGVzdCJ9LHsiaWQiOiJsYmxfaGludCIsInQiOiJsYWJlbCIsIngiOjgwLCJ5"
+  "Ijo2NzAsInciOjM4MCwiaCI6NjAsImxhYmVsIjoiTW92ZSB5b3VyIGhhbmQgaW4gZnJvbnQg"
+  "b2YgdGhlIHNlbnNvci4iLCJtb2RlbCI6ImNhcmQifV19";
+
+static const char* LAYOUT_CFG_TEST_LIGHTS_BASE64 =
+  "eyJzY2hlbWFWZXJzaW9uIjoxLCJ0aXRsZSI6ImIzIC0gTGlnaHRzIHRlc3QiLCJjYW52YXMi"
+  "OnsidyI6NjMwLCJoIjo4NTZ9LCJ3aWRnZXRzIjpbeyJpZCI6ImdycF90ZXN0IiwidCI6Imdy"
+  "b3VwIiwibGFiZWwiOiJMSUdIVFMiLCJjb2xvciI6IiM3YzVjZmYiLCJ4Ijo1NiwieSI6NDIs"
+  "InciOjUxOCwiaCI6NjgyLCJjaGlsZHJlbiI6WyJ0b2dnbGVfbGVkX3IiLCJ0b2dnbGVfbGVk"
+  "X2ciLCJsZWRfcl9zdGF0ZSIsImxlZF9nX3N0YXRlIiwidG9nZ2xlX25wIiwibnBfZWZmZWN0"
+  "IiwibnBfciIsIm5wX2ciLCJucF9iIiwibnBfYnJpZ2h0IiwibGV2ZWwiXX0seyJpZCI6InRv"
+  "Z2dsZV9sZWRfciIsInQiOiJ0b2dnbGUiLCJ4Ijo4MCwieSI6MTAwLCJ3IjoxMTAsImgiOjEx"
+  "MCwibGFiZWwiOiJSZWQgTEVEIiwibW9kZWwiOiJwaWxsIiwiZ3JvdXBJZCI6ImdycF90ZXN0"
+  "In0seyJpZCI6InRvZ2dsZV9sZWRfZyIsInQiOiJ0b2dnbGUiLCJ4IjoyMTAsInkiOjEwMCwi"
+  "dyI6MTEwLCJoIjoxMTAsImxhYmVsIjoiR3JlZW4gTEVEIiwibW9kZWwiOiJwaWxsIiwiZ3Jv"
+  "dXBJZCI6ImdycF90ZXN0In0seyJpZCI6ImxlZF9yX3N0YXRlIiwidCI6ImxlZCIsIngiOjM1"
+  "MCwieSI6MTEwLCJ3Ijo5MCwiaCI6OTAsImxhYmVsIjoiUmVkIGlzIiwibW9kZWwiOiJkb3Qi"
+  "LCJjb2xvck9uIjoiI2ZmNTI1MiIsImNvbG9yT2ZmIjoiIzJhMmEzYSIsImdyb3VwSWQiOiJn"
+  "cnBfdGVzdCJ9LHsiaWQiOiJsZWRfZ19zdGF0ZSIsInQiOiJsZWQiLCJ4Ijo0NjAsInkiOjEx"
+  "MCwidyI6OTAsImgiOjkwLCJsYWJlbCI6IkdyZWVuIGlzIiwibW9kZWwiOiJkb3QiLCJjb2xv"
+  "ck9uIjoiIzAwZmY4OCIsImNvbG9yT2ZmIjoiIzJhMmEzYSIsImdyb3VwSWQiOiJncnBfdGVz"
+  "dCJ9LHsiaWQiOiJ0b2dnbGVfbnAiLCJ0IjoidG9nZ2xlIiwieCI6ODAsInkiOjI1MCwidyI6"
+  "MTEwLCJoIjoxMTAsImxhYmVsIjoiU3RyaXAiLCJtb2RlbCI6InBpbGwiLCJncm91cElkIjoi"
+  "Z3JwX3Rlc3QifSx7ImlkIjoibnBfZWZmZWN0IiwidCI6InNlbGVjdCIsIngiOjIxMCwieSI6"
+  "MjcwLCJ3IjoxOTAsImgiOjcwLCJsYWJlbCI6IkVmZmVjdCIsIm9wdGlvbnMiOiJTb2xpZCxS"
+  "YWluYm93LEtuaWdodCBSaWRlcixEdWVsIGV5ZSxGcmVuY2ggZmxhZyIsImdyb3VwSWQiOiJn"
+  "cnBfdGVzdCJ9LHsiaWQiOiJucF9yIiwidCI6InNsaWRlciIsIngiOjgwLCJ5Ijo0MDAsInci"
+  "OjgwLCJoIjoxOTAsImxhYmVsIjoiUiIsIm1heCI6MjU1LCJ2YWx1ZSI6MjU1LCJncm91cElk"
+  "IjoiZ3JwX3Rlc3QifSx7ImlkIjoibnBfZyIsInQiOiJzbGlkZXIiLCJ4IjoxODAsInkiOjQw"
+  "MCwidyI6ODAsImgiOjE5MCwibGFiZWwiOiJHIiwibWF4IjoyNTUsInZhbHVlIjowLCJncm91"
+  "cElkIjoiZ3JwX3Rlc3QifSx7ImlkIjoibnBfYiIsInQiOiJzbGlkZXIiLCJ4IjoyODAsInki"
+  "OjQwMCwidyI6ODAsImgiOjE5MCwibGFiZWwiOiJCIiwibWF4IjoyNTUsInZhbHVlIjowLCJn"
+  "cm91cElkIjoiZ3JwX3Rlc3QifSx7ImlkIjoibnBfYnJpZ2h0IiwidCI6InNsaWRlciIsIngi"
+  "OjM5MCwieSI6NDAwLCJ3IjoxMDAsImgiOjE5MCwibGFiZWwiOiJCcmlnaHQiLCJtYXgiOjI1"
+  "NSwic3RlcCI6NSwidmFsdWUiOjE1LCJncm91cElkIjoiZ3JwX3Rlc3QifSx7ImlkIjoibGV2"
+  "ZWwiLCJ0Ijoic2VsZWN0IiwieCI6ODAsInkiOjYzMCwidyI6MjAwLCJoIjo3MCwibGFiZWwi"
+  "OiJUZXN0Iiwib3B0aW9ucyI6IkJlZ2lubmVyLEV4cGVydCxNb3RvcnMsRGlzdGFuY2UsTGln"
+  "aHRzLFNvdW5kLERpc3BsYXksUG93ZXIiLCJncm91cElkIjoiZ3JwX3Rlc3QifSx7ImlkIjoi"
+  "bGJsX2hpbnQiLCJ0IjoibGFiZWwiLCJ4Ijo4MCwieSI6NzQwLCJ3Ijo0NzAsImgiOjYwLCJs"
+  "YWJlbCI6IlN3aXRjaCB0aGUgbGlnaHRzIG9uLCB0aGVuIG1peCBhIGNvbG91ci4iLCJtb2Rl"
+  "bCI6ImNhcmQifV19";
+
+static const char* LAYOUT_CFG_TEST_SOUND_BASE64 =
+  "eyJzY2hlbWFWZXJzaW9uIjoxLCJ0aXRsZSI6ImIzIC0gU291bmQgdGVzdCIsImNhbnZhcyI6"
+  "eyJ3Ijo1NzAsImgiOjQ4Nn0sIndpZGdldHMiOlt7ImlkIjoiZ3JwX3Rlc3QiLCJ0IjoiZ3Jv"
+  "dXAiLCJsYWJlbCI6IlNPVU5EIiwiY29sb3IiOiIjZmY1YzhhIiwieCI6NTYsInkiOjQyLCJ3"
+  "Ijo0NTgsImgiOjMxMiwiY2hpbGRyZW4iOlsiYnRuX2hvcm4iLCJidG5fYnV6eiIsInNvdW5k"
+  "X2FsZXJ0IiwibGV2ZWwiXX0seyJpZCI6ImJ0bl9ob3JuIiwidCI6ImJ1dHRvbiIsIngiOjgw"
+  "LCJ5IjoxMDAsInciOjEyMCwiaCI6MTIwLCJsYWJlbCI6Ikhvcm4iLCJtb2RlbCI6Im5lbyIs"
+  "Imdyb3VwSWQiOiJncnBfdGVzdCJ9LHsiaWQiOiJidG5fYnV6eiIsInQiOiJidXR0b24iLCJ4"
+  "IjoyMzAsInkiOjEwMCwidyI6MTIwLCJoIjoxMjAsImxhYmVsIjoiQnV6eiIsIm1vZGVsIjoi"
+  "bmVvIiwiZ3JvdXBJZCI6ImdycF90ZXN0In0seyJpZCI6InNvdW5kX2FsZXJ0IiwidCI6InNv"
+  "dW5kIiwieCI6MzgwLCJ5IjoxMDUsInciOjExMCwiaCI6MTEwLCJsYWJlbCI6IkFsZXJ0Iiwi"
+  "Z3JvdXBJZCI6ImdycF90ZXN0In0seyJpZCI6ImxldmVsIiwidCI6InNlbGVjdCIsIngiOjgw"
+  "LCJ5IjoyNjAsInciOjIwMCwiaCI6NzAsImxhYmVsIjoiVGVzdCIsIm9wdGlvbnMiOiJCZWdp"
+  "bm5lcixFeHBlcnQsTW90b3JzLERpc3RhbmNlLExpZ2h0cyxTb3VuZCxEaXNwbGF5LFBvd2Vy"
+  "IiwiZ3JvdXBJZCI6ImdycF90ZXN0In0seyJpZCI6ImxibF9oaW50IiwidCI6ImxhYmVsIiwi"
+  "eCI6ODAsInkiOjM3MCwidyI6NDEwLCJoIjo2MCwibGFiZWwiOiJFYWNoIGJ1dHRvbiBtYWtl"
+  "cyBhIGRpZmZlcmVudCBzb3VuZC4iLCJtb2RlbCI6ImNhcmQifV19";
+
+static const char* LAYOUT_CFG_TEST_DISPLAY_BASE64 =
+  "eyJzY2hlbWFWZXJzaW9uIjoxLCJ0aXRsZSI6ImIzIC0gRGlzcGxheSB0ZXN0IiwiY2FudmFz"
+  "Ijp7InciOjc5MCwiaCI6NDQ2fSwid2lkZ2V0cyI6W3siaWQiOiJncnBfdGVzdCIsInQiOiJn"
+  "cm91cCIsImxhYmVsIjoiRElTUExBWSIsImNvbG9yIjoiIzAwZTVmZiIsIngiOjU2LCJ5Ijo0"
+  "MiwidyI6Njc4LCJoIjoyNzIsImNoaWxkcmVuIjpbIm9sZWRfdGV4dCIsImxibF9vbGVkIiwi"
+  "bGV2ZWwiXX0seyJpZCI6Im9sZWRfdGV4dCIsInQiOiJlZGl0ZmllbGQiLCJ4Ijo4MCwieSI6"
+  "MTAwLCJ3IjozMDAsImgiOjgwLCJsYWJlbCI6IldyaXRlIGhlcmUiLCJwbGFjZWhvbGRlciI6"
+  "IlR5cGUgeW91ciBuYW1lLi4uIiwiZ3JvdXBJZCI6ImdycF90ZXN0In0seyJpZCI6ImxibF9v"
+  "bGVkIiwidCI6ImxhYmVsIiwieCI6NDEwLCJ5IjoxMDUsInciOjMwMCwiaCI6NzAsImxhYmVs"
+  "IjoiU2NyZWVuIHNob3dzIiwibW9kZWwiOiJjYXJkIiwiZ3JvdXBJZCI6ImdycF90ZXN0In0s"
+  "eyJpZCI6ImxldmVsIiwidCI6InNlbGVjdCIsIngiOjgwLCJ5IjoyMjAsInciOjIwMCwiaCI6"
+  "NzAsImxhYmVsIjoiVGVzdCIsIm9wdGlvbnMiOiJCZWdpbm5lcixFeHBlcnQsTW90b3JzLERp"
+  "c3RhbmNlLExpZ2h0cyxTb3VuZCxEaXNwbGF5LFBvd2VyIiwiZ3JvdXBJZCI6ImdycF90ZXN0"
+  "In0seyJpZCI6ImxibF9oaW50IiwidCI6ImxhYmVsIiwieCI6ODAsInkiOjMzMCwidyI6NjMw"
+  "LCJoIjo2MCwibGFiZWwiOiJUeXBlLCB0aGVuIGxvb2sgYXQgdGhlIHJvYm90J3MgbGl0dGxl"
+  "IHNjcmVlbi4iLCJtb2RlbCI6ImNhcmQifV19";
+
+static const char* LAYOUT_CFG_TEST_POWER_BASE64 =
+  "eyJzY2hlbWFWZXJzaW9uIjoxLCJ0aXRsZSI6ImIzIC0gUG93ZXIgdGVzdCIsImNhbnZhcyI6"
+  "eyJ3Ijo2ODAsImgiOjY1Nn0sIndpZGdldHMiOlt7ImlkIjoiZ3JwX3Rlc3QiLCJ0IjoiZ3Jv"
+  "dXAiLCJsYWJlbCI6IlBPV0VSIiwiY29sb3IiOiIjM2RkYzk3IiwieCI6NTYsInkiOjQyLCJ3"
+  "Ijo1NjgsImgiOjQ4MiwiY2hpbGRyZW4iOlsiYmF0dGVyeV9sZXZlbCIsImxibF92YmF0Iiwi"
+  "Z2F1Z2VfcnNzaSIsImJ0bl9idXp6IiwibGV2ZWwiXX0seyJpZCI6ImJhdHRlcnlfbGV2ZWwi"
+  "LCJ0IjoiYmF0dGVyeSIsIngiOjgwLCJ5IjoxMDAsInciOjkwLCJoIjoxMjAsImxhYmVsIjoi"
+  "QmF0dGVyeSIsIm1vZGVsIjoidmVydGljYWwiLCJncm91cElkIjoiZ3JwX3Rlc3QifSx7Imlk"
+  "IjoibGJsX3ZiYXQiLCJ0IjoibGFiZWwiLCJ4IjoyMDAsInkiOjEyMCwidyI6MjIwLCJoIjo2"
+  "MCwibGFiZWwiOiJWb2x0cyIsIm1vZGVsIjoiY2FyZCIsImdyb3VwSWQiOiJncnBfdGVzdCJ9"
+  "LHsiaWQiOiJnYXVnZV9yc3NpIiwidCI6ImdhdWdlIiwieCI6NDUwLCJ5IjoxMDAsInciOjE1"
+  "MCwiaCI6MTkwLCJsYWJlbCI6IlNpZ25hbCIsIm1pbiI6LTEwMCwibWF4IjotMzAsInVuaXRz"
+  "IjoiZEJtIiwiZGVjaW1hbHMiOjAsImdyb3VwSWQiOiJncnBfdGVzdCJ9LHsiaWQiOiJidG5f"
+  "YnV6eiIsInQiOiJidXR0b24iLCJ4Ijo4MCwieSI6MjcwLCJ3IjoxMjAsImgiOjEyMCwibGFi"
+  "ZWwiOiJCdXp6IiwibW9kZWwiOiJuZW8iLCJncm91cElkIjoiZ3JwX3Rlc3QifSx7ImlkIjoi"
+  "bGV2ZWwiLCJ0Ijoic2VsZWN0IiwieCI6ODAsInkiOjQzMCwidyI6MjAwLCJoIjo3MCwibGFi"
+  "ZWwiOiJUZXN0Iiwib3B0aW9ucyI6IkJlZ2lubmVyLEV4cGVydCxNb3RvcnMsRGlzdGFuY2Us"
+  "TGlnaHRzLFNvdW5kLERpc3BsYXksUG93ZXIiLCJncm91cElkIjoiZ3JwX3Rlc3QifSx7Imlk"
+  "IjoibGJsX2hpbnQiLCJ0IjoibGFiZWwiLCJ4Ijo4MCwieSI6NTQwLCJ3Ijo1MjAsImgiOjYw"
+  "LCJsYWJlbCI6IkJ1enogdXNlcyB0aGUgc2FtZSBwaW4gYXMgdGhlIGJhdHRlcnkgc2Vuc29y"
+  "IC0tIHdhdGNoIHRoZSB2b2x0cy4iLCJtb2RlbCI6ImNhcmQifV19";
 
 // ===========================================================================
 // State
@@ -360,7 +498,7 @@ static void layoutLevelLoad(void) {
     s_layout_level = s_prefs.getUChar("level", LAYOUT_BEGINNER);
     s_prefs.end();
   }
-  if (s_layout_level > LAYOUT_EXPERT) s_layout_level = LAYOUT_BEGINNER;
+  if (s_layout_level >= LAYOUT_COUNT) s_layout_level = LAYOUT_BEGINNER;
 }
 
 static void layoutLevelStore(uint8_t lvl) {
@@ -402,13 +540,61 @@ static String   s_lastOled        = "";
 static int8_t   s_lastLedR        = -1;
 static int8_t   s_lastLedG        = -1;   // impossible first value -> always sends once
 
-// The beginner layout carries only dpad/joystick/horn, the two gauges, the
-// sound widget, battery, level and the logo. Everything else in the expert
-// layout simply does not exist there, so publishing it would be notifications
-// sent to widget ids no panel contains — pure waste on the same radio that
-// this file already works hard to keep out of rc=6.
-static inline bool telemExpertOnly(void) {
-  return s_layout_level == LAYOUT_EXPERT;
+
+// ---------------------------------------------------------------------------
+// Which blob each mode serves, and which telemetry ids that panel contains.
+//
+// The old code gated telemetry on "is this the expert layout", which stopped
+// working the moment there was more than one small panel: a Sound panel has no
+// gauges at all, and publishing to widget ids the active layout does not
+// contain is a notification into nothing. One bit per readout keeps each
+// sender honest about where its value is actually displayed.
+// ---------------------------------------------------------------------------
+#define T_DIST   (1u<<0)
+#define T_SPEED  (1u<<1)
+#define T_BATT   (1u<<2)
+#define T_GRAPH  (1u<<3)
+#define T_ALERT  (1u<<4)
+#define T_VER    (1u<<5)
+#define T_UPTIME (1u<<6)
+#define T_VBAT   (1u<<7)
+#define T_RSSI   (1u<<8)
+#define T_BTN    (1u<<9)
+#define T_LEDS   (1u<<10)
+#define T_OLED   (1u<<11)
+#define T_UPDSEL (1u<<12)
+
+static const char* const LAYOUT_BLOBS[LAYOUT_COUNT] = {
+  LAYOUT_CFG_BEGINNER_BASE64,
+  LAYOUT_CFG_EXPERT_BASE64,
+  LAYOUT_CFG_TEST_MOTORS_BASE64,
+  LAYOUT_CFG_TEST_DISTANCE_BASE64,
+  LAYOUT_CFG_TEST_LIGHTS_BASE64,
+  LAYOUT_CFG_TEST_SOUND_BASE64,
+  LAYOUT_CFG_TEST_DISPLAY_BASE64,
+  LAYOUT_CFG_TEST_POWER_BASE64,
+};
+
+static const uint16_t LAYOUT_TELEM[LAYOUT_COUNT] = {
+  /* Beginner */ T_DIST | T_SPEED | T_BATT,
+  /* Expert   */ 0xFFFF,
+  /* Motors   */ T_SPEED,
+  /* Distance */ T_DIST | T_GRAPH | T_ALERT,
+  /* Lights   */ T_LEDS,
+  /* Sound    */ 0,
+  /* Display  */ T_OLED,
+  /* Power    */ T_BATT | T_VBAT | T_RSSI,
+};
+
+// Names shown in the Level select. Must match the enum order and the options
+// string baked into every layout's `level` widget.
+static const char* const LEVEL_NAMES[LAYOUT_COUNT] = {
+  "Beginner", "Expert", "Motors", "Distance",
+  "Lights", "Sound", "Display", "Power"
+};
+
+static inline bool modeHas(uint16_t bit) {
+  return (LAYOUT_TELEM[s_layout_level] & bit) != 0;
 }
 
 // Returns true (and latches the new value) when `now` has moved far enough
@@ -531,8 +717,7 @@ static void sendCfg() {
   // can't drain notify()'s buffer pool fast enough (rc=6 / BLE_HS_ENOMEM
   // on nearly every packet). Give the renegotiation time to land first.
   delay(300);
-  const char* p  = (s_layout_level == LAYOUT_EXPERT) ? LAYOUT_CFG_EXPERT_BASE64
-                                                     : LAYOUT_CFG_BEGINNER_BASE64;
+  const char* p  = LAYOUT_BLOBS[s_layout_level];
   const size_t n = strlen(p);
 
   // Chunk size follows the negotiated MTU rather than the rxy MakeCode
@@ -780,7 +965,10 @@ static void handleWidget(const String& id, const String& val) {
 
   // --- SYSTEM --------------------------------------------------------------
   if (id == "level") {
-    const uint8_t want = (val == "Expert") ? LAYOUT_EXPERT : LAYOUT_BEGINNER;
+    uint8_t want = LAYOUT_BEGINNER;
+    for (uint8_t i = 0; i < LAYOUT_COUNT; ++i) {
+      if (val == LEVEL_NAMES[i]) { want = i; break; }
+    }
     if (want == s_layout_level) return;
     layoutLevelStore(want);
     // Re-send the whole CFG so the app re-renders on the new layout with no
@@ -812,7 +1000,7 @@ void remotexy_init(void) {
   layoutLevelLoad();
   #ifdef DEF_DERIAL_DEBUG
   Serial.printf("[BLE] layout level: %s\n",
-                s_layout_level == LAYOUT_EXPERT ? "Expert" : "Beginner");
+                LEVEL_NAMES[s_layout_level]);
   #endif
 
   NimBLEDevice::init(CONFIG_BLE_DEVICE_NAME);
@@ -918,18 +1106,21 @@ void remotexy_set_button_01(uint8_t p_button_01) {
 // doing right now, so they survive everything except Telemetry = Off. All three
 // display whole numbers, so a deadband of 1 costs nothing visible.
 void remotexy_set_onlineGraph_01_distance(float p_onlineGraph_01_distance) {
+  if (!modeHas(T_DIST)) return;
   if (s_upd_level == UPD_OFF) return;
   if (!telemChanged(p_onlineGraph_01_distance, s_lastDist, 1.0f)) return;
   sendValue("gauge_distance", String(p_onlineGraph_01_distance, 0));
 }
 
 void remotexy_set_onlineGraph_02_speed( float p_onlineGraph_02_speed) {
+  if (!modeHas(T_SPEED)) return;
   if (s_upd_level == UPD_OFF) return;
   if (!telemChanged(p_onlineGraph_02_speed, s_lastSpeed, 1.0f)) return;
   sendValue("gauge_speed", String(p_onlineGraph_02_speed, 0));
 }
 
 void remotexy_set_onlineGraph_03_battery( float p_onlineGraph_03_battery) {
+  if (!modeHas(T_BATT)) return;
   if (s_upd_level == UPD_OFF) return;
   if (!telemChanged(p_onlineGraph_03_battery, s_lastBatt, 1.0f)) return;
   sendValue("battery_level", String(p_onlineGraph_03_battery, 0));
@@ -941,7 +1132,7 @@ void remotexy_set_onlineGraph_03_battery( float p_onlineGraph_03_battery) {
 // the one value that genuinely wants every cycle — which is why it is "All"
 // only.
 void remotexy_send_graph_distance(float cm) {
-  if (!telemExpertOnly()) return;   // graph_dist exists only in the expert layout
+  if (!modeHas(T_GRAPH)) return;   // graph_dist is not on this panel
   if (s_upd_level != UPD_ALL) return;
   sendValue("graph_dist", String(cm, 0));
 }
@@ -950,7 +1141,7 @@ void remotexy_send_graph_distance(float cm) {
 // this fires once on entering the obstacle band and re-arms only after the
 // robot has backed well clear of it.
 void remotexy_send_obstacle_alert(float cm) {
-  if (!telemExpertOnly()) return;   // `alert` exists only in the expert layout
+  if (!modeHas(T_ALERT)) return;   // alert is not on this panel
   if (s_upd_level == UPD_OFF) return;
   // A zero reading means "no echo", not "wall against the sensor" — treating
   // it as an obstacle would fire the alert continuously with nothing there.
@@ -968,11 +1159,11 @@ void remotexy_send_obstacle_alert(float cm) {
 // there is no value in spending a notification per cycle on a string that
 // rarely changes.
 void remotexy_send_system_labels(void) {
-  if (!telemExpertOnly()) return;   // lbl_* exist only in the expert layout
+  if (!modeHas(T_VER | T_UPTIME | T_VBAT)) return;   // no labels on this panel
   if (s_upd_level != UPD_ALL) return;
 
   // The version string never changes at runtime — one send per CFG is enough.
-  if (s_telemForce || !s_verSent) {
+  if (modeHas(T_VER) && (s_telemForce || !s_verSent)) {
     sendValue("lbl_ver", B3_FIRMWARE_VERSION);
     s_verSent = true;
   }
@@ -982,7 +1173,7 @@ void remotexy_send_system_labels(void) {
   const uint32_t upSec = g_elapsed_time_hours * 3600u
                        + g_elapsed_time_minutes * 60u
                        + g_elapsed_time_seconds;
-  if (s_telemForce || upSec != s_lastUptimeSec) {
+  if (modeHas(T_UPTIME) && (s_telemForce || upSec != s_lastUptimeSec)) {
     s_lastUptimeSec = upSec;
     char up[16];
     snprintf(up, sizeof(up), "%02u:%02u:%02u",
@@ -995,7 +1186,7 @@ void remotexy_send_system_labels(void) {
   // The battery widget already shows percentage; the raw voltage is what
   // actually reveals a sagging cell, so publish both. 0.05V deadband keeps
   // ADC noise from making the last decimal flicker every cycle.
-  if (telemChanged(g_battery_voltage, s_lastVbat, 0.05f)) {
+  if (modeHas(T_VBAT) && telemChanged(g_battery_voltage, s_lastVbat, 0.05f)) {
     sendValue("lbl_vbat", String(g_battery_voltage, 2) + "V");
   }
 }
@@ -1003,7 +1194,7 @@ void remotexy_send_system_labels(void) {
 // Board push button, mirrored as an indicator. On change only — it is the only
 // physical input the robot has and it spends nearly all of its time released.
 void remotexy_send_button_state(void) {
-  if (!telemExpertOnly()) return;   // led_button exists only in the expert layout
+  if (!modeHas(T_BTN)) return;   // led_button is not on this panel
   if (s_upd_level == UPD_OFF) return;
   const int8_t now = button_pressed() ? 1 : 0;
   if (!s_telemForce && now == s_lastBtn) return;
@@ -1016,7 +1207,7 @@ void remotexy_send_button_state(void) {
 // non-zero if that handle is stale — in which case publish nothing rather
 // than a fabricated number.
 void remotexy_send_link_rssi(void) {
-  if (!telemExpertOnly()) return;   // gauge_rssi exists only in the expert layout
+  if (!modeHas(T_RSSI)) return;   // gauge_rssi is not on this panel
   if (s_upd_level != UPD_ALL) return;
   if (s_connHandle == BLE_HS_CONN_HANDLE_NONE) return;
   int8_t rssi = 0;
@@ -1034,7 +1225,7 @@ void remotexy_send_link_rssi(void) {
 // with no override the screen shows its banner instead. Sent on change only —
 // this string is static most of the time.
 void remotexy_send_oled_mirror(void) {
-  if (!telemExpertOnly()) return;   // lbl_oled exists only in the expert layout
+  if (!modeHas(T_OLED)) return;   // lbl_oled is not on this panel
   if (s_upd_level == UPD_OFF) return;
   const String now = oled_text_active()
                        ? String(oled_text_get())
@@ -1052,7 +1243,7 @@ void remotexy_send_oled_mirror(void) {
 // intent rather than blink phase they are steady, so a parked robot costs
 // nothing here even while the status indicator is actively flashing.
 void remotexy_send_led_state(void) {
-  if (!telemExpertOnly()) return;   // the indicators exist only in expert
+  if (!modeHas(T_LEDS)) return;   // led_r/g_state is not on this panel
   if (s_upd_level == UPD_OFF) return;
   const int8_t r = leds_state_r() ? 1 : 0;
   const int8_t g = leds_state_g() ? 1 : 0;
@@ -1069,9 +1260,9 @@ void remotexy_send_led_state(void) {
 void remotexy_send_control_echo(void) {
   if (!s_telemForce) return;   // only after a CFG transfer; they cannot drift
   // `level` is in BOTH layouts — it is the way back — so it is always echoed.
-  sendValue("level", s_layout_level == LAYOUT_EXPERT ? "Expert" : "Beginner");
+  sendValue("level", LEVEL_NAMES[s_layout_level]);
   // `upd` only exists in the expert layout.
-  if (!telemExpertOnly()) return;
+  if (!modeHas(T_UPDSEL)) return;
   sendValue("upd", s_upd_level == UPD_OFF   ? "Off"
                  : s_upd_level == UPD_BASIC ? "Basic"
                                             : "All");

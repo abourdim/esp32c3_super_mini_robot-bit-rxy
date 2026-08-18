@@ -1,0 +1,173 @@
+{
+ "schemaVersion": 1,
+ "title": "b3 - Lights test",
+ "canvas": {
+  "w": 630,
+  "h": 856
+ },
+ "widgets": [
+  {
+   "id": "grp_test",
+   "t": "group",
+   "label": "LIGHTS",
+   "color": "#7c5cff",
+   "x": 56,
+   "y": 42,
+   "w": 518,
+   "h": 682,
+   "children": [
+    "toggle_led_r",
+    "toggle_led_g",
+    "led_r_state",
+    "led_g_state",
+    "toggle_np",
+    "np_effect",
+    "np_r",
+    "np_g",
+    "np_b",
+    "np_bright",
+    "level"
+   ]
+  },
+  {
+   "id": "toggle_led_r",
+   "t": "toggle",
+   "x": 80,
+   "y": 100,
+   "w": 110,
+   "h": 110,
+   "label": "Red LED",
+   "model": "pill",
+   "groupId": "grp_test"
+  },
+  {
+   "id": "toggle_led_g",
+   "t": "toggle",
+   "x": 210,
+   "y": 100,
+   "w": 110,
+   "h": 110,
+   "label": "Green LED",
+   "model": "pill",
+   "groupId": "grp_test"
+  },
+  {
+   "id": "led_r_state",
+   "t": "led",
+   "x": 350,
+   "y": 110,
+   "w": 90,
+   "h": 90,
+   "label": "Red is",
+   "model": "dot",
+   "colorOn": "#ff5252",
+   "colorOff": "#2a2a3a",
+   "groupId": "grp_test"
+  },
+  {
+   "id": "led_g_state",
+   "t": "led",
+   "x": 460,
+   "y": 110,
+   "w": 90,
+   "h": 90,
+   "label": "Green is",
+   "model": "dot",
+   "colorOn": "#00ff88",
+   "colorOff": "#2a2a3a",
+   "groupId": "grp_test"
+  },
+  {
+   "id": "toggle_np",
+   "t": "toggle",
+   "x": 80,
+   "y": 250,
+   "w": 110,
+   "h": 110,
+   "label": "Strip",
+   "model": "pill",
+   "groupId": "grp_test"
+  },
+  {
+   "id": "np_effect",
+   "t": "select",
+   "x": 210,
+   "y": 270,
+   "w": 190,
+   "h": 70,
+   "label": "Effect",
+   "options": "Solid,Rainbow,Knight Rider,Duel eye,French flag",
+   "groupId": "grp_test"
+  },
+  {
+   "id": "np_r",
+   "t": "slider",
+   "x": 80,
+   "y": 400,
+   "w": 80,
+   "h": 190,
+   "label": "R",
+   "max": 255,
+   "value": 255,
+   "groupId": "grp_test"
+  },
+  {
+   "id": "np_g",
+   "t": "slider",
+   "x": 180,
+   "y": 400,
+   "w": 80,
+   "h": 190,
+   "label": "G",
+   "max": 255,
+   "value": 0,
+   "groupId": "grp_test"
+  },
+  {
+   "id": "np_b",
+   "t": "slider",
+   "x": 280,
+   "y": 400,
+   "w": 80,
+   "h": 190,
+   "label": "B",
+   "max": 255,
+   "value": 0,
+   "groupId": "grp_test"
+  },
+  {
+   "id": "np_bright",
+   "t": "slider",
+   "x": 390,
+   "y": 400,
+   "w": 100,
+   "h": 190,
+   "label": "Bright",
+   "max": 255,
+   "step": 5,
+   "value": 15,
+   "groupId": "grp_test"
+  },
+  {
+   "id": "level",
+   "t": "select",
+   "x": 80,
+   "y": 630,
+   "w": 200,
+   "h": 70,
+   "label": "Test",
+   "options": "Beginner,Expert,Motors,Distance,Lights,Sound,Display,Power",
+   "groupId": "grp_test"
+  },
+  {
+   "id": "lbl_hint",
+   "t": "label",
+   "x": 80,
+   "y": 740,
+   "w": 470,
+   "h": 60,
+   "label": "Switch the lights on, then mix a colour.",
+   "model": "card"
+  }
+ ]
+}

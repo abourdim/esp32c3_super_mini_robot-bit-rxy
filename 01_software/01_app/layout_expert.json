@@ -411,7 +411,7 @@
    "w": 160,
    "h": 70,
    "label": "Level",
-   "options": "Beginner,Expert",
+   "options": "Beginner,Expert,Motors,Distance,Lights,Sound,Display,Power",
    "groupId": "grp_sys"
   },
   {
