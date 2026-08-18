@@ -350,7 +350,7 @@ a:hover { text-decoration: underline; }
     <div class="help-content active" id="helpFaq">
       <details class="help-item">
         <summary data-i18n="faq_q1">What is this robot?</summary>
-        <p data-i18n="faq_a1">An ESP32-C3 RISC-V robot with servos, NeoPixels, OLED, ultrasonic sensor, and Bluetooth control via RemoteXY.</p>
+        <p data-i18n="faq_a1">An ESP32-C3 RISC-V robot with servos, NeoPixels, OLED, ultrasonic sensor, and Bluetooth control from a browser, no app to install.</p>
       </details>
       <details class="help-item">
         <summary data-i18n="faq_q2">How do I flash firmware?</summary>
@@ -649,7 +649,7 @@ a:hover { text-decoration: underline; }
 │   ├── 01_src.ino               <span class="c"># entry point (setup + loop)</span>
 │   ├── 00_config.h              <span class="c"># pin map</span>
 │   ├── 02_data.{h,cpp}          <span class="c"># shared state</span>
-│   ├── 03_remotexy.{h,cpp}      <span class="c"># 📱 phone control</span>
+│   ├── 03_bit-rxy.{h,cpp}      <span class="c"># 📱 phone control</span>
 │   ├── 05_buzzer.{h,cpp}        <span class="c"># 🔊 sounds</span>
 │   ├── 06_neopixels.{h,cpp}     <span class="c"># 💡 LEDs</span>
 │   ├── 09_servos.{h,cpp}        <span class="c"># 🦾 motors</span>
@@ -738,7 +738,7 @@ build_flags =
     -D FASTLED_RMT_BUILTIN_DRIVER=1  ; <span style="color:var(--accent)">use IDF's tested RMT driver</span>
 
 lib_deps =
-    RemoteXY                         ; <span style="color:var(--accent)">phone control via BLE</span>
+    bit-rxy                         ; <span style="color:var(--accent)">phone control via BLE</span>
     fastled/FastLED @ ^3.7.0         ; <span style="color:var(--accent)">NeoPixel (version pinned)</span>
     madhephaestus/ESP32Servo         ; <span style="color:var(--accent)">servo library</span>
     adafruit/Adafruit GFX Library    ; <span style="color:var(--accent)">OLED graphics</span>
@@ -1146,7 +1146,7 @@ python -m platformio pkg update</code></pre>
           </div>
           <div class="m-cell">
             <span class="m-badge warn">3</span><h3 style="display:inline">Install 5 libraries</h3>
-            <p>Library Manager: <code>FastLED</code>, <code>ESP32Servo</code>, <code>Adafruit GFX Library</code>, <code>Adafruit SSD1306</code>, <code>RemoteXY</code></p>
+            <p>Library Manager: <code>FastLED</code>, <code>ESP32Servo</code>, <code>Adafruit GFX Library</code>, <code>Adafruit SSD1306</code>, <code>NimBLE-Arduino</code></p>
           </div>
           <div class="m-cell">
             <span class="m-badge info">4</span><h3 style="display:inline">Pick the board</h3>
@@ -1235,7 +1235,7 @@ if (typeof LANG !== 'undefined') {
   LANG.en.title    = 'esp32-c3-robot-app';
   LANG.en.subtitle = '🤖 explore · 🛠️ build · 🚀 deploy';
   LANG.en.faq_q1   = 'What is this robot?';
-  LANG.en.faq_a1   = 'An ESP32-C3 RISC-V robot with servos, NeoPixels, OLED, ultrasonic sensor, and Bluetooth phone control via RemoteXY.';
+  LANG.en.faq_a1   = 'An ESP32-C3 RISC-V robot with servos, NeoPixels, OLED, ultrasonic sensor, and Bluetooth control from a browser, no app to install.';
   LANG.en.faq_q2   = 'How do I flash firmware?';
   LANG.en.faq_a2   = 'Run ./launch.sh → option 10 (full flash = compile + upload + monitor).';
   LANG.en.faq_q3   = 'Upload fails — what now?';
@@ -1251,7 +1251,7 @@ if (typeof LANG !== 'undefined') {
   LANG.fr.title    = 'esp32-c3-robot-app';
   LANG.fr.subtitle = '🤖 explorer · 🛠️ construire · 🚀 déployer';
   LANG.fr.faq_q1   = 'C\'est quoi ce robot ?';
-  LANG.fr.faq_a1   = 'Un robot ESP32-C3 RISC-V avec servos, NeoPixels, OLED, capteur ultrasonique et commande Bluetooth via RemoteXY.';
+  LANG.fr.faq_a1   = 'Un robot ESP32-C3 RISC-V avec servos, NeoPixels, OLED, capteur ultrasonique et commande Bluetooth depuis un navigateur, sans application &agrave; installer.';
   LANG.fr.faq_q2   = 'Comment flasher le firmware ?';
   LANG.fr.faq_a2   = 'Lance ./launch.sh → option 10 (flash complet = compilation + upload + monitoring).';
   LANG.fr.faq_q3   = 'L\'upload échoue — que faire ?';
@@ -1267,7 +1267,7 @@ if (typeof LANG !== 'undefined') {
   LANG.ar.title    = 'تطبيق-روبوت-ESP32';
   LANG.ar.subtitle = '🤖 استكشف · 🛠️ ابنِ · 🚀 انشر';
   LANG.ar.faq_q1   = 'ما هذا الروبوت؟';
-  LANG.ar.faq_a1   = 'روبوت ESP32-C3 RISC-V مع سيرفو ومصابيح NeoPixels وشاشة OLED ومستشعر موجات فوق صوتية وتحكم بلوتوث عبر RemoteXY.';
+  LANG.ar.faq_a1   = 'روبوت ESP32-C3 RISC-V مع سيرفو ومصابيح NeoPixels وشاشة OLED ومستشعر موجات فوق صوتية وتحكم بلوتوث من المتصفح بدون تطبيق.';
   LANG.ar.faq_q2   = 'كيف أرفع الفيرموير؟';
   LANG.ar.faq_a2   = 'شغّل ./launch.sh ← اختر option 10 (رفع كامل = تجميع + رفع + مراقبة).';
   LANG.ar.faq_q3   = 'فشل الرفع — ماذا أفعل؟';

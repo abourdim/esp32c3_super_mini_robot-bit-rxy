@@ -222,7 +222,7 @@ details.collapsible > summary { font-size: .95rem; }
           <div class="ug-tile">
             <span class="icon">📱</span>
             <h3>Listen</h3>
-            <p>Bluetooth → talks to your phone over a free RemoteXY app. No WiFi needed.</p>
+            <p>Bluetooth &rarr; talks to a web page in Chrome. No app to install, no WiFi needed.</p>
           </div>
         </div>
       </div>
@@ -265,18 +265,18 @@ details.collapsible > summary { font-size: .95rem; }
     <details class="collapsible" id="pair">
       <summary>📱 3 — Connect your phone</summary>
       <div class="card">
-        <p class="lead">Robot-01 is controlled from a free app called <strong>RemoteXY</strong>. It uses Bluetooth, so no WiFi or internet is needed.</p>
+        <p class="lead">Robot-01 is controlled from a <strong>web page</strong>, not an installed app. Open it in Chrome and it talks to the robot over Bluetooth &mdash; no WiFi, no internet, no account, nothing to download.</p>
 
         <ol class="steps">
-          <li>Open the App Store (iOS) or Play Store (Android). Search for <strong>RemoteXY</strong>. Install the app — it's free.</li>
+          <li>Open <strong>Chrome</strong> (or Edge). Safari and Firefox cannot do Bluetooth from a web page.</li>
+          <li>Go to the remote page your teacher gives you, and leave it open.</li>
           <li>Power on Robot-01 (see section <strong>2</strong>). Make sure the OLED shows <code>READY</code>.</li>
-          <li>Open RemoteXY → tap <strong>+ New connection</strong> → pick <strong>Bluetooth</strong>.</li>
-          <li>The app scans. After a few seconds you'll see <code>RemoteXY</code> or <code>Robot-01</code> in the list. Tap it.</li>
-          <li>Phone will ask to pair. Confirm. The buzzer plays a short <em>connect</em> jingle.</li>
-          <li>The app loads the control screen — joystick, button, and battery gauge appear. The robot's status LED turns 🔵 <strong>blue</strong> = connected.</li>
+          <li>Press <strong>Connect</strong>. A little window lists nearby robots &mdash; pick <code>diy_app_b3</code>.</li>
+          <li>The buzzer plays a short <em>connect</em> jingle and the green light comes on.</li>
+          <li>Wait a second or two while the robot <em>sends its own buttons</em> to the page. A progress bar counts them. Then the controls appear by themselves.</li>
         </ol>
 
-        <div class="phone-mock" aria-label="RemoteXY control screen mockup">
+        <div class="phone-mock" aria-label="robot control screen mockup">
           <div class="screen-title">ROBOT-01</div>
           <div class="joystick" aria-label="joystick"></div>
           <div class="pad-row">
@@ -289,13 +289,13 @@ details.collapsible > summary { font-size: .95rem; }
         </div>
 
         <div class="alert win">
-          <strong>// SAVED FOR NEXT TIME</strong>
-          Once paired, your phone remembers Robot-01. Next time, just open RemoteXY and tap <strong>Connect</strong> — no re-scanning.
+          <strong>// THE ROBOT BRINGS ITS OWN BUTTONS</strong>
+            Nobody designs the screen on the phone. The robot stores its layout and sends it every time you connect, so the page always matches the robot in front of you &mdash; and a different robot shows different buttons.
         </div>
-        <div class="alert warn">
-          <strong>// "NO PRO LICENSE"</strong>
-          If you see a "PRO license required" dialog, that's a known limit of the free RemoteXY tier (max 5 controls). The grown-ups need to fix it — see <a href="audit.html#bug-004">audit BUG-004</a>.
-        </div>
+        <div class="alert win">
+            <strong>// PICK WHAT YOU SEE</strong>
+            The <strong>Level</strong> box switches the whole screen. <em>Beginner</em> gives you driving and two dials. <em>Expert</em> adds lights, sound and sensors. The rest are one-job test screens &mdash; Motors, Distance, Lights, Sound, Display, Power &mdash; for checking one part of the robot at a time. Changing it takes a second and never needs re-flashing.
+          </div>
       </div>
     </details>
 
@@ -486,7 +486,7 @@ details.collapsible > summary { font-size: .95rem; }
         <ul class="simple">
           <li>Make sure Bluetooth is ON in your phone settings (not just in the app).</li>
           <li>Make sure the robot is powered on and showing <code>READY</code> on the OLED.</li>
-          <li>Force-close the RemoteXY app and reopen it.</li>
+          <li>Reload the web page in Chrome.</li>
           <li>If it still won't connect, switch the robot off, count to 5, switch it back on. Re-scan.</li>
         </ul>
 

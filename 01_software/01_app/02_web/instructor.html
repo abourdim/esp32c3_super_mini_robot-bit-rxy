@@ -198,7 +198,7 @@ details.collapsible > summary { font-size: .92rem; }
             <ul>
               <li>1× pre-assembled Robot-01</li>
               <li>1× USB-C cable (charging + flashing)</li>
-              <li>Phone or tablet with RemoteXY installed</li>
+              <li>Phone or tablet with <strong>Chrome</strong> (nothing to install)</li>
               <li>~1.5 m² floor space to drive in</li>
             </ul>
           </div>
@@ -216,7 +216,7 @@ details.collapsible > summary { font-size: .92rem; }
           <div class="prereq">
             <h4>📱 Phones &amp; apps</h4>
             <ul>
-              <li>RemoteXY app pre-installed on every device</li>
+              <li>Chrome on every device &mdash; there is no app to install</li>
               <li>Bluetooth turned on, paired with at least one robot beforehand</li>
               <li>Wi-Fi optional — robots use BT, not Wi-Fi</li>
               <li>Screen-time / parental-control allow-list if needed</li>
@@ -299,7 +299,7 @@ details.collapsible > summary { font-size: .92rem; }
           <div class="lesson-time">25:00<br>40:00</div>
           <div class="lesson-content">
             <h5>📱 Pair phones</h5>
-            <p>Open RemoteXY on each phone. Walk through pairing. Project <a href="user-guide.html#pair">user-guide § 3</a>. Expect: 2-3 phones will fail first try — bluetooth toggle / restart fixes.</p>
+            <p>Open the remote page on each phone. Walk through pressing Connect and picking the robot. Project <a href="user-guide.html#pair">user-guide § 3</a>. Expect: 2-3 phones will fail first try — bluetooth toggle / restart fixes.</p>
             <p class="obj">Objective: every student has paired and seen the connect-jingle.</p>
           </div>
           <div class="lesson-format hands-on">Hands</div>
@@ -390,7 +390,7 @@ details.collapsible > summary { font-size: .92rem; }
 
         <div class="faq-item">
           <div class="q">"Why doesn't my phone find it?"</div>
-          <div class="a">Three usual culprits: (1) Bluetooth off in phone settings, (2) robot not powered or showing READY, (3) RemoteXY needs reopening. Power-cycle the robot, restart the app.</div>
+          <div class="a">Three usual culprits: (1) Bluetooth off in phone settings, (2) robot not powered or showing READY, (3) the web page needs reloading. Power-cycle the robot, restart the app.</div>
         </div>
 
         <div class="faq-item">
@@ -421,7 +421,7 @@ details.collapsible > summary { font-size: .92rem; }
 
           <div class="cheat-block">
             <h4>📱 Phone side</h4>
-            <div class="row"><div class="what">RemoteXY won't open</div><div class="fix">Force-close + reopen. Check BT toggle.</div></div>
+            <div class="row"><div class="what">The page will not connect</div><div class="fix">Force-close + reopen. Check BT toggle.</div></div>
             <div class="row"><div class="what">Robot not in list</div><div class="fix">Power-cycle the robot. Re-scan.</div></div>
             <div class="row"><div class="what">"PRO license required"</div><div class="fix">Known issue (<a href="audit.html#bug-004">audit BUG-004</a>). Use spare robot.</div></div>
             <div class="row"><div class="what">Connects then drops</div><div class="fix">Phone too far OR low robot battery.</div></div>
@@ -481,7 +481,7 @@ details.collapsible > summary { font-size: .92rem; }
         <div class="checklist">
           <h4>📱 Phones / app state</h4>
           <label><input type="checkbox"><span>Tell students to forget the robot from their phone's BT settings (so the next group can pair)</span></label>
-          <label><input type="checkbox"><span>If using shared tablets: clear paired devices, close RemoteXY</span></label>
+          <label><input type="checkbox"><span>If using shared tablets: clear paired Bluetooth devices, close the tab</span></label>
           <label><input type="checkbox"><span>Charge all instructor tablets / phones</span></label>
         </div>
 
@@ -530,7 +530,7 @@ details.collapsible > summary { font-size: .92rem; }
               <li><a href="https://workshop-diy.org" target="_blank" rel="noopener">workshop-diy.org</a> — community + more workshops</li>
               <li><a href="https://github.com/abourdim/esp32c3_super_mini_robot-bit-rxy" target="_blank" rel="noopener">github.com/abourdim/esp32c3_super_mini_robot-bit-rxy</a> — source</li>
               <li><a href="https://docs.platformio.org" target="_blank" rel="noopener">docs.platformio.org</a> — build tools</li>
-              <li><a href="https://remotexy.com" target="_blank" rel="noopener">remotexy.com</a> — phone-app docs</li>
+              <li><a href="../../../README.md">README.md</a> — the robot serves its own layout; no phone app to document</li>
             </ul>
           </div>
 
@@ -547,7 +547,7 @@ details.collapsible > summary { font-size: .92rem; }
             <h4>🏆 Stretch goals for advanced kids</h4>
             <ul>
               <li>Add a custom LED pattern in <code>06_neopixels.cpp</code></li>
-              <li>Write a new RemoteXY screen (if PRO available)</li>
+              <li>Design a new panel in the app and export it into the firmware</li>
               <li>Use ultrasonic data to draw a "map" on OLED</li>
               <li>Add an external IR sensor for line-following</li>
             </ul>

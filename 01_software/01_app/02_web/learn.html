@@ -653,7 +653,7 @@ details.collapsible > summary { font-size: .94rem; }
             <td colspan="3" style="padding-top:14px;font-weight:700;color:var(--accent2)">lib_deps</td>
           </tr>
           <tr>
-            <td><code>RemoteXY</code></td>
+            <td><code>RemoteXY</code> <em style="opacity:.7;font-size:.85em">(historical)</em></td>
             <td>(unconstrained)</td>
             <td>Phone-app library for Bluetooth control. NOT pinned because pinning didn't fix <a href="audit.html#bug-004">BUG-004</a> (PRO check is enforced server-side, not in the lib).</td>
           </tr>
@@ -695,7 +695,7 @@ details.collapsible > summary { font-size: .94rem; }
           <strong>// PIN, OR NOT TO PIN?</strong>
           Pin <em>platforms</em> hard (<code>@ 6.7.0</code>): platform changes mean toolchain + IDF changes — high blast radius.<br>
           Pin <em>libraries</em> with caret (<code>@ ^X.Y.Z</code>): patch fixes welcome, breaking changes blocked.<br>
-          Leave <em>libraries</em> unpinned only when the lib is your own / very stable / when pinning made things worse (RemoteXY case).
+          Leave <em>libraries</em> unpinned only when the lib is your own / very stable / when pinning made things worse (the RemoteXY case &mdash; that library is no longer used here, the robot now speaks bit-rxy over NimBLE, but the reasoning still holds).
         </div>
       </div>
     </details>
