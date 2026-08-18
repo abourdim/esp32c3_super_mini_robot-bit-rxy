@@ -157,12 +157,142 @@ widget inside, a couple of pixels of overlap from a stray drag), drops the
 the firmware. It refuses to install on any validation failure rather than
 producing a broken panel.
 
+## 🔧 Hardware map
+
+From `01_software/01_app/01_src/00_config.h` — the single place these are defined.
+
+| Function | GPIO | Notes |
+|---|---|---|
+| Left drive servo | 6 | continuous rotation, 90 = stop |
+| Right drive servo | 3 | mounted mirrored, so its pulse range is inverted |
+| Red LED | 10 | link status **and** app-controllable — see below |
+| Green LED | 1 | link status **and** app-controllable |
+| Buzzer | **4** | shares its pin with battery sense |
+| Battery sense (ADC) | **4** | shares its pin with the buzzer |
+| NeoPixel strip | 5 | 4 LEDs |
+| Ultrasonic trig / echo | 21 / 20 | HC-SR04 |
+| OLED SDA / SCL | 8 / 9 | SSD1306 128×64 at 0x3C |
+| Button | 0 | also the OTA entry: hold 3 s |
+
+BLE device name: `diy_app_b3`. Battery scale: 3.3 V empty → 4.5 V full.
+
+> **GPIO 4 is used twice.** `CONFIG_PIN_BUZZER` and `CONFIG_PIN_BATTERY_LEVEL`
+> are the same pin. This predates the current firmware and has not been
+> rewired, but the **Power** test panel deliberately puts a Buzz button next to
+> the live voltage reading so the interaction is visible rather than hidden.
+> If the volts jump while buzzing, that is the cause.
+
+**The two board LEDs are the link indicator by default** — green blinks while
+connected, red while not. The app does not own them until the first toggle;
+`onDisconnect()` hands them back, so "not connected" stays visible even if a
+user left both switched off. The panel's status dots report *which LED is
+active*, not the blink phase — publishing the raw pin would flip the indicator
+every telemetry cycle and defeat the send-on-change gate.
+
+## 🕹 Widgets
+
+Everything the firmware answers to. Ids are stable; the layouts are just
+different subsets of them.
+
+**Controls (app → robot)**
+
+| id | does |
+|---|---|
+| `joy_drive` / `dpad_drive` | both write the same steering state, whichever was touched last |
+| `spd` | scales the drive mix, so steering geometry survives a low ceiling |
+| `btn_stop` | clears every input that could re-assert motion, then stops the servos |
+| `btn_horn` | horn / alarm |
+| `btn_buzz` | one beep per press |
+| `toggle_led_r` / `toggle_led_g` | take the board LEDs over from the status indicator |
+| `toggle_np` | strip on/off |
+| `np_r` / `np_g` / `np_b` | one colour channel each, recombined into 0xRRGGBB |
+| `np_effect` | Solid, Rainbow, Knight Rider, Duel eye, French flag |
+| `np_bright` | FastLED brightness |
+| `oled_text` | text typed here becomes the OLED's top line |
+| `upd` | telemetry verbosity: Off / Basic / All |
+| `level` | which panel the robot serves |
+
+**Readouts (robot → app)**
+
+| id | source |
+|---|---|
+| `gauge_speed` | drive magnitude 0–100 |
+| `gauge_distance` | ultrasonic, 0–200 cm |
+| `graph_dist` | the same measurement as a time series |
+| `alert` | obstacle toast, under 30 cm, re-arms above 40 |
+| `battery_level` / `lbl_vbat` | percentage and raw pack voltage |
+| `gauge_rssi` | link strength via `ble_gap_conn_rssi()` |
+| `led_button` | the board's push button |
+| `led_r_state` / `led_g_state` | which board LED is active |
+| `lbl_ver` / `lbl_uptime` | firmware version and uptime |
+| `lbl_oled` | what the OLED's top line actually reads |
+| `sound_alert` | plays a tone on the phone |
+
+Only `np_effect` still couples a string between layout and firmware; the colour
+is three numbers precisely so there is no name table to keep in sync.
+
+## 📶 Telemetry
+
+Sent **on change**, never on a timer, with a deadband per value so sensor noise
+cannot manufacture updates: 1 cm on distance, 1 % on speed and battery, 0.05 V
+on the pack, 2 dBm on RSSI, and a whole second on uptime. `lbl_ver` goes once
+per CFG. A parked robot on the Expert panel drops from 11 notifications per
+cycle to roughly two.
+
+`graph_dist` is the deliberate exception and is sent every cycle: a graph is a
+time series, and suppressing repeats would compress the flat stretches and
+distort the trace rather than just saving traffic.
+
+Two mechanisms keep it honest:
+
+- **A forced refresh after every CFG transfer.** A freshly rendered panel has
+  no values in it, so a widget whose reading had not changed would sit blank.
+- **Gating on the active panel.** Publishing to widget ids the current layout
+  does not contain is a notification into nothing; the Sound panel sends none
+  at all.
+
+This matters because this radio has a documented history of drowning in `rc=6`
+(`BLE_HS_ENOMEM`) when `notify()` is called too freely — the bug that shaped
+the whole bit-rxy conversion.
+
+## 🧪 Bring-up tests
+
+`01_software/06_tests/` holds two sketches that are deliberately **outside**
+the panel system — no radio, no layout, no app:
+
+| sketch | answers |
+|---|---|
+| `test_leds` | is the board powered, and am I flashing what I think I am? |
+| `test_ble` | does the radio advertise and accept a connection? |
+
+Run them in that order first. An app-driven test cannot distinguish a dead
+subsystem from a failed connection, and neither can a child — so these two
+settle both questions before anything downstream is believed. `test_ble`
+blinks slowly while advertising and goes solid on connect, readable across a
+room with no serial monitor.
+
+The six **test panels** in the Level selector cover the rest, and need no
+reflashing between them.
+
 ## 🐛 Known issues
 
 See [`audit.html`](https://abourdim.github.io/esp32c3_super_mini_robot-bit-rxy/audit.html) for the live tracker (inherited dashboard, predates the bit-rxy conversion — treat entries about RemoteXY as historical). Still-relevant platform-level issues:
 - **RMT ISR recursion crash on ESP32-C3** — fixed by pinning to `espressif32 @ 6.7.0` (ESP-IDF 5.1) in `platformio.ini`.
 - **Native USB-CDC upload quirks** — mid-upload baud switch and stub hand-off both crash the C3's native USB endpoint; fixed via `upload_speed = 115200` + `upload_flags = --no-stub`.
 - The joystick-flood BLE bug (`rc=6`/`BLE_HS_ENOMEM`) that shaped the bit-rxy conversion is documented in full in the [wiki article's post-mortem section](https://abourdim.github.io/wiki/wdiy-robot-en.html#postmortem).
+
+**Current limitations, stated plainly:**
+- `GETCFGVER` is recognised but not answered. Replying means reproducing the
+  app's revision hash exactly, and a mismatch fails silently into permanent
+  cache misses, so every connect re-sends the whole layout. On a low negotiated
+  MTU that is several seconds.
+- The joystick encoding is ambiguous inside the 0–100 quadrant when the app
+  skips `GETCFGVER` (its hard-refresh path). A drag confined to up-and-right
+  reads as angle/distance until a negative value proves otherwise.
+- `gauge_speed` and `gauge_distance` sit under ~175 px in the current expert
+  layout and may clip their unit labels. Both were sized by hand.
+- Flash is at ~90 %. Each new panel costs roughly 1 KB between firmware and its
+  embedded blob.
 
 ## 📜 License
 

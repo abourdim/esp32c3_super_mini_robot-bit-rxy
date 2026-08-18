@@ -193,6 +193,72 @@ pio run -t upload</div>
     </section>
 
     <section>
+        <h2>🔧 Hardware map</h2>
+        <p>From <code>01_software/01_app/01_src/00_config.h</code> &mdash; the single place these are defined.</p>
+        <table>
+            <tr><th>Function</th><th>GPIO</th><th>Notes</th></tr>
+            <tr><td>Left drive servo</td><td>6</td><td>continuous rotation, 90 = stop</td></tr>
+            <tr><td>Right drive servo</td><td>3</td><td>mounted mirrored, so its pulse range is inverted</td></tr>
+            <tr><td>Red LED</td><td>10</td><td>link status <strong>and</strong> app-controllable</td></tr>
+            <tr><td>Green LED</td><td>1</td><td>link status <strong>and</strong> app-controllable</td></tr>
+            <tr><td>Buzzer</td><td><strong>4</strong></td><td>shares its pin with battery sense</td></tr>
+            <tr><td>Battery sense (ADC)</td><td><strong>4</strong></td><td>shares its pin with the buzzer</td></tr>
+            <tr><td>NeoPixel strip</td><td>5</td><td>4 LEDs</td></tr>
+            <tr><td>Ultrasonic trig / echo</td><td>21 / 20</td><td>HC-SR04</td></tr>
+            <tr><td>OLED SDA / SCL</td><td>8 / 9</td><td>SSD1306 128&times;64 at 0x3C</td></tr>
+            <tr><td>Button</td><td>0</td><td>also the OTA entry: hold 3&nbsp;s</td></tr>
+        </table>
+        <p>BLE device name: <code>diy_app_b3</code>. Battery scale: 3.3&nbsp;V empty &rarr; 4.5&nbsp;V full.</p>
+        <p><strong>GPIO 4 is used twice.</strong> <code>CONFIG_PIN_BUZZER</code> and <code>CONFIG_PIN_BATTERY_LEVEL</code> are the same pin. This predates the current firmware and has not been rewired, but the <strong>Power</strong> test panel deliberately puts a Buzz button next to the live voltage reading so the interaction is visible rather than hidden. If the volts jump while buzzing, that is the cause.</p>
+        <p><strong>The two board LEDs are the link indicator by default</strong> &mdash; green blinks while connected, red while not. The app does not own them until the first toggle; <code>onDisconnect()</code> hands them back, so &ldquo;not connected&rdquo; stays visible even if a user left both switched off. The panel status dots report <em>which LED is active</em>, not the blink phase &mdash; publishing the raw pin would flip the indicator every telemetry cycle and defeat the send-on-change gate.</p>
+    </section>
+
+    <section>
+        <h2>🕹 Widgets</h2>
+        <p>Everything the firmware answers to. Ids are stable; the layouts are just different subsets of them.</p>
+        <p><strong>Controls (app &rarr; robot)</strong></p>
+        <ul>
+            <li><code>joy_drive</code> / <code>dpad_drive</code> &mdash; both write the same steering state, whichever was touched last</li>
+            <li><code>spd</code> &mdash; scales the drive mix, so steering geometry survives a low ceiling</li>
+            <li><code>btn_stop</code> &mdash; clears every input that could re-assert motion, then stops the servos</li>
+            <li><code>btn_horn</code>, <code>btn_buzz</code> &mdash; horn / alarm, and one beep per press</li>
+            <li><code>toggle_led_r</code> / <code>toggle_led_g</code> &mdash; take the board LEDs over from the status indicator</li>
+            <li><code>toggle_np</code>, <code>np_r</code>/<code>np_g</code>/<code>np_b</code>, <code>np_effect</code>, <code>np_bright</code> &mdash; strip state</li>
+            <li><code>oled_text</code> &mdash; text typed here becomes the OLED top line</li>
+            <li><code>upd</code> &mdash; telemetry verbosity: Off / Basic / All</li>
+            <li><code>level</code> &mdash; which panel the robot serves</li>
+        </ul>
+        <p><strong>Readouts (robot &rarr; app)</strong></p>
+        <ul>
+            <li><code>gauge_speed</code>, <code>gauge_distance</code>, <code>graph_dist</code>, <code>alert</code></li>
+            <li><code>battery_level</code> / <code>lbl_vbat</code> &mdash; percentage and raw pack voltage</li>
+            <li><code>gauge_rssi</code> &mdash; link strength via <code>ble_gap_conn_rssi()</code></li>
+            <li><code>led_button</code>, <code>led_r_state</code>, <code>led_g_state</code></li>
+            <li><code>lbl_ver</code>, <code>lbl_uptime</code>, <code>lbl_oled</code></li>
+        </ul>
+        <p>Only <code>np_effect</code> still couples a string between layout and firmware; the colour is three numbers precisely so there is no name table to keep in sync.</p>
+    </section>
+
+    <section>
+        <h2>📶 Telemetry</h2>
+        <p>Sent <strong>on change</strong>, never on a timer, with a deadband per value so sensor noise cannot manufacture updates: 1&nbsp;cm on distance, 1&nbsp;% on speed and battery, 0.05&nbsp;V on the pack, 2&nbsp;dBm on RSSI, and a whole second on uptime. A parked robot on the Expert panel drops from 11 notifications per cycle to roughly two.</p>
+        <p><code>graph_dist</code> is the deliberate exception and is sent every cycle: a graph is a time series, and suppressing repeats would compress the flat stretches and distort the trace rather than just saving traffic.</p>
+        <p>Two mechanisms keep it honest: a <strong>forced refresh after every CFG transfer</strong>, because a freshly rendered panel has no values in it and an unchanged widget would sit blank; and <strong>gating on the active panel</strong>, because publishing to widget ids the current layout does not contain is a notification into nothing. The Sound panel sends none at all.</p>
+        <p>This matters because this radio has a documented history of drowning in <code>rc=6</code> (<code>BLE_HS_ENOMEM</code>) when <code>notify()</code> is called too freely &mdash; the bug that shaped the whole bit-rxy conversion.</p>
+    </section>
+
+    <section>
+        <h2>🧪 Bring-up tests</h2>
+        <p><code>01_software/06_tests/</code> holds two sketches that are deliberately <strong>outside</strong> the panel system &mdash; no radio, no layout, no app:</p>
+        <ul>
+            <li><code>test_leds</code> &mdash; is the board powered, and am I flashing what I think I am?</li>
+            <li><code>test_ble</code> &mdash; does the radio advertise and accept a connection?</li>
+        </ul>
+        <p>Run them in that order first. An app-driven test cannot distinguish a dead subsystem from a failed connection, and neither can a child &mdash; so these two settle both questions before anything downstream is believed. <code>test_ble</code> blinks slowly while advertising and goes solid on connect, readable across a room with no serial monitor.</p>
+        <p>The six <strong>test panels</strong> in the Level selector cover the rest, and need no reflashing between them.</p>
+    </section>
+
+    <section>
         <h2>🐛 Known issues</h2>
         <p>See <a href="https://abourdim.github.io/esp32c3_super_mini_robot-bit-rxy/audit.html">audit.html</a> for the live tracker (inherited dashboard, predates the bit-rxy conversion &mdash; treat entries about RemoteXY as historical). Still-relevant platform-level issues:</p>
         <table>
@@ -200,6 +266,10 @@ pio run -t upload</div>
             <tr><td>RMT ISR recursion crash on ESP32-C3</td><td>Pinned to <code>espressif32 @ 6.7.0</code> (ESP-IDF 5.1) in <code>platformio.ini</code></td></tr>
             <tr><td>Native USB-CDC upload quirks (mid-upload baud switch, stub hand-off)</td><td><code>upload_speed = 115200</code> + <code>upload_flags = --no-stub</code></td></tr>
             <tr><td>Joystick-flood BLE bug (<code>rc=6</code>/<code>BLE_HS_ENOMEM</code>)</td><td>Fixed &mdash; full post-mortem in the <a href="https://abourdim.github.io/wiki/wdiy-robot-en.html#postmortem">wiki article</a></td></tr>
+            <tr><td><code>GETCFGVER</code> not answered</td><td>Open &mdash; every connect re-sends the whole layout. Replying means reproducing the app's revision hash exactly, and a mismatch fails silently into permanent cache misses.</td></tr>
+            <tr><td>Joystick encoding ambiguous in the 0&ndash;100 quadrant</td><td>Open &mdash; only when the app skips <code>GETCFGVER</code> on its hard-refresh path. A drag confined to up-and-right reads as angle/distance until a negative value proves otherwise.</td></tr>
+            <tr><td><code>gauge_speed</code> / <code>gauge_distance</code> under ~175&nbsp;px</td><td>Open &mdash; may clip their unit labels. Both were sized by hand in Arrange.</td></tr>
+            <tr><td>Flash at ~90&nbsp;%</td><td>Watch &mdash; each new panel costs roughly 1&nbsp;KB between firmware and its embedded blob.</td></tr>
         </table>
     </section>
 
