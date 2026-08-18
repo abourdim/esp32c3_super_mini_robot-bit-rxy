@@ -62,6 +62,7 @@
    "w": 630,
    "h": 60,
    "label": "Type, then look at the robot's little screen.",
+   "value": "Type, then look at the robot's little screen.",
    "model": "card"
   }
  ]

@@ -89,6 +89,7 @@
    "w": 520,
    "h": 60,
    "label": "Buzz uses the same pin as the battery sensor -- watch the volts.",
+   "value": "Buzz uses the same pin as the battery sensor -- watch the volts.",
    "model": "card"
   }
  ]

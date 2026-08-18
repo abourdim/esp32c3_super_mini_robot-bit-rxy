@@ -73,6 +73,7 @@
    "w": 410,
    "h": 60,
    "label": "Each button makes a different sound.",
+   "value": "Each button makes a different sound.",
    "model": "card"
   }
  ]

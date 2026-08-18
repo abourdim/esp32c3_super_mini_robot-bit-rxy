@@ -75,6 +75,7 @@
    "w": 380,
    "h": 60,
    "label": "Move your hand in front of the sensor.",
+   "value": "Move your hand in front of the sensor.",
    "model": "card"
   }
  ]

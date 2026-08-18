@@ -167,6 +167,7 @@
    "w": 470,
    "h": 60,
    "label": "Switch the lights on, then mix a colour.",
+   "value": "Switch the lights on, then mix a colour.",
    "model": "card"
   }
  ]
